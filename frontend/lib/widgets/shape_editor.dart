@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:frontend/models/shape_data.dart';
 import 'package:frontend/painters/relationship_painter.dart';
+import 'package:frontend/widgets/link_button.dart';
 
 class ShapeEditor extends StatefulWidget {
   const ShapeEditor({super.key});
@@ -369,6 +370,23 @@ class _ShapeEditorState extends State<ShapeEditor> {
     _previousOffset = _currentOffset;
   }
 
+  void _updateZoomScale(double newScale) {
+    setState(() {
+      _currentScale = newScale.clamp(0.3, 5.0);
+      final Offset screenCenter = Offset(
+        MediaQuery.of(context).size.width / 2,
+        MediaQuery.of(context).size.height / 2,
+      );
+      final Offset centerWorldAtPrevScale =
+          (screenCenter - _previousOffset) / _previousScale;
+      _currentOffset =
+          screenCenter - centerWorldAtPrevScale * _currentScale;
+      _previousScale = _currentScale;
+      _previousOffset = _currentOffset;
+      _previousFocalPoint = screenCenter;
+    });
+  }
+
   void _deleteSelectedVertex() {
     if (!isEditVerticesMode ||
         selectedIndices.length != 1 ||
@@ -627,7 +645,11 @@ class _ShapeEditorState extends State<ShapeEditor> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
-              const Icon(Icons.zoom_out, color: Colors.white),
+              IconButton(
+                icon: const Icon(Icons.zoom_out, color: Colors.white),
+                onPressed: () => _updateZoomScale(_currentScale - 0.2),
+                tooltip: 'Zoom Out',
+              ),
               SizedBox(
                 width: 150,
                 child: Slider(
@@ -635,27 +657,16 @@ class _ShapeEditorState extends State<ShapeEditor> {
                   min: 0.3,
                   max: 5.0,
                   divisions: ((5.0 - 0.3) * 10).round(),
-                  onChanged: (double newValue) {
-                    setState(() {
-                      _currentScale = newValue;
-                      final Offset screenCenter = Offset(
-                        MediaQuery.of(context).size.width / 2,
-                        MediaQuery.of(context).size.height / 2,
-                      );
-                      final Offset centerWorldAtPrevScale =
-                          (screenCenter - _previousOffset) / _previousScale;
-                      _currentOffset =
-                          screenCenter - centerWorldAtPrevScale * _currentScale;
-                      _previousScale = _currentScale;
-                      _previousOffset = _currentOffset;
-                      _previousFocalPoint = screenCenter;
-                    });
-                  },
+                  onChanged: (double newValue) => _updateZoomScale(newValue),
                   activeColor: Colors.white,
                   inactiveColor: Colors.white38,
                 ),
               ),
-              const Icon(Icons.zoom_in, color: Colors.white),
+              IconButton(
+                icon: const Icon(Icons.zoom_in, color: Colors.white),
+                onPressed: () => _updateZoomScale(_currentScale + 0.2),
+                tooltip: 'Zoom In',
+              ),
               IconButton(
                 icon: const Icon(Icons.refresh, color: Colors.white),
                 onPressed: () {
@@ -702,34 +713,6 @@ class _ShapeEditorState extends State<ShapeEditor> {
               .toList(),
         ),
       ],
-    );
-  }
-}
-
-class LinkButton extends StatelessWidget {
-  final String label;
-  final ColorComponent component;
-  final double offsetValue;
-  final void Function(ColorComponent, double) onPressed;
-
-  const LinkButton({
-    super.key,
-    required this.label,
-    required this.component,
-    required this.offsetValue,
-    required this.onPressed,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ElevatedButton(
-      onPressed: () => onPressed(component, offsetValue),
-      style: ElevatedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        minimumSize: Size.zero,
-        textStyle: const TextStyle(fontSize: 10),
-      ),
-      child: Text(label),
     );
   }
 }
