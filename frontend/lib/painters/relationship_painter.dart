@@ -45,7 +45,9 @@ class RelationshipPainter extends CustomPainter {
     canvas.translate(offset.dx, offset.dy);
     canvas.scale(scale);
 
-    final TextPainter textPainter = TextPainter(textDirection: TextDirection.ltr);
+    final TextPainter textPainter = TextPainter(
+      textDirection: TextDirection.ltr,
+    );
     final Paint segmentIndicatorPaint = _buildSegmentIndicatorPaint();
     final Paint segmentPointPaint = _buildSegmentPointPaint();
 
@@ -54,16 +56,29 @@ class RelationshipPainter extends CustomPainter {
 
     _paintBackgroundCanvas(canvas);
 
-    for (int i = 0; i < shapes.length; i++) {
+    final List<MapEntry<int, ShapeData>> sortedShapes =
+        shapes.asMap().entries.toList()..sort((a, b) {
+          final int zCompare = a.value.zIndex.compareTo(b.value.zIndex);
+          if (zCompare != 0) return zCompare;
+          return a.key.compareTo(b.key);
+        });
+
+    for (final MapEntry<int, ShapeData> entry in sortedShapes) {
+      final int i = entry.key;
+      final ShapeData shape = entry.value;
       final bool isSelected = selectedIndices.contains(i);
-      final ShapeData shape = shapes[i];
 
       _paintShape(canvas, shape, isSelected);
 
       if (isSelected && isEditVerticesMode) {
         _paintVertexHandles(canvas, shape, i);
         if (showAddPointIndicators) {
-          _paintAddPointIndicators(canvas, shape, segmentIndicatorPaint, segmentPointPaint);
+          _paintAddPointIndicators(
+            canvas,
+            shape,
+            segmentIndicatorPaint,
+            segmentPointPaint,
+          );
         }
       }
 
@@ -147,8 +162,10 @@ class RelationshipPainter extends CustomPainter {
       final Offset point = shape.points[j];
       final bool isDraggingThisHandle =
           draggingShapeIndex == shapeIndex && draggingPointIndex == j;
-      final bool isSelectedHandle = selectedVertexIndex != null &&
-          selectedVertexIndex == j && selectedIndices.contains(shapeIndex);
+      final bool isSelectedHandle =
+          selectedVertexIndex != null &&
+          selectedVertexIndex == j &&
+          selectedIndices.contains(shapeIndex);
       canvas.drawCircle(
         point,
         handleRadius / scale,
@@ -156,12 +173,21 @@ class RelationshipPainter extends CustomPainter {
       );
       canvas.drawCircle(point, handleRadius / scale, strokePaint);
       if (isSelectedHandle) {
-        canvas.drawCircle(point, handleRadius / scale + 2.0 / scale, selectedHandlePaint);
+        canvas.drawCircle(
+          point,
+          handleRadius / scale + 2.0 / scale,
+          selectedHandlePaint,
+        );
       }
     }
   }
 
-  void _paintAddPointIndicators(Canvas canvas, ShapeData shape, Paint indicatorPaint, Paint pointPaint) {
+  void _paintAddPointIndicators(
+    Canvas canvas,
+    ShapeData shape,
+    Paint indicatorPaint,
+    Paint pointPaint,
+  ) {
     for (int j = 0; j < shape.points.length; j++) {
       final Offset p1 = shape.points[j];
       final Offset p2 = shape.points[(j + 1) % shape.points.length];
@@ -180,10 +206,7 @@ class RelationshipPainter extends CustomPainter {
         p1.dx + (p2.dx - p1.dx) * start,
         p1.dy + (p2.dy - p1.dy) * start,
       );
-      path.lineTo(
-        p1.dx + (p2.dx - p1.dx) * end,
-        p1.dy + (p2.dy - p1.dy) * end,
-      );
+      path.lineTo(p1.dx + (p2.dx - p1.dx) * end, p1.dy + (p2.dy - p1.dy) * end);
     }
     return path;
   }
@@ -200,7 +223,12 @@ class RelationshipPainter extends CustomPainter {
     return isFirst ? selectedIndices.first : selectedIndices.last;
   }
 
-  void _paintShapeLabel(Canvas canvas, String labelText, List<Offset> points, TextPainter textPainter) {
+  void _paintShapeLabel(
+    Canvas canvas,
+    String labelText,
+    List<Offset> points,
+    TextPainter textPainter,
+  ) {
     final Offset center = _polygonCentroid(points);
     textPainter.text = TextSpan(
       text: labelText,
@@ -215,7 +243,10 @@ class RelationshipPainter extends CustomPainter {
     canvas.save();
     canvas.translate(center.dx, center.dy);
     canvas.scale(textScale);
-    textPainter.paint(canvas, Offset(-textPainter.width / 2, -textPainter.height / 2));
+    textPainter.paint(
+      canvas,
+      Offset(-textPainter.width / 2, -textPainter.height / 2),
+    );
     canvas.restore();
   }
 
@@ -250,17 +281,30 @@ class RelationshipPainter extends CustomPainter {
       // Draw relationship text in the middle with an offset so multiple labels don't overlap.
       final Offset direction = targetCenter - sourceCenter;
       final double distance = direction.distance;
-      final Offset normalizedDirection = distance == 0 ? const Offset(0, 0) : direction / distance;
-      final Offset perpendicular = Offset(-normalizedDirection.dy, normalizedDirection.dx);
+      final Offset normalizedDirection = distance == 0
+          ? const Offset(0, 0)
+          : direction / distance;
+      final Offset perpendicular = Offset(
+        -normalizedDirection.dy,
+        normalizedDirection.dx,
+      );
       final Offset midPoint = Offset(
         (sourceCenter.dx + targetCenter.dx) / 2,
         (sourceCenter.dy + targetCenter.dy) / 2,
       );
       final double labelSpacing = _relationshipLabelSpacing;
-      final Offset labelOffset = perpendicular * _getRelationshipLabelOffset(relationship.relationship.component) * labelSpacing;
+      final Offset labelOffset =
+          perpendicular *
+          _getRelationshipLabelOffset(relationship.relationship.component) *
+          labelSpacing;
 
       final String label = _getRelationshipLabel(relationship.relationship);
-      _paintRelationshipLabel(canvas, label, midPoint + labelOffset, textPainter);
+      _paintRelationshipLabel(
+        canvas,
+        label,
+        midPoint + labelOffset,
+        textPainter,
+      );
     }
   }
 
@@ -282,11 +326,16 @@ class RelationshipPainter extends CustomPainter {
     if (length == 0) return;
 
     final Offset normalizedDirection = direction / length;
-    final Offset perpendicular = Offset(-normalizedDirection.dy, normalizedDirection.dx) * arrowSize * 0.5;
+    final Offset perpendicular =
+        Offset(-normalizedDirection.dy, normalizedDirection.dx) *
+        arrowSize *
+        0.5;
 
     final Offset arrowTip = to;
-    final Offset arrowBase1 = to - normalizedDirection * arrowSize + perpendicular;
-    final Offset arrowBase2 = to - normalizedDirection * arrowSize - perpendicular;
+    final Offset arrowBase1 =
+        to - normalizedDirection * arrowSize + perpendicular;
+    final Offset arrowBase2 =
+        to - normalizedDirection * arrowSize - perpendicular;
 
     final Path arrowPath = Path()
       ..moveTo(arrowTip.dx, arrowTip.dy)
@@ -301,8 +350,8 @@ class RelationshipPainter extends CustomPainter {
     final offsetStr = relationship.offset == 0
         ? ''
         : (relationship.offset > 0
-            ? ' + ${relationship.offset.toStringAsFixed(1)}'
-            : ' - ${relationship.offset.abs().toStringAsFixed(1)}');
+              ? ' + ${relationship.offset.toStringAsFixed(1)}'
+              : ' - ${relationship.offset.abs().toStringAsFixed(1)}');
 
     final String prefix;
     switch (relationship.component) {
@@ -320,7 +369,12 @@ class RelationshipPainter extends CustomPainter {
     return '$prefix${relationship.operator.symbol}$offsetStr';
   }
 
-  void _paintRelationshipLabel(Canvas canvas, String text, Offset position, TextPainter textPainter) {
+  void _paintRelationshipLabel(
+    Canvas canvas,
+    String text,
+    Offset position,
+    TextPainter textPainter,
+  ) {
     textPainter.text = TextSpan(
       text: text,
       style: TextStyle(
@@ -335,7 +389,10 @@ class RelationshipPainter extends CustomPainter {
     canvas.save();
     canvas.translate(position.dx, position.dy);
     canvas.scale(textScale);
-    textPainter.paint(canvas, Offset(-textPainter.width / 2, -textPainter.height / 2));
+    textPainter.paint(
+      canvas,
+      Offset(-textPainter.width / 2, -textPainter.height / 2),
+    );
     canvas.restore();
   }
 
@@ -390,11 +447,13 @@ class RelationshipPainter extends CustomPainter {
     if (isLinkMode != oldDelegate.isLinkMode) return true;
     if (isEditVerticesMode != oldDelegate.isEditVerticesMode) return true;
     if (handleRadius != oldDelegate.handleRadius) return true;
-    if (showAddPointIndicators != oldDelegate.showAddPointIndicators) return true;
+    if (showAddPointIndicators != oldDelegate.showAddPointIndicators)
+      return true;
     if (showRelationships != oldDelegate.showRelationships) return true;
     if (scale != oldDelegate.scale) return true;
     if (offset != oldDelegate.offset) return true;
-    if (!listEquals(activeRelationships, oldDelegate.activeRelationships)) return true;
+    if (!listEquals(activeRelationships, oldDelegate.activeRelationships))
+      return true;
     return false;
   }
 }

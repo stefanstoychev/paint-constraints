@@ -10,7 +10,11 @@ class ShapeRelationship {
   final int targetShapeIndex;
   final ColorRelationship relationship;
 
-  const ShapeRelationship(this.sourceShapeIndex, this.targetShapeIndex, this.relationship);
+  const ShapeRelationship(
+    this.sourceShapeIndex,
+    this.targetShapeIndex,
+    this.relationship,
+  );
 
   bool hasSameType(ShapeRelationship other) {
     return other.sourceShapeIndex == sourceShapeIndex &&
@@ -28,7 +32,8 @@ class ShapeRelationship {
   }
 
   @override
-  int get hashCode => Object.hash(sourceShapeIndex, targetShapeIndex, relationship);
+  int get hashCode =>
+      Object.hash(sourceShapeIndex, targetShapeIndex, relationship);
 
   /// Convert to JSON for serialization
   Map<String, dynamic> toJson() {
@@ -49,7 +54,11 @@ class ShapeRelationship {
     final operator = ComparisonOperator.values.firstWhere(
       (e) => e.name == json['operator'],
     );
-    final relationship = ColorRelationship(component, operator, json['offset'] as double);
+    final relationship = ColorRelationship(
+      component,
+      operator,
+      json['offset'] as double,
+    );
     return ShapeRelationship(
       json['sourceShapeIndex'] as int,
       json['targetShapeIndex'] as int,
@@ -61,15 +70,17 @@ class ShapeRelationship {
 class ShapeData {
   final List<Offset> points;
   final HSVColor hsv;
+  final int zIndex;
 
-  const ShapeData({required this.points, required this.hsv});
+  const ShapeData({required this.points, required this.hsv, this.zIndex = 0});
 
   Color get color => hsv.toColor();
 
-  ShapeData copyWith({List<Offset>? points, HSVColor? hsv}) {
+  ShapeData copyWith({List<Offset>? points, HSVColor? hsv, int? zIndex}) {
     return ShapeData(
       points: points ?? List<Offset>.from(this.points),
       hsv: hsv ?? this.hsv,
+      zIndex: zIndex ?? this.zIndex,
     );
   }
 
@@ -78,11 +89,12 @@ class ShapeData {
     if (identical(this, other)) return true;
     return other is ShapeData &&
         listEquals(points, other.points) &&
-        hsv == other.hsv;
+        hsv == other.hsv &&
+        zIndex == other.zIndex;
   }
 
   @override
-  int get hashCode => Object.hashAll(points) ^ hsv.hashCode;
+  int get hashCode => Object.hashAll(points) ^ hsv.hashCode ^ zIndex.hashCode;
 
   /// Convert to JSON for serialization
   Map<String, dynamic> toJson() {
@@ -92,6 +104,7 @@ class ShapeData {
       'saturation': hsv.saturation,
       'value': hsv.value,
       'alpha': hsv.alpha,
+      'zIndex': zIndex,
     };
   }
 
@@ -106,6 +119,10 @@ class ShapeData {
       json['saturation'] as double,
       json['value'] as double,
     );
-    return ShapeData(points: pointsList, hsv: hsv);
+    return ShapeData(
+      points: pointsList,
+      hsv: hsv,
+      zIndex: json['zIndex'] is int ? json['zIndex'] as int : 0,
+    );
   }
 }

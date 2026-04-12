@@ -44,7 +44,8 @@ class _ShapeEditorState extends State<ShapeEditor> {
   bool isEditVerticesMode = false;
   bool showRelationships = true;
 
-  final ColorConstraints colorConstraints = ColorConstraints.withCommonRelationships();
+  final ColorConstraints colorConstraints =
+      ColorConstraints.withCommonRelationships();
 
   // Store active relationships between shapes
   List<ShapeRelationship> activeRelationships = <ShapeRelationship>[];
@@ -68,6 +69,12 @@ class _ShapeEditorState extends State<ShapeEditor> {
 
   Offset _screenToWorld(Offset screenPoint) {
     return (screenPoint - _currentOffset) / _currentScale;
+  }
+
+  int _nextShapeZIndex() {
+    if (allShapes.isEmpty) return 0;
+    return allShapes.map<int>((ShapeData shape) => shape.zIndex).reduce(max) +
+        1;
   }
 
   void _addShape() {
@@ -94,6 +101,7 @@ class _ShapeEditorState extends State<ShapeEditor> {
         ShapeData(
           points: translatedPoints,
           hsv: HSVColor.fromAHSV(1, randomHue, 0.7, 0.8),
+          zIndex: _nextShapeZIndex(),
         ),
       ];
       selectedIndices = <int>[allShapes.length - 1];
@@ -122,7 +130,11 @@ class _ShapeEditorState extends State<ShapeEditor> {
 
     setState(() {
       // Create and store the relationship, replacing any existing relationship of the same type.
-      final shapeRelationship = ShapeRelationship(sourceIdx, targetIdx, relationship);
+      final shapeRelationship = ShapeRelationship(
+        sourceIdx,
+        targetIdx,
+        relationship,
+      );
       final int existingRelationshipIndex = activeRelationships.indexWhere(
         (ShapeRelationship activeRelationship) =>
             activeRelationship.hasSameType(shapeRelationship),
@@ -236,9 +248,15 @@ class _ShapeEditorState extends State<ShapeEditor> {
     }
 
     int? tappedShapeIndex;
-    for (int i = allShapes.length - 1; i >= 0; i--) {
-      if (_isPointInPolygon(worldPosition, allShapes[i].points)) {
-        tappedShapeIndex = i;
+    final List<MapEntry<int, ShapeData>> sortedShapeEntries =
+        allShapes.asMap().entries.toList()..sort((a, b) {
+          final int zCompare = b.value.zIndex.compareTo(a.value.zIndex);
+          return zCompare != 0 ? zCompare : b.key.compareTo(a.key);
+        });
+
+    for (final MapEntry<int, ShapeData> entry in sortedShapeEntries) {
+      if (_isPointInPolygon(worldPosition, entry.value.points)) {
+        tappedShapeIndex = entry.key;
         break;
       }
     }
@@ -315,8 +333,9 @@ class _ShapeEditorState extends State<ShapeEditor> {
           _dragStartWorldPoint = worldPosition;
           _draggedShapesInitialPoints = <int, List<Offset>>{};
           for (final int shapeIndex in selectedIndices) {
-            _draggedShapesInitialPoints![shapeIndex] =
-                List<Offset>.from(allShapes[shapeIndex].points);
+            _draggedShapesInitialPoints![shapeIndex] = List<Offset>.from(
+              allShapes[shapeIndex].points,
+            );
           }
           return;
         }
@@ -400,8 +419,7 @@ class _ShapeEditorState extends State<ShapeEditor> {
       );
       final Offset centerWorldAtPrevScale =
           (screenCenter - _previousOffset) / _previousScale;
-      _currentOffset =
-          screenCenter - centerWorldAtPrevScale * _currentScale;
+      _currentOffset = screenCenter - centerWorldAtPrevScale * _currentScale;
       _previousScale = _currentScale;
       _previousOffset = _currentOffset;
       _previousFocalPoint = screenCenter;
@@ -433,10 +451,58 @@ class _ShapeEditorState extends State<ShapeEditor> {
     });
   }
 
+  void _pushSelectedShapesToBack() {
+    if (selectedIndices.isEmpty) return;
+
+    setState(() {
+      final List<ShapeData> tempShapes = List<ShapeData>.from(allShapes);
+      final int minZIndex = allShapes
+          .map<int>((ShapeData shape) => shape.zIndex)
+          .reduce(min);
+      final List<int> sortedSelectedIndices = List<int>.from(selectedIndices)
+        ..sort((a, b) => allShapes[a].zIndex.compareTo(allShapes[b].zIndex));
+
+      for (int i = 0; i < sortedSelectedIndices.length; i++) {
+        final int shapeIndex = sortedSelectedIndices[i];
+        tempShapes[shapeIndex] = tempShapes[shapeIndex].copyWith(
+          zIndex: minZIndex - (sortedSelectedIndices.length - i),
+        );
+      }
+
+      allShapes = tempShapes;
+    });
+  }
+
+  void _sendSelectedShapesToFront() {
+    if (selectedIndices.isEmpty) return;
+
+    setState(() {
+      final List<ShapeData> tempShapes = List<ShapeData>.from(allShapes);
+      final int maxZIndex = allShapes
+          .map<int>((ShapeData shape) => shape.zIndex)
+          .reduce(max);
+      final List<int> sortedSelectedIndices = List<int>.from(selectedIndices)
+        ..sort((a, b) => allShapes[a].zIndex.compareTo(allShapes[b].zIndex));
+
+      for (int i = 0; i < sortedSelectedIndices.length; i++) {
+        final int shapeIndex = sortedSelectedIndices[i];
+        tempShapes[shapeIndex] = tempShapes[shapeIndex].copyWith(
+          zIndex: maxZIndex + i + 1,
+        );
+      }
+
+      allShapes = tempShapes;
+    });
+  }
+
   Future<void> _saveShapes() async {
     final prefs = await SharedPreferences.getInstance();
-    final shapesJson = jsonEncode(allShapes.map((shape) => shape.toJson()).toList());
-    final relationshipsJson = jsonEncode(activeRelationships.map((rel) => rel.toJson()).toList());
+    final shapesJson = jsonEncode(
+      allShapes.map((shape) => shape.toJson()).toList(),
+    );
+    final relationshipsJson = jsonEncode(
+      activeRelationships.map((rel) => rel.toJson()).toList(),
+    );
     await prefs.setString('saved_shapes', shapesJson);
     await prefs.setString('saved_relationships', relationshipsJson);
     if (mounted) {
@@ -456,10 +522,15 @@ class _ShapeEditorState extends State<ShapeEditor> {
     if (shapesJson != null) {
       try {
         final List<dynamic> shapesDecoded = jsonDecode(shapesJson);
-        final List<ShapeRelationship> relationshipsDecoded = relationshipsJson != null
+        final List<ShapeRelationship> relationshipsDecoded =
+            relationshipsJson != null
             ? (jsonDecode(relationshipsJson) as List<dynamic>)
-                .map((item) => ShapeRelationship.fromJson(item as Map<String, dynamic>))
-                .toList()
+                  .map(
+                    (item) => ShapeRelationship.fromJson(
+                      item as Map<String, dynamic>,
+                    ),
+                  )
+                  .toList()
             : <ShapeRelationship>[];
         setState(() {
           allShapes = shapesDecoded
@@ -545,9 +616,30 @@ class _ShapeEditorState extends State<ShapeEditor> {
             ),
           if (!isLinkMode)
             IconButton(
-              icon: Icon(showRelationships ? Icons.visibility : Icons.visibility_off),
-              onPressed: () => setState(() => showRelationships = !showRelationships),
-              tooltip: showRelationships ? 'Hide relationships' : 'Show relationships',
+              icon: Icon(
+                showRelationships ? Icons.visibility : Icons.visibility_off,
+              ),
+              onPressed: () =>
+                  setState(() => showRelationships = !showRelationships),
+              tooltip: showRelationships
+                  ? 'Hide relationships'
+                  : 'Show relationships',
+            ),
+          if (!isLinkMode)
+            IconButton(
+              icon: const Icon(Icons.vertical_align_top),
+              onPressed: selectedIndices.isNotEmpty
+                  ? _sendSelectedShapesToFront
+                  : null,
+              tooltip: 'Send selected shape to front',
+            ),
+          if (!isLinkMode)
+            IconButton(
+              icon: const Icon(Icons.vertical_align_bottom),
+              onPressed: selectedIndices.isNotEmpty
+                  ? _pushSelectedShapesToBack
+                  : null,
+              tooltip: 'Push selected shape to back',
             ),
           IconButton(
             icon: const Icon(Icons.save),
@@ -591,11 +683,7 @@ class _ShapeEditorState extends State<ShapeEditor> {
               ),
             ),
           ),
-          Positioned(
-            top: 20,
-            right: 20,
-            child: _buildConstraintsLegend(),
-          ),
+          Positioned(top: 20, right: 20, child: _buildConstraintsLegend()),
           if (isLinkMode && selectedIndices.length == 2)
             Positioned(
               bottom: 20,
@@ -618,17 +706,25 @@ class _ShapeEditorState extends State<ShapeEditor> {
                       const SizedBox(height: 10),
                       _buildRelationshipRow(
                         'Hue Constraints',
-                        colorConstraints.relationships.where((r) => r.component == ColorComponent.hue).toList(),
+                        colorConstraints.relationships
+                            .where((r) => r.component == ColorComponent.hue)
+                            .toList(),
                       ),
                       const SizedBox(height: 10),
                       _buildRelationshipRow(
                         'Saturation Constraints',
-                        colorConstraints.relationships.where((r) => r.component == ColorComponent.saturation).toList(),
+                        colorConstraints.relationships
+                            .where(
+                              (r) => r.component == ColorComponent.saturation,
+                            )
+                            .toList(),
                       ),
                       const SizedBox(height: 10),
                       _buildRelationshipRow(
                         'Value Constraints',
-                        colorConstraints.relationships.where((r) => r.component == ColorComponent.value).toList(),
+                        colorConstraints.relationships
+                            .where((r) => r.component == ColorComponent.value)
+                            .toList(),
                       ),
                     ],
                   ),
@@ -664,9 +760,15 @@ class _ShapeEditorState extends State<ShapeEditor> {
   }
 
   Widget _buildConstraintsLegend() {
-    final hue = colorConstraints.relationships.where((r) => r.component == ColorComponent.hue).toList();
-    final saturation = colorConstraints.relationships.where((r) => r.component == ColorComponent.saturation).toList();
-    final value = colorConstraints.relationships.where((r) => r.component == ColorComponent.value).toList();
+    final hue = colorConstraints.relationships
+        .where((r) => r.component == ColorComponent.hue)
+        .toList();
+    final saturation = colorConstraints.relationships
+        .where((r) => r.component == ColorComponent.saturation)
+        .toList();
+    final value = colorConstraints.relationships
+        .where((r) => r.component == ColorComponent.value)
+        .toList();
 
     return Card(
       color: Colors.black87.withOpacity(0.9),
@@ -678,7 +780,10 @@ class _ShapeEditorState extends State<ShapeEditor> {
           children: <Widget>[
             const Text(
               'Color Constraints',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 8),
             _buildConstraintSection('Hue', hue),
@@ -692,16 +797,24 @@ class _ShapeEditorState extends State<ShapeEditor> {
     );
   }
 
-  Widget _buildConstraintSection(String title, List<ColorRelationship> relationships) {
+  Widget _buildConstraintSection(
+    String title,
+    List<ColorRelationship> relationships,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text(title, style: const TextStyle(color: Colors.white70, fontSize: 12)),
+        Text(
+          title,
+          style: const TextStyle(color: Colors.white70, fontSize: 12),
+        ),
         const SizedBox(height: 4),
         Wrap(
           spacing: 6,
           runSpacing: 6,
-          children: relationships.map<Widget>(_buildConstraintIndicator).toList(),
+          children: relationships
+              .map<Widget>(_buildConstraintIndicator)
+              .toList(),
         ),
       ],
     );
@@ -733,8 +846,8 @@ class _ShapeEditorState extends State<ShapeEditor> {
     final offsetStr = relationship.offset == 0
         ? ''
         : (relationship.offset > 0
-            ? ' + ${relationship.offset.toStringAsFixed(1)}'
-            : ' - ${relationship.offset.abs().toStringAsFixed(1)}');
+              ? ' + ${relationship.offset.toStringAsFixed(1)}'
+              : ' - ${relationship.offset.abs().toStringAsFixed(1)}');
 
     return '${relationship.operator.symbol}$offsetStr';
   }
@@ -823,8 +936,8 @@ class _ShapeEditorState extends State<ShapeEditor> {
     final offsetStr = relationship.offset == 0
         ? ''
         : (relationship.offset > 0
-            ? ' + ${relationship.offset.toStringAsFixed(1)}'
-            : ' - ${relationship.offset.abs().toStringAsFixed(1)}');
+              ? ' + ${relationship.offset.toStringAsFixed(1)}'
+              : ' - ${relationship.offset.abs().toStringAsFixed(1)}');
 
     switch (relationship.component) {
       case ColorComponent.hue:
