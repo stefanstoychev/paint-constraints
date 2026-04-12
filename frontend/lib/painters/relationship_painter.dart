@@ -5,6 +5,10 @@ import 'package:frontend/models/color_relationship.dart';
 import 'package:frontend/models/shape_data.dart';
 
 class RelationshipPainter extends CustomPainter {
+  static const double _relationshipLabelFontSize = 16.0;
+  static const double _relationshipLabelSpacing = 16.0;
+  static const double _shapeLabelFontSize = 16.0;
+  static const double _arrowSize = 8.0;
   final List<ShapeData> shapes;
   final List<int> selectedIndices;
   final List<ShapeRelationship> activeRelationships;
@@ -200,10 +204,10 @@ class RelationshipPainter extends CustomPainter {
     final Offset center = _polygonCentroid(points);
     textPainter.text = TextSpan(
       text: labelText,
-      style: const TextStyle(
+      style: TextStyle(
         color: Colors.black,
         fontWeight: FontWeight.bold,
-        fontSize: 16,
+        fontSize: _shapeLabelFontSize,
       ),
     );
     textPainter.layout();
@@ -252,7 +256,7 @@ class RelationshipPainter extends CustomPainter {
         (sourceCenter.dx + targetCenter.dx) / 2,
         (sourceCenter.dy + targetCenter.dy) / 2,
       );
-      final double labelSpacing = 16.0;
+      final double labelSpacing = _relationshipLabelSpacing;
       final Offset labelOffset = perpendicular * _getRelationshipLabelOffset(relationship.relationship.component) * labelSpacing;
 
       final String label = _getRelationshipLabel(relationship.relationship);
@@ -272,7 +276,7 @@ class RelationshipPainter extends CustomPainter {
   }
 
   void _drawArrowhead(Canvas canvas, Offset from, Offset to, Paint paint) {
-    const double arrowSize = 8.0;
+    const double arrowSize = _arrowSize;
     final Offset direction = (to - from);
     final double length = direction.distance;
     if (length == 0) return;
@@ -321,7 +325,7 @@ class RelationshipPainter extends CustomPainter {
       text: text,
       style: TextStyle(
         color: Colors.blue.shade800,
-        fontSize: 16,
+        fontSize: _relationshipLabelFontSize,
         fontWeight: FontWeight.bold,
         backgroundColor: Colors.white.withOpacity(0.8),
       ),
