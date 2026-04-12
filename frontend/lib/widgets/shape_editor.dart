@@ -46,6 +46,7 @@ class _ShapeEditorState extends State<ShapeEditor> {
 
   int? _draggingShapeIndex;
   int? _draggingPointIndex;
+  int? _selectedVertexIndex;
   Offset? _draggedPointInitialPosition;
   Offset? _dragStartWorldPoint;
 
@@ -83,6 +84,7 @@ class _ShapeEditorState extends State<ShapeEditor> {
         ),
       ];
       selectedIndices = <int>[allShapes.length - 1];
+      _selectedVertexIndex = null;
     });
   }
 
@@ -171,6 +173,9 @@ class _ShapeEditorState extends State<ShapeEditor> {
 
       for (int i = 0; i < points.length; i++) {
         if ((points[i] - worldPosition).distance < worldHandleRadius) {
+          setState(() {
+            _selectedVertexIndex = i;
+          });
           return;
         }
       }
@@ -205,6 +210,7 @@ class _ShapeEditorState extends State<ShapeEditor> {
     }
 
     setState(() {
+      _selectedVertexIndex = null;
       if (tappedShapeIndex != null) {
         if (isEditVerticesMode) {
           selectedIndices = <int>[tappedShapeIndex];
@@ -256,6 +262,7 @@ class _ShapeEditorState extends State<ShapeEditor> {
         if ((point - worldPosition).distance < worldHandleRadius) {
           _draggingShapeIndex = shapeIndex;
           _draggingPointIndex = i;
+          _selectedVertexIndex = i;
           _draggedPointInitialPosition = point;
           _dragStartWorldPoint = worldPosition;
           return;
@@ -270,6 +277,7 @@ class _ShapeEditorState extends State<ShapeEditor> {
 
       if (_draggingShapeIndex != null && _draggingPointIndex != null &&
           details.pointerCount == 1) {
+        _selectedVertexIndex = _draggingPointIndex;
         final Offset currentWorldFocalPoint = _screenToWorld(localFocalPoint);
         final Offset deltaWorld = currentWorldFocalPoint - _dragStartWorldPoint!;
 
@@ -303,6 +311,28 @@ class _ShapeEditorState extends State<ShapeEditor> {
     _previousOffset = _currentOffset;
   }
 
+  void _deleteSelectedVertex() {
+    if (!isEditVerticesMode || selectedIndices.length != 1 ||
+        _selectedVertexIndex == null) {
+      return;
+    }
+
+    final int shapeIndex = selectedIndices.first;
+    final List<Offset> points = allShapes[shapeIndex].points;
+    if (points.length <= 3) return;
+
+    setState(() {
+      final List<ShapeData> tempShapes = List<ShapeData>.from(allShapes);
+      final List<Offset> updatedPoints = List<Offset>.from(points)
+        ..removeAt(_selectedVertexIndex!);
+      tempShapes[shapeIndex] = tempShapes[shapeIndex].copyWith(points: updatedPoints);
+      allShapes = tempShapes;
+      _selectedVertexIndex = null;
+      _draggingPointIndex = null;
+      _draggingShapeIndex = null;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final bool showAddPointIndicators =
@@ -327,6 +357,7 @@ class _ShapeEditorState extends State<ShapeEditor> {
               isLinkMode = !isLinkMode;
               isEditVerticesMode = false;
               selectedIndices.clear();
+              _selectedVertexIndex = null;
             }),
           ),
           _buildModeButton(
@@ -338,8 +369,17 @@ class _ShapeEditorState extends State<ShapeEditor> {
               isEditVerticesMode = !isEditVerticesMode;
               isLinkMode = false;
               selectedIndices.clear();
+              _selectedVertexIndex = null;
             }),
           ),
+          if (isEditVerticesMode)
+            IconButton(
+              icon: const Icon(Icons.delete),
+              color: _selectedVertexIndex != null ? Colors.white : Colors.white38,
+              onPressed:
+                  _selectedVertexIndex != null ? _deleteSelectedVertex : null,
+              tooltip: 'Delete selected vertex',
+            ),
         ],
       ),
       body: Stack(
@@ -357,6 +397,7 @@ class _ShapeEditorState extends State<ShapeEditor> {
                   selectedIndices: selectedIndices,
                   draggingShapeIndex: _draggingShapeIndex,
                   draggingPointIndex: _draggingPointIndex,
+                  selectedVertexIndex: _selectedVertexIndex,
                   handleRadius: _handleRadius,
                   isLinkMode: isLinkMode,
                   isEditVerticesMode: isEditVerticesMode,

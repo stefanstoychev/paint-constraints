@@ -7,6 +7,7 @@ class RelationshipPainter extends CustomPainter {
   final List<int> selectedIndices;
   final int? draggingShapeIndex;
   final int? draggingPointIndex;
+  final int? selectedVertexIndex;
   final double handleRadius;
   final bool isLinkMode;
   final bool isEditVerticesMode;
@@ -19,6 +20,7 @@ class RelationshipPainter extends CustomPainter {
     required this.selectedIndices,
     this.draggingShapeIndex,
     this.draggingPointIndex,
+    this.selectedVertexIndex,
     required this.handleRadius,
     required this.isLinkMode,
     required this.isEditVerticesMode,
@@ -118,18 +120,27 @@ class RelationshipPainter extends CustomPainter {
   void _paintVertexHandles(Canvas canvas, ShapeData shape, int shapeIndex) {
     final Paint fillPaint = _buildHandleFillPaint();
     final Paint activeFillPaint = _buildActiveHandleFillPaint();
+    final Paint selectedHandlePaint = Paint()
+      ..color = Colors.yellow
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0 / scale;
     final Paint strokePaint = _buildHandleStrokePaint();
 
     for (int j = 0; j < shape.points.length; j++) {
       final Offset point = shape.points[j];
       final bool isDraggingThisHandle =
           draggingShapeIndex == shapeIndex && draggingPointIndex == j;
+      final bool isSelectedHandle = selectedVertexIndex != null &&
+          selectedVertexIndex == j && selectedIndices.contains(shapeIndex);
       canvas.drawCircle(
         point,
         handleRadius / scale,
         isDraggingThisHandle ? activeFillPaint : fillPaint,
       );
       canvas.drawCircle(point, handleRadius / scale, strokePaint);
+      if (isSelectedHandle) {
+        canvas.drawCircle(point, handleRadius / scale + 2.0 / scale, selectedHandlePaint);
+      }
     }
   }
 
