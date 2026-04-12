@@ -34,8 +34,8 @@ class RelationshipPainter extends CustomPainter {
     canvas.scale(scale);
 
     final TextPainter textPainter = TextPainter(textDirection: TextDirection.ltr);
-    final Paint segmentIndicatorPaint = _createSegmentIndicatorPaint();
-    final Paint segmentAddPointPaint = _createSegmentAddPointPaint();
+    final Paint segmentIndicatorPaint = _buildSegmentIndicatorPaint();
+    final Paint segmentPointPaint = _buildSegmentPointPaint();
 
     final int? firstSelected = _linkLabelIndex(isFirst: true);
     final int? lastSelected = _linkLabelIndex(isFirst: false);
@@ -44,55 +44,55 @@ class RelationshipPainter extends CustomPainter {
       final bool isSelected = selectedIndices.contains(i);
       final ShapeData shape = shapes[i];
 
-      _drawShape(canvas, shape, isSelected);
+      _paintShape(canvas, shape, isSelected);
 
       if (isSelected && isEditVerticesMode) {
-        _drawVertexHandles(canvas, i, shape);
+        _paintVertexHandles(canvas, shape, i);
         if (showAddPointIndicators) {
-          _drawAddPointIndicators(canvas, shape, segmentIndicatorPaint, segmentAddPointPaint);
+          _paintAddPointIndicators(canvas, shape, segmentIndicatorPaint, segmentPointPaint);
         }
       }
 
       final String? labelText = _shapeLabel(i, firstSelected, lastSelected);
       if (labelText != null) {
-        _drawShapeLabel(canvas, labelText, shape.points, textPainter);
+        _paintShapeLabel(canvas, labelText, shape.points, textPainter);
       }
     }
 
     canvas.restore();
   }
 
-  Paint _createShapeFillPaint(ShapeData shape) {
+  Paint _buildShapeFillPaint(ShapeData shape) {
     return Paint()
       ..color = shape.color.withAlpha((shape.color.alpha * 0.5).round())
       ..style = PaintingStyle.fill;
   }
 
-  Paint _createShapeStrokePaint(bool isSelected) {
+  Paint _buildShapeStrokePaint(bool isSelected) {
     return Paint()
       ..color = isSelected ? Colors.orange : Colors.black26
       ..strokeWidth = isSelected ? 4 / scale : 1 / scale
       ..style = PaintingStyle.stroke;
   }
 
-  Paint _createHandleFillPaint() {
+  Paint _buildHandleFillPaint() {
     return Paint()
       ..color = Colors.blue.withOpacity(0.7)
       ..style = PaintingStyle.fill;
   }
 
-  Paint _createActiveHandleFillPaint() {
+  Paint _buildActiveHandleFillPaint() {
     return Paint()..color = Colors.red;
   }
 
-  Paint _createHandleStrokePaint() {
+  Paint _buildHandleStrokePaint() {
     return Paint()
       ..color = Colors.blueGrey
       ..strokeWidth = 1.5 / scale
       ..style = PaintingStyle.stroke;
   }
 
-  Paint _createSegmentIndicatorPaint() {
+  Paint _buildSegmentIndicatorPaint() {
     return Paint()
       ..color = Colors.blueAccent
       ..style = PaintingStyle.stroke
@@ -103,22 +103,22 @@ class RelationshipPainter extends CustomPainter {
       ).createShader(const Rect.fromLTWH(0, 0, 100, 0));
   }
 
-  Paint _createSegmentAddPointPaint() {
+  Paint _buildSegmentPointPaint() {
     return Paint()
       ..color = Colors.blue.withOpacity(0.7)
       ..style = PaintingStyle.fill;
   }
 
-  void _drawShape(Canvas canvas, ShapeData shape, bool isSelected) {
+  void _paintShape(Canvas canvas, ShapeData shape, bool isSelected) {
     final Path path = Path()..addPolygon(shape.points, true);
-    canvas.drawPath(path, _createShapeFillPaint(shape));
-    canvas.drawPath(path, _createShapeStrokePaint(isSelected));
+    canvas.drawPath(path, _buildShapeFillPaint(shape));
+    canvas.drawPath(path, _buildShapeStrokePaint(isSelected));
   }
 
-  void _drawVertexHandles(Canvas canvas, int shapeIndex, ShapeData shape) {
-    final Paint fillPaint = _createHandleFillPaint();
-    final Paint activeFillPaint = _createActiveHandleFillPaint();
-    final Paint strokePaint = _createHandleStrokePaint();
+  void _paintVertexHandles(Canvas canvas, ShapeData shape, int shapeIndex) {
+    final Paint fillPaint = _buildHandleFillPaint();
+    final Paint activeFillPaint = _buildActiveHandleFillPaint();
+    final Paint strokePaint = _buildHandleStrokePaint();
 
     for (int j = 0; j < shape.points.length; j++) {
       final Offset point = shape.points[j];
@@ -133,13 +133,12 @@ class RelationshipPainter extends CustomPainter {
     }
   }
 
-  void _drawAddPointIndicators(Canvas canvas, ShapeData shape, Paint indicatorPaint, Paint pointPaint) {
+  void _paintAddPointIndicators(Canvas canvas, ShapeData shape, Paint indicatorPaint, Paint pointPaint) {
     for (int j = 0; j < shape.points.length; j++) {
       final Offset p1 = shape.points[j];
       final Offset p2 = shape.points[(j + 1) % shape.points.length];
       final Offset midPoint = Offset((p1.dx + p2.dx) / 2, (p1.dy + p2.dy) / 2);
-      final Path dashedPath = _buildDashedPath(p1, p2);
-      canvas.drawPath(dashedPath, indicatorPaint);
+      canvas.drawPath(_buildDashedPath(p1, p2), indicatorPaint);
       canvas.drawCircle(midPoint, handleRadius / 2 / scale, pointPaint);
     }
   }
@@ -173,7 +172,7 @@ class RelationshipPainter extends CustomPainter {
     return isFirst ? selectedIndices.first : selectedIndices.last;
   }
 
-  void _drawShapeLabel(Canvas canvas, String labelText, List<Offset> points, TextPainter textPainter) {
+  void _paintShapeLabel(Canvas canvas, String labelText, List<Offset> points, TextPainter textPainter) {
     final Offset center = _polygonCentroid(points);
     textPainter.text = TextSpan(
       text: labelText,
@@ -194,20 +193,35 @@ class RelationshipPainter extends CustomPainter {
 
   Offset _polygonCentroid(List<Offset> points) {
     if (points.isEmpty) return Offset.zero;
-    Offset sum = Offset.zero;
-    for (final Offset point in points) {
-      sum += point;
+    if (points.length == 1) return points.first;
+
+    double area = 0.0;
+    double centroidX = 0.0;
+    double centroidY = 0.0;
+
+    for (int i = 0, j = points.length - 1; i < points.length; j = i++) {
+      final Offset current = points[i];
+      final Offset previous = points[j];
+      final double cross = previous.dx * current.dy - current.dx * previous.dy;
+      area += cross;
+      centroidX += (previous.dx + current.dx) * cross;
+      centroidY += (previous.dy + current.dy) * cross;
     }
-    return Offset(sum.dx / points.length, sum.dy / points.length);
+
+    area *= 0.5;
+    if (area.abs() < 1e-9) {
+      return Offset(
+        points.map((p) => p.dx).reduce((a, b) => a + b) / points.length,
+        points.map((p) => p.dy).reduce((a, b) => a + b) / points.length,
+      );
+    }
+
+    return Offset(centroidX / (6 * area), centroidY / (6 * area));
   }
 
   @override
   bool shouldRepaint(covariant RelationshipPainter oldDelegate) {
-    if (!identical(shapes, oldDelegate.shapes)) return true;
-    if (shapes.length != oldDelegate.shapes.length) return true;
-    for (int i = 0; i < shapes.length; i++) {
-      if (!identical(shapes[i], oldDelegate.shapes[i])) return true;
-    }
+    if (!listEquals(shapes, oldDelegate.shapes)) return true;
     if (!listEquals(selectedIndices, oldDelegate.selectedIndices)) return true;
     if (draggingShapeIndex != oldDelegate.draggingShapeIndex) return true;
     if (draggingPointIndex != oldDelegate.draggingPointIndex) return true;
