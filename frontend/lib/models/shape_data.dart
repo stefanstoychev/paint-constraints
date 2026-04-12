@@ -29,6 +29,33 @@ class ShapeRelationship {
 
   @override
   int get hashCode => Object.hash(sourceShapeIndex, targetShapeIndex, relationship);
+
+  /// Convert to JSON for serialization
+  Map<String, dynamic> toJson() {
+    return {
+      'sourceShapeIndex': sourceShapeIndex,
+      'targetShapeIndex': targetShapeIndex,
+      'component': relationship.component.name,
+      'operator': relationship.operator.name,
+      'offset': relationship.offset,
+    };
+  }
+
+  /// Create from JSON
+  factory ShapeRelationship.fromJson(Map<String, dynamic> json) {
+    final component = ColorComponent.values.firstWhere(
+      (e) => e.name == json['component'],
+    );
+    final operator = ComparisonOperator.values.firstWhere(
+      (e) => e.name == json['operator'],
+    );
+    final relationship = ColorRelationship(component, operator, json['offset'] as double);
+    return ShapeRelationship(
+      json['sourceShapeIndex'] as int,
+      json['targetShapeIndex'] as int,
+      relationship,
+    );
+  }
 }
 
 class ShapeData {

@@ -45,7 +45,7 @@ class _ShapeEditorState extends State<ShapeEditor> {
   final ColorConstraints colorConstraints = ColorConstraints.withCommonRelationships();
 
   // Store active relationships between shapes
-  final List<ShapeRelationship> activeRelationships = <ShapeRelationship>[];
+  List<ShapeRelationship> activeRelationships = <ShapeRelationship>[];
 
   double _currentScale = 1.0;
   Offset _currentOffset = Offset.zero;
@@ -433,8 +433,10 @@ class _ShapeEditorState extends State<ShapeEditor> {
 
   Future<void> _saveShapes() async {
     final prefs = await SharedPreferences.getInstance();
-    final json = jsonEncode(allShapes.map((shape) => shape.toJson()).toList());
-    await prefs.setString('saved_shapes', json);
+    final shapesJson = jsonEncode(allShapes.map((shape) => shape.toJson()).toList());
+    final relationshipsJson = jsonEncode(activeRelationships.map((rel) => rel.toJson()).toList());
+    await prefs.setString('saved_shapes', shapesJson);
+    await prefs.setString('saved_relationships', relationshipsJson);
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -447,14 +449,21 @@ class _ShapeEditorState extends State<ShapeEditor> {
 
   Future<void> _loadShapes() async {
     final prefs = await SharedPreferences.getInstance();
-    final json = prefs.getString('saved_shapes');
-    if (json != null) {
+    final shapesJson = prefs.getString('saved_shapes');
+    final relationshipsJson = prefs.getString('saved_relationships');
+    if (shapesJson != null) {
       try {
-        final List<dynamic> decoded = jsonDecode(json);
+        final List<dynamic> shapesDecoded = jsonDecode(shapesJson);
+        final List<ShapeRelationship> relationshipsDecoded = relationshipsJson != null
+            ? (jsonDecode(relationshipsJson) as List<dynamic>)
+                .map((item) => ShapeRelationship.fromJson(item as Map<String, dynamic>))
+                .toList()
+            : <ShapeRelationship>[];
         setState(() {
-          allShapes = decoded
+          allShapes = shapesDecoded
               .map((item) => ShapeData.fromJson(item as Map<String, dynamic>))
               .toList();
+          activeRelationships = relationshipsDecoded;
           selectedIndices.clear();
           _selectedVertexIndex = null;
         });
