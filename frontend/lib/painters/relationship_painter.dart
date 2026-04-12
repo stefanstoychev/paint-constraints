@@ -1,10 +1,12 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/models/shape_data.dart';
+import 'package:frontend/models/color_constraints.dart';
 
 class RelationshipPainter extends CustomPainter {
   final List<ShapeData> shapes;
   final List<int> selectedIndices;
+  final List<ShapeRelationship> activeRelationships;
   final int? draggingShapeIndex;
   final int? draggingPointIndex;
   final int? selectedVertexIndex;
@@ -18,6 +20,7 @@ class RelationshipPainter extends CustomPainter {
   RelationshipPainter({
     required this.shapes,
     required this.selectedIndices,
+    required this.activeRelationships,
     this.draggingShapeIndex,
     this.draggingPointIndex,
     this.selectedVertexIndex,
@@ -62,6 +65,9 @@ class RelationshipPainter extends CustomPainter {
         _paintShapeLabel(canvas, labelText, shape.points, textPainter);
       }
     }
+
+    // Paint relationship lines
+    _paintRelationships(canvas, textPainter);
 
     canvas.restore();
   }
@@ -204,6 +210,126 @@ class RelationshipPainter extends CustomPainter {
     canvas.restore();
   }
 
+  void _paintRelationships(Canvas canvas, TextPainter textPainter) {
+    final Paint linePaint = Paint()
+      ..color = Colors.blue.withOpacity(0.7)
+      ..strokeWidth = 2.0 / scale
+      ..style = PaintingStyle.stroke;
+
+    final Paint arrowPaint = Paint()
+      ..color = Colors.blue.withOpacity(0.7)
+      ..style = PaintingStyle.fill;
+
+    for (final ShapeRelationship relationship in activeRelationships) {
+      if (relationship.sourceShapeIndex >= shapes.length ||
+          relationship.targetShapeIndex >= shapes.length) {
+        continue;
+      }
+
+      final ShapeData sourceShape = shapes[relationship.sourceShapeIndex];
+      final ShapeData targetShape = shapes[relationship.targetShapeIndex];
+
+      final Offset sourceCenter = _polygonCentroid(sourceShape.points);
+      final Offset targetCenter = _polygonCentroid(targetShape.points);
+
+      // Draw the line
+      canvas.drawLine(sourceCenter, targetCenter, linePaint);
+
+      // Draw arrowhead at target end
+      _drawArrowhead(canvas, sourceCenter, targetCenter, arrowPaint);
+
+      // Draw relationship text in the middle with an offset so multiple labels don't overlap.
+      final Offset direction = targetCenter - sourceCenter;
+      final double distance = direction.distance;
+      final Offset normalizedDirection = distance == 0 ? const Offset(0, 0) : direction / distance;
+      final Offset perpendicular = Offset(-normalizedDirection.dy, normalizedDirection.dx);
+      final Offset midPoint = Offset(
+        (sourceCenter.dx + targetCenter.dx) / 2,
+        (sourceCenter.dy + targetCenter.dy) / 2,
+      );
+      final double labelSpacing = 16.0;
+      final Offset labelOffset = perpendicular * _getRelationshipLabelOffset(relationship.relationship.component) * labelSpacing;
+
+      final String label = _getRelationshipLabel(relationship.relationship);
+      _paintRelationshipLabel(canvas, label, midPoint + labelOffset, textPainter);
+    }
+  }
+
+  double _getRelationshipLabelOffset(ColorComponent component) {
+    switch (component) {
+      case ColorComponent.hue:
+        return -1.0;
+      case ColorComponent.saturation:
+        return 0.0;
+      case ColorComponent.value:
+        return 1.0;
+    }
+  }
+
+  void _drawArrowhead(Canvas canvas, Offset from, Offset to, Paint paint) {
+    const double arrowSize = 8.0;
+    final Offset direction = (to - from);
+    final double length = direction.distance;
+    if (length == 0) return;
+
+    final Offset normalizedDirection = direction / length;
+    final Offset perpendicular = Offset(-normalizedDirection.dy, normalizedDirection.dx) * arrowSize * 0.5;
+
+    final Offset arrowTip = to;
+    final Offset arrowBase1 = to - normalizedDirection * arrowSize + perpendicular;
+    final Offset arrowBase2 = to - normalizedDirection * arrowSize - perpendicular;
+
+    final Path arrowPath = Path()
+      ..moveTo(arrowTip.dx, arrowTip.dy)
+      ..lineTo(arrowBase1.dx, arrowBase1.dy)
+      ..lineTo(arrowBase2.dx, arrowBase2.dy)
+      ..close();
+
+    canvas.drawPath(arrowPath, paint);
+  }
+
+  String _getRelationshipLabel(ColorRelationship relationship) {
+    final offsetStr = relationship.offset == 0
+        ? ''
+        : (relationship.offset > 0
+            ? ' + ${relationship.offset.toStringAsFixed(1)}'
+            : ' - ${relationship.offset.abs().toStringAsFixed(1)}');
+
+    final String prefix;
+    switch (relationship.component) {
+      case ColorComponent.hue:
+        prefix = 'h';
+        break;
+      case ColorComponent.saturation:
+        prefix = 's';
+        break;
+      case ColorComponent.value:
+        prefix = 'v';
+        break;
+    }
+
+    return '$prefix${relationship.operator.symbol}$offsetStr';
+  }
+
+  void _paintRelationshipLabel(Canvas canvas, String text, Offset position, TextPainter textPainter) {
+    textPainter.text = TextSpan(
+      text: text,
+      style: TextStyle(
+        color: Colors.blue.shade800,
+        fontSize: 16,
+        fontWeight: FontWeight.bold,
+        backgroundColor: Colors.white.withOpacity(0.8),
+      ),
+    );
+    textPainter.layout();
+    final double textScale = 1 / scale;
+    canvas.save();
+    canvas.translate(position.dx, position.dy);
+    canvas.scale(textScale);
+    textPainter.paint(canvas, Offset(-textPainter.width / 2, -textPainter.height / 2));
+    canvas.restore();
+  }
+
   void _paintBackgroundCanvas(Canvas canvas) {
     const Rect canvasRect = Rect.fromLTWH(20, 20, 460, 320);
     final Paint fillPaint = Paint()
@@ -258,6 +384,7 @@ class RelationshipPainter extends CustomPainter {
     if (showAddPointIndicators != oldDelegate.showAddPointIndicators) return true;
     if (scale != oldDelegate.scale) return true;
     if (offset != oldDelegate.offset) return true;
+    if (!listEquals(activeRelationships, oldDelegate.activeRelationships)) return true;
     return false;
   }
 }

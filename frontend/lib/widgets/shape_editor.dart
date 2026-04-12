@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:frontend/models/color_constraints.dart';
 import 'package:frontend/models/shape_data.dart';
 import 'package:frontend/painters/relationship_painter.dart';
 import 'package:frontend/widgets/link_button.dart';
@@ -39,6 +40,11 @@ class _ShapeEditorState extends State<ShapeEditor> {
   List<int> selectedIndices = <int>[];
   bool isLinkMode = false;
   bool isEditVerticesMode = false;
+
+  final ColorConstraints colorConstraints = ColorConstraints.withCommonRelationships();
+
+  // Store active relationships between shapes
+  final List<ShapeRelationship> activeRelationships = <ShapeRelationship>[];
 
   double _currentScale = 1.0;
   Offset _currentOffset = Offset.zero;
@@ -92,36 +98,34 @@ class _ShapeEditorState extends State<ShapeEditor> {
     });
   }
 
-  void _applyRelationship(ColorComponent component, double offsetValue) {
+  void _applyRelationship(ColorRelationship relationship) {
     if (selectedIndices.length != 2) return;
     final int sourceIdx = selectedIndices.first;
     final int targetIdx = selectedIndices.last;
 
     setState(() {
-      final List<ShapeData> tempAllShapes = List<ShapeData>.from(allShapes);
-      final HSVColor sourceHsv = tempAllShapes[sourceIdx].hsv;
-      final HSVColor targetHsv = tempAllShapes[targetIdx].hsv;
-      HSVColor newTargetHsv;
+      // Create and store the relationship, replacing any existing relationship of the same type.
+      final shapeRelationship = ShapeRelationship(sourceIdx, targetIdx, relationship);
+      final int existingRelationshipIndex = activeRelationships.indexWhere(
+        (ShapeRelationship activeRelationship) =>
+            activeRelationship.hasSameType(shapeRelationship),
+      );
 
-      switch (component) {
-        case ColorComponent.hue:
-          double newHue = (sourceHsv.hue + offsetValue) % 360;
-          if (newHue < 0) newHue += 360;
-          newTargetHsv = targetHsv.withHue(newHue);
-          break;
-        case ColorComponent.saturation:
-          double newSaturation = (sourceHsv.saturation + offsetValue).clamp(
-            0.0,
-            1.0,
-          );
-          newTargetHsv = targetHsv.withSaturation(newSaturation);
-          break;
-        case ColorComponent.value:
-          double newValue = (sourceHsv.value + offsetValue).clamp(0.0, 1.0);
-          newTargetHsv = targetHsv.withValue(newValue);
-          break;
+      if (existingRelationshipIndex != -1) {
+        activeRelationships[existingRelationshipIndex] = shapeRelationship;
+      } else {
+        activeRelationships.add(shapeRelationship);
       }
 
+      // Apply the relationship immediately
+      final HSVColor targetHsv = allShapes[targetIdx].hsv;
+      final HSVColor newTargetHsv = colorConstraints.applyOffset(
+        targetHsv,
+        relationship.component,
+        relationship.offset,
+      );
+
+      final List<ShapeData> tempAllShapes = List<ShapeData>.from(allShapes);
       tempAllShapes[targetIdx] = tempAllShapes[targetIdx].copyWith(
         hsv: newTargetHsv,
       );
@@ -526,6 +530,7 @@ class _ShapeEditorState extends State<ShapeEditor> {
         ],
       ),
       body: Stack(
+        clipBehavior: Clip.none,
         children: <Widget>[
           GestureDetector(
             onTapDown: _handleTapDown,
@@ -538,6 +543,7 @@ class _ShapeEditorState extends State<ShapeEditor> {
                 painter: RelationshipPainter(
                   shapes: allShapes,
                   selectedIndices: selectedIndices,
+                  activeRelationships: activeRelationships,
                   draggingShapeIndex: _draggingShapeIndex,
                   draggingPointIndex: _draggingPointIndex,
                   selectedVertexIndex: _selectedVertexIndex,
@@ -552,6 +558,11 @@ class _ShapeEditorState extends State<ShapeEditor> {
               ),
             ),
           ),
+          Positioned(
+            top: 20,
+            right: 20,
+            child: _buildConstraintsLegend(),
+          ),
           if (isLinkMode && selectedIndices.length == 2)
             Positioned(
               bottom: 20,
@@ -565,7 +576,7 @@ class _ShapeEditorState extends State<ShapeEditor> {
                     mainAxisSize: MainAxisSize.min,
                     children: <Widget>[
                       const Text(
-                        'Define Relationship (B = A + X)',
+                        'Define Relationship (B constraint relative to A)',
                         style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
@@ -573,33 +584,18 @@ class _ShapeEditorState extends State<ShapeEditor> {
                       ),
                       const SizedBox(height: 10),
                       _buildRelationshipRow(
-                        'Hue (°)',
-                        ColorComponent.hue,
-                        <Map<String, dynamic>>[
-                          {'label': 'Analogous (+30°)', 'value': 30.0},
-                          {'label': 'Triadic (+120°)', 'value': 120.0},
-                          {'label': 'Complementary (+180°)', 'value': 180.0},
-                        ],
+                        'Hue Constraints',
+                        colorConstraints.relationships.where((r) => r.component == ColorComponent.hue).toList(),
                       ),
                       const SizedBox(height: 10),
                       _buildRelationshipRow(
-                        'Saturation',
-                        ColorComponent.saturation,
-                        <Map<String, dynamic>>[
-                          {'label': 'Same', 'value': 0.0},
-                          {'label': '+0.1', 'value': 0.1},
-                          {'label': '-0.1', 'value': -0.1},
-                        ],
+                        'Saturation Constraints',
+                        colorConstraints.relationships.where((r) => r.component == ColorComponent.saturation).toList(),
                       ),
                       const SizedBox(height: 10),
                       _buildRelationshipRow(
-                        'Value',
-                        ColorComponent.value,
-                        <Map<String, dynamic>>[
-                          {'label': 'Same', 'value': 0.0},
-                          {'label': '+0.1', 'value': 0.1},
-                          {'label': '-0.1', 'value': -0.1},
-                        ],
+                        'Value Constraints',
+                        colorConstraints.relationships.where((r) => r.component == ColorComponent.value).toList(),
                       ),
                     ],
                   ),
@@ -632,6 +628,82 @@ class _ShapeEditorState extends State<ShapeEditor> {
         style: TextStyle(color: isActive ? activeColor : Colors.grey),
       ),
     );
+  }
+
+  Widget _buildConstraintsLegend() {
+    final hue = colorConstraints.relationships.where((r) => r.component == ColorComponent.hue).toList();
+    final saturation = colorConstraints.relationships.where((r) => r.component == ColorComponent.saturation).toList();
+    final value = colorConstraints.relationships.where((r) => r.component == ColorComponent.value).toList();
+
+    return Card(
+      color: Colors.black87.withOpacity(0.9),
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            const Text(
+              'Color Constraints',
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            _buildConstraintSection('Hue', hue),
+            const SizedBox(height: 6),
+            _buildConstraintSection('Saturation', saturation),
+            const SizedBox(height: 6),
+            _buildConstraintSection('Value', value),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildConstraintSection(String title, List<ColorRelationship> relationships) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Text(title, style: const TextStyle(color: Colors.white70, fontSize: 12)),
+        const SizedBox(height: 4),
+        Wrap(
+          spacing: 6,
+          runSpacing: 6,
+          children: relationships.map<Widget>(_buildConstraintIndicator).toList(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildConstraintIndicator(ColorRelationship relationship) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white12,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.white24),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Icon(Icons.arrow_right_alt, size: 14, color: Colors.white70),
+          const SizedBox(width: 4),
+          Text(
+            _getConstraintLabel(relationship),
+            style: const TextStyle(color: Colors.white70, fontSize: 11),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _getConstraintLabel(ColorRelationship relationship) {
+    final offsetStr = relationship.offset == 0
+        ? ''
+        : (relationship.offset > 0
+            ? ' + ${relationship.offset.toStringAsFixed(1)}'
+            : ' - ${relationship.offset.abs().toStringAsFixed(1)}');
+
+    return '${relationship.operator.symbol}$offsetStr';
   }
 
   Widget _buildZoomControls(BuildContext context) {
@@ -688,8 +760,7 @@ class _ShapeEditorState extends State<ShapeEditor> {
 
   Widget _buildRelationshipRow(
     String title,
-    ColorComponent component,
-    List<Map<String, dynamic>> options,
+    List<ColorRelationship> relationships,
   ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -701,12 +772,11 @@ class _ShapeEditorState extends State<ShapeEditor> {
         const SizedBox(height: 5),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: options
+          children: relationships
               .map<Widget>(
-                (Map<String, dynamic> option) => LinkButton(
-                  label: option['label'] as String,
-                  component: component,
-                  offsetValue: option['value'] as double,
+                (ColorRelationship relationship) => LinkButton(
+                  label: _getRelationshipLabel(relationship),
+                  relationship: relationship,
                   onPressed: _applyRelationship,
                 ),
               )
@@ -714,5 +784,22 @@ class _ShapeEditorState extends State<ShapeEditor> {
         ),
       ],
     );
+  }
+
+  String _getRelationshipLabel(ColorRelationship relationship) {
+    final offsetStr = relationship.offset == 0
+        ? ''
+        : (relationship.offset > 0
+            ? ' + ${relationship.offset.toStringAsFixed(1)}'
+            : ' - ${relationship.offset.abs().toStringAsFixed(1)}');
+
+    switch (relationship.component) {
+      case ColorComponent.hue:
+        return 'Hue ${relationship.operator.symbol}$offsetStr';
+      case ColorComponent.saturation:
+        return 'Sat ${relationship.operator.symbol}$offsetStr';
+      case ColorComponent.value:
+        return 'Val ${relationship.operator.symbol}$offsetStr';
+    }
   }
 }

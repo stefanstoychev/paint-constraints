@@ -1,7 +1,35 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:frontend/models/color_constraints.dart';
 
 enum ColorComponent { hue, saturation, value }
+
+/// Represents a relationship between two shapes
+class ShapeRelationship {
+  final int sourceShapeIndex;
+  final int targetShapeIndex;
+  final ColorRelationship relationship;
+
+  const ShapeRelationship(this.sourceShapeIndex, this.targetShapeIndex, this.relationship);
+
+  bool hasSameType(ShapeRelationship other) {
+    return other.sourceShapeIndex == sourceShapeIndex &&
+        other.targetShapeIndex == targetShapeIndex &&
+        other.relationship.component == relationship.component;
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is ShapeRelationship &&
+        other.sourceShapeIndex == sourceShapeIndex &&
+        other.targetShapeIndex == targetShapeIndex &&
+        other.relationship == relationship;
+  }
+
+  @override
+  int get hashCode => Object.hash(sourceShapeIndex, targetShapeIndex, relationship);
+}
 
 class ShapeData {
   final List<Offset> points;

@@ -1,24 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/models/shape_data.dart';
+import 'package:frontend/models/color_constraints.dart';
 
 class LinkButton extends StatelessWidget {
   final String label;
-  final ColorComponent component;
-  final double offsetValue;
-  final void Function(ColorComponent, double) onPressed;
+  final ColorRelationship relationship;
+  final void Function(ColorRelationship) onPressed;
 
   const LinkButton({
     super.key,
     required this.label,
-    required this.component,
-    required this.offsetValue,
+    required this.relationship,
     required this.onPressed,
   });
 
   @override
   Widget build(BuildContext context) {
     return ElevatedButton(
-      onPressed: () => onPressed(component, offsetValue),
+      onPressed: () => onPressed(relationship),
       style: ElevatedButton.styleFrom(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         minimumSize: Size.zero,
