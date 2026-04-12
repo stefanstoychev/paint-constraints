@@ -618,8 +618,8 @@ class _ShapeEditorState extends State<ShapeEditor> {
 
   Widget _buildZoomControls(BuildContext context) {
     return Positioned(
-      top: 20,
-      right: 20,
+      bottom: 20,
+      left: 20,
       child: Card(
         color: Colors.black54,
         child: Padding(
