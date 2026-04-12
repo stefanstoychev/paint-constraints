@@ -683,7 +683,6 @@ class _ShapeEditorState extends State<ShapeEditor> {
               ),
             ),
           ),
-          Positioned(top: 20, right: 20, child: _buildConstraintsLegend()),
           if (isLinkMode && selectedIndices.length == 2)
             Positioned(
               bottom: 20,
@@ -757,99 +756,6 @@ class _ShapeEditorState extends State<ShapeEditor> {
         style: TextStyle(color: isActive ? activeColor : Colors.grey),
       ),
     );
-  }
-
-  Widget _buildConstraintsLegend() {
-    final hue = colorConstraints.relationships
-        .where((r) => r.component == ColorComponent.hue)
-        .toList();
-    final saturation = colorConstraints.relationships
-        .where((r) => r.component == ColorComponent.saturation)
-        .toList();
-    final value = colorConstraints.relationships
-        .where((r) => r.component == ColorComponent.value)
-        .toList();
-
-    return Card(
-      color: Colors.black87.withOpacity(0.9),
-      child: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            const Text(
-              'Color Constraints',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            _buildConstraintSection('Hue', hue),
-            const SizedBox(height: 6),
-            _buildConstraintSection('Saturation', saturation),
-            const SizedBox(height: 6),
-            _buildConstraintSection('Value', value),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildConstraintSection(
-    String title,
-    List<ColorRelationship> relationships,
-  ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        Text(
-          title,
-          style: const TextStyle(color: Colors.white70, fontSize: 12),
-        ),
-        const SizedBox(height: 4),
-        Wrap(
-          spacing: 6,
-          runSpacing: 6,
-          children: relationships
-              .map<Widget>(_buildConstraintIndicator)
-              .toList(),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildConstraintIndicator(ColorRelationship relationship) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: Colors.white12,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.white24),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          Icon(Icons.arrow_right_alt, size: 14, color: Colors.white70),
-          const SizedBox(width: 4),
-          Text(
-            _getConstraintLabel(relationship),
-            style: const TextStyle(color: Colors.white70, fontSize: 11),
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _getConstraintLabel(ColorRelationship relationship) {
-    final offsetStr = relationship.offset == 0
-        ? ''
-        : (relationship.offset > 0
-              ? ' + ${relationship.offset.toStringAsFixed(1)}'
-              : ' - ${relationship.offset.abs().toStringAsFixed(1)}');
-
-    return '${relationship.operator.symbol}$offsetStr';
   }
 
   Widget _buildZoomControls(BuildContext context) {
