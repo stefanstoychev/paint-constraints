@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/models/color_constraints.dart';
+import 'package:frontend/models/color_relationship.dart';
 
 class LinkButton extends StatelessWidget {
   final String label;

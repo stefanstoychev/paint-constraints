@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:frontend/models/color_constraints.dart';
-
-enum ColorComponent { hue, saturation, value }
+import 'color_component.dart';
+import 'color_relationship.dart';
+import 'comparison_operator.dart';
 
 /// Represents a relationship between two shapes
 class ShapeRelationship {

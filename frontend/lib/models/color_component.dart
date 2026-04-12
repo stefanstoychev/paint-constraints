@@ -1,0 +1,1 @@
+enum ColorComponent { hue, saturation, value }

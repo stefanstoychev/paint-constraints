@@ -1,7 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:frontend/models/color_component.dart';
+import 'package:frontend/models/color_relationship.dart';
 import 'package:frontend/models/shape_data.dart';
-import 'package:frontend/models/color_constraints.dart';
 
 class RelationshipPainter extends CustomPainter {
   final List<ShapeData> shapes;
