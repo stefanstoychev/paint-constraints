@@ -40,6 +40,7 @@ class _ShapeEditorState extends State<ShapeEditor> {
   List<int> selectedIndices = <int>[];
   bool isLinkMode = false;
   bool isEditVerticesMode = false;
+  bool showRelationships = true;
 
   final ColorConstraints colorConstraints = ColorConstraints.withCommonRelationships();
 
@@ -102,6 +103,20 @@ class _ShapeEditorState extends State<ShapeEditor> {
     if (selectedIndices.length != 2) return;
     final int sourceIdx = selectedIndices.first;
     final int targetIdx = selectedIndices.last;
+
+    // Prevent creating a reverse relationship
+    final bool hasReverseRelationship = activeRelationships.any(
+      (ShapeRelationship r) =>
+          r.sourceShapeIndex == targetIdx &&
+          r.targetShapeIndex == sourceIdx &&
+          r.relationship.component == relationship.component,
+    );
+    if (hasReverseRelationship) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Reverse relationship already exists')),
+      );
+      return;
+    }
 
     setState(() {
       // Create and store the relationship, replacing any existing relationship of the same type.
@@ -517,6 +532,12 @@ class _ShapeEditorState extends State<ShapeEditor> {
                   : null,
               tooltip: 'Delete selected vertex',
             ),
+          if (!isLinkMode)
+            IconButton(
+              icon: Icon(showRelationships ? Icons.visibility : Icons.visibility_off),
+              onPressed: () => setState(() => showRelationships = !showRelationships),
+              tooltip: showRelationships ? 'Hide relationships' : 'Show relationships',
+            ),
           IconButton(
             icon: const Icon(Icons.save),
             onPressed: _saveShapes,
@@ -551,6 +572,7 @@ class _ShapeEditorState extends State<ShapeEditor> {
                   isLinkMode: isLinkMode,
                   isEditVerticesMode: isEditVerticesMode,
                   showAddPointIndicators: showAddPointIndicators,
+                  showRelationships: showRelationships,
                   scale: _currentScale,
                   offset: _currentOffset,
                 ),

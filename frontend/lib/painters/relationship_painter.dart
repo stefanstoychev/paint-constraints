@@ -14,6 +14,7 @@ class RelationshipPainter extends CustomPainter {
   final bool isLinkMode;
   final bool isEditVerticesMode;
   final bool showAddPointIndicators;
+  final bool showRelationships;
   final double scale;
   final Offset offset;
 
@@ -28,6 +29,7 @@ class RelationshipPainter extends CustomPainter {
     required this.isLinkMode,
     required this.isEditVerticesMode,
     required this.showAddPointIndicators,
+    required this.showRelationships,
     required this.scale,
     required this.offset,
   });
@@ -67,7 +69,9 @@ class RelationshipPainter extends CustomPainter {
     }
 
     // Paint relationship lines
-    _paintRelationships(canvas, textPainter);
+    if (showRelationships || isLinkMode) {
+      _paintRelationships(canvas, textPainter);
+    }
 
     canvas.restore();
   }
@@ -382,6 +386,7 @@ class RelationshipPainter extends CustomPainter {
     if (isEditVerticesMode != oldDelegate.isEditVerticesMode) return true;
     if (handleRadius != oldDelegate.handleRadius) return true;
     if (showAddPointIndicators != oldDelegate.showAddPointIndicators) return true;
+    if (showRelationships != oldDelegate.showRelationships) return true;
     if (scale != oldDelegate.scale) return true;
     if (offset != oldDelegate.offset) return true;
     if (!listEquals(activeRelationships, oldDelegate.activeRelationships)) return true;
