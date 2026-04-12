@@ -1,0 +1,41 @@
+name: Build and Deploy Flutter Web
+
+on:
+  push:
+    branches:
+      - main # Change this to your default branch name
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout the code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Setup Flutter
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+# Use 'working-directory' so the action knows where pubspec.yaml is
+      - name: Install dependencies
+        run: flutter pub get
+        working-directory: frontend
+        
+      # 4. Build for Web
+      # Replace <REPOSITORY_NAME> with your repo name (e.g., /my-app/) 
+      # if you aren't using a custom domain.
+      - name: Build Web
+        run: flutter build web --release --base-href "/paint-constraints/"
+
+      # 5. Deploy to GitHub Pages
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./build/web
+          publish_branch: gh-pages
