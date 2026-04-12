@@ -47,9 +47,11 @@ class _ShapeEditorState extends State<ShapeEditor> {
 
   int? _draggingShapeIndex;
   int? _draggingPointIndex;
+  bool _isDraggingWholeShape = false;
   int? _selectedVertexIndex;
   Offset? _draggedPointInitialPosition;
   Offset? _dragStartWorldPoint;
+  Map<int, List<Offset>>? _draggedShapesInitialPoints;
 
   static const double _handleRadius = 25.0;
   static const double _segmentTapTolerance = 10.0;
@@ -74,8 +76,8 @@ class _ShapeEditorState extends State<ShapeEditor> {
           .map<Offset>((Offset p) => p + offsetTranslation)
           .toList();
 
-      final double randomHue =
-          (DateTime.now().millisecond.toDouble() % 360).roundToDouble();
+      final double randomHue = (DateTime.now().millisecond.toDouble() % 360)
+          .roundToDouble();
 
       allShapes = <ShapeData>[
         ...allShapes,
@@ -107,8 +109,10 @@ class _ShapeEditorState extends State<ShapeEditor> {
           newTargetHsv = targetHsv.withHue(newHue);
           break;
         case ColorComponent.saturation:
-          double newSaturation =
-              (sourceHsv.saturation + offsetValue).clamp(0.0, 1.0);
+          double newSaturation = (sourceHsv.saturation + offsetValue).clamp(
+            0.0,
+            1.0,
+          );
           newTargetHsv = targetHsv.withSaturation(newSaturation);
           break;
         case ColorComponent.value:
@@ -117,8 +121,9 @@ class _ShapeEditorState extends State<ShapeEditor> {
           break;
       }
 
-      tempAllShapes[targetIdx] =
-          tempAllShapes[targetIdx].copyWith(hsv: newTargetHsv);
+      tempAllShapes[targetIdx] = tempAllShapes[targetIdx].copyWith(
+        hsv: newTargetHsv,
+      );
       allShapes = tempAllShapes;
     });
   }
@@ -139,13 +144,13 @@ class _ShapeEditorState extends State<ShapeEditor> {
   }
 
   double _distanceToSegment(Offset p, Offset p1, Offset p2) {
-    final double l2 =
-        (pow(p2.dx - p1.dx, 2) + pow(p2.dy - p1.dy, 2)).toDouble();
+    final double l2 = (pow(p2.dx - p1.dx, 2) + pow(p2.dy - p1.dy, 2))
+        .toDouble();
     if (l2 == 0.0) return (p - p1).distance;
 
     final double t =
         ((p.dx - p1.dx) * (p2.dx - p1.dx) + (p.dy - p1.dy) * (p2.dy - p1.dy)) /
-            l2;
+        l2;
 
     late Offset projection;
     if (t < 0.0) {
@@ -166,7 +171,8 @@ class _ShapeEditorState extends State<ShapeEditor> {
 
     final Offset worldPosition = _screenToWorld(details.localPosition);
     final double worldHandleRadius = _handleRadius / _currentScale;
-    final double worldSegmentTapTolerance = _segmentTapTolerance / _currentScale;
+    final double worldSegmentTapTolerance =
+        _segmentTapTolerance / _currentScale;
 
     if (isEditVerticesMode && selectedIndices.length == 1) {
       final int selectedShapeIndex = selectedIndices.first;
@@ -188,13 +194,18 @@ class _ShapeEditorState extends State<ShapeEditor> {
         if (_distanceToSegment(worldPosition, p1, p2) <
             worldSegmentTapTolerance) {
           setState(() {
-            final List<ShapeData> tempAllShapes = List<ShapeData>.from(allShapes);
-            final List<Offset> currentPoints =
-                List<Offset>.from(tempAllShapes[selectedShapeIndex].points);
+            final List<ShapeData> tempAllShapes = List<ShapeData>.from(
+              allShapes,
+            );
+            final List<Offset> currentPoints = List<Offset>.from(
+              tempAllShapes[selectedShapeIndex].points,
+            );
             currentPoints.insert(i + 1, worldPosition);
 
             tempAllShapes[selectedShapeIndex] =
-                tempAllShapes[selectedShapeIndex].copyWith(points: currentPoints);
+                tempAllShapes[selectedShapeIndex].copyWith(
+                  points: currentPoints,
+                );
             allShapes = tempAllShapes;
           });
           return;
@@ -227,9 +238,7 @@ class _ShapeEditorState extends State<ShapeEditor> {
             }
           }
         } else {
-          if (selectedIndices.contains(tappedShapeIndex)) {
-            selectedIndices.remove(tappedShapeIndex);
-          } else {
+          if (!selectedIndices.contains(tappedShapeIndex)) {
             selectedIndices.add(tappedShapeIndex);
           }
         }
@@ -248,10 +257,13 @@ class _ShapeEditorState extends State<ShapeEditor> {
 
     _draggingShapeIndex = null;
     _draggingPointIndex = null;
+    _isDraggingWholeShape = false;
     _draggedPointInitialPosition = null;
     _dragStartWorldPoint = null;
+    _draggedShapesInitialPoints = null;
 
-    if (isEditVerticesMode && selectedIndices.length == 1 &&
+    if (isEditVerticesMode &&
+        selectedIndices.length == 1 &&
         details.pointerCount == 1) {
       final Offset worldPosition = _screenToWorld(localFocalPoint);
       final double worldHandleRadius = _handleRadius / _currentScale;
@@ -270,21 +282,64 @@ class _ShapeEditorState extends State<ShapeEditor> {
         }
       }
     }
+
+    if (!isLinkMode &&
+        details.pointerCount == 1 &&
+        selectedIndices.isNotEmpty) {
+      final Offset worldPosition = _screenToWorld(localFocalPoint);
+      for (final int index in selectedIndices.reversed) {
+        if (_isPointInPolygon(worldPosition, allShapes[index].points)) {
+          _isDraggingWholeShape = true;
+          _dragStartWorldPoint = worldPosition;
+          _draggedShapesInitialPoints = <int, List<Offset>>{};
+          for (final int shapeIndex in selectedIndices) {
+            _draggedShapesInitialPoints![shapeIndex] =
+                List<Offset>.from(allShapes[shapeIndex].points);
+          }
+          return;
+        }
+      }
+    }
   }
 
   void _handleScaleUpdate(ScaleUpdateDetails details) {
     setState(() {
       final Offset localFocalPoint = details.localFocalPoint;
 
-      if (_draggingShapeIndex != null && _draggingPointIndex != null &&
+      if (_isDraggingWholeShape &&
+          details.pointerCount == 1 &&
+          _dragStartWorldPoint != null &&
+          _draggedShapesInitialPoints != null) {
+        final Offset currentWorldFocalPoint = _screenToWorld(localFocalPoint);
+        final Offset deltaWorld =
+            currentWorldFocalPoint - _dragStartWorldPoint!;
+
+        final List<ShapeData> tempAllShapes = List<ShapeData>.from(allShapes);
+        for (final int shapeIndex in selectedIndices) {
+          final List<Offset>? initialPoints =
+              _draggedShapesInitialPoints![shapeIndex];
+          if (initialPoints != null) {
+            final List<Offset> updatedPoints = initialPoints
+                .map<Offset>((Offset point) => point + deltaWorld)
+                .toList();
+            tempAllShapes[shapeIndex] = tempAllShapes[shapeIndex].copyWith(
+              points: updatedPoints,
+            );
+          }
+        }
+        allShapes = tempAllShapes;
+      } else if (_draggingShapeIndex != null &&
+          _draggingPointIndex != null &&
           details.pointerCount == 1) {
         _selectedVertexIndex = _draggingPointIndex;
         final Offset currentWorldFocalPoint = _screenToWorld(localFocalPoint);
-        final Offset deltaWorld = currentWorldFocalPoint - _dragStartWorldPoint!;
+        final Offset deltaWorld =
+            currentWorldFocalPoint - _dragStartWorldPoint!;
 
         final List<ShapeData> tempAllShapes = List<ShapeData>.from(allShapes);
-        final List<Offset> updatedPoints =
-            List<Offset>.from(tempAllShapes[_draggingShapeIndex!].points);
+        final List<Offset> updatedPoints = List<Offset>.from(
+          tempAllShapes[_draggingShapeIndex!].points,
+        );
         updatedPoints[_draggingPointIndex!] =
             _draggedPointInitialPosition! + deltaWorld;
 
@@ -305,15 +360,18 @@ class _ShapeEditorState extends State<ShapeEditor> {
   void _handleScaleEnd(ScaleEndDetails details) {
     _draggingShapeIndex = null;
     _draggingPointIndex = null;
+    _isDraggingWholeShape = false;
     _draggedPointInitialPosition = null;
     _dragStartWorldPoint = null;
+    _draggedShapesInitialPoints = null;
 
     _previousScale = _currentScale;
     _previousOffset = _currentOffset;
   }
 
   void _deleteSelectedVertex() {
-    if (!isEditVerticesMode || selectedIndices.length != 1 ||
+    if (!isEditVerticesMode ||
+        selectedIndices.length != 1 ||
         _selectedVertexIndex == null) {
       return;
     }
@@ -326,7 +384,9 @@ class _ShapeEditorState extends State<ShapeEditor> {
       final List<ShapeData> tempShapes = List<ShapeData>.from(allShapes);
       final List<Offset> updatedPoints = List<Offset>.from(points)
         ..removeAt(_selectedVertexIndex!);
-      tempShapes[shapeIndex] = tempShapes[shapeIndex].copyWith(points: updatedPoints);
+      tempShapes[shapeIndex] = tempShapes[shapeIndex].copyWith(
+        points: updatedPoints,
+      );
       allShapes = tempShapes;
       _selectedVertexIndex = null;
       _draggingPointIndex = null;
@@ -336,13 +396,14 @@ class _ShapeEditorState extends State<ShapeEditor> {
 
   Future<void> _saveShapes() async {
     final prefs = await SharedPreferences.getInstance();
-    final json = jsonEncode(
-      allShapes.map((shape) => shape.toJson()).toList(),
-    );
+    final json = jsonEncode(allShapes.map((shape) => shape.toJson()).toList());
     await prefs.setString('saved_shapes', json);
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Shapes saved'), duration: Duration(seconds: 1)),
+        const SnackBar(
+          content: Text('Shapes saved'),
+          duration: Duration(seconds: 1),
+        ),
       );
     }
   }
@@ -362,14 +423,17 @@ class _ShapeEditorState extends State<ShapeEditor> {
         });
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Shapes loaded'), duration: Duration(seconds: 1)),
+            const SnackBar(
+              content: Text('Shapes loaded'),
+              duration: Duration(seconds: 1),
+            ),
           );
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error loading shapes: $e')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Error loading shapes: $e')));
         }
       }
     }
@@ -392,8 +456,8 @@ class _ShapeEditorState extends State<ShapeEditor> {
           isEditVerticesMode
               ? 'Edit Vertices Mode'
               : isLinkMode
-                  ? 'Select 2 Shapes to Link'
-                  : 'Shape Operations',
+              ? 'Select 2 Shapes to Link'
+              : 'Shape Operations',
         ),
         actions: <Widget>[
           _buildModeButton(
@@ -423,9 +487,12 @@ class _ShapeEditorState extends State<ShapeEditor> {
           if (isEditVerticesMode)
             IconButton(
               icon: const Icon(Icons.delete),
-              color: _selectedVertexIndex != null ? Colors.white : Colors.white38,
-              onPressed:
-                  _selectedVertexIndex != null ? _deleteSelectedVertex : null,
+              color: _selectedVertexIndex != null
+                  ? Colors.white
+                  : Colors.white38,
+              onPressed: _selectedVertexIndex != null
+                  ? _deleteSelectedVertex
+                  : null,
               tooltip: 'Delete selected vertex',
             ),
           IconButton(
