@@ -98,7 +98,7 @@ class RelationshipPainter extends CustomPainter {
 
   Paint _buildShapeFillPaint(ShapeData shape) {
     return Paint()
-      ..color = shape.color.withAlpha((shape.color.alpha * 0.5).round())
+      ..color = shape.color
       ..style = PaintingStyle.fill;
   }
 

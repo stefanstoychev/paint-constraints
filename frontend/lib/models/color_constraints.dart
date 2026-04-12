@@ -48,22 +48,50 @@ class ColorConstraints {
         ColorRelationship(ColorComponent.hue, ComparisonOperator.lessThan),
         ColorRelationship(ColorComponent.hue, ComparisonOperator.greaterThan),
         ColorRelationship(ColorComponent.hue, ComparisonOperator.equal),
-        ColorRelationship(ColorComponent.hue, ComparisonOperator.lessThan, 30.0), // Less than source + 30°
-        ColorRelationship(ColorComponent.hue, ComparisonOperator.greaterThan, 30.0), // Greater than source + 30°
-
+        ColorRelationship(
+          ColorComponent.hue,
+          ComparisonOperator.lessThan,
+          30.0,
+        ), // Less than source + 30°
+        ColorRelationship(
+          ColorComponent.hue,
+          ComparisonOperator.greaterThan,
+          30.0,
+        ), // Greater than source + 30°
         // Saturation relationships
-        ColorRelationship(ColorComponent.saturation, ComparisonOperator.lessThan),
-        ColorRelationship(ColorComponent.saturation, ComparisonOperator.greaterThan),
+        ColorRelationship(
+          ColorComponent.saturation,
+          ComparisonOperator.lessThan,
+        ),
+        ColorRelationship(
+          ColorComponent.saturation,
+          ComparisonOperator.greaterThan,
+        ),
         ColorRelationship(ColorComponent.saturation, ComparisonOperator.equal),
-        ColorRelationship(ColorComponent.saturation, ComparisonOperator.lessThan, 0.1), // Less than source + 0.1
-        ColorRelationship(ColorComponent.saturation, ComparisonOperator.greaterThan, 0.1), // Greater than source + 0.1
-
+        ColorRelationship(
+          ColorComponent.saturation,
+          ComparisonOperator.lessThan,
+          0.1,
+        ), // Less than source + 0.1
+        ColorRelationship(
+          ColorComponent.saturation,
+          ComparisonOperator.greaterThan,
+          0.1,
+        ), // Greater than source + 0.1
         // Value relationships
         ColorRelationship(ColorComponent.value, ComparisonOperator.lessThan),
         ColorRelationship(ColorComponent.value, ComparisonOperator.greaterThan),
         ColorRelationship(ColorComponent.value, ComparisonOperator.equal),
-        ColorRelationship(ColorComponent.value, ComparisonOperator.lessThan, 0.1), // Less than source + 0.1
-        ColorRelationship(ColorComponent.value, ComparisonOperator.greaterThan, 0.1), // Greater than source + 0.1
+        ColorRelationship(
+          ColorComponent.value,
+          ComparisonOperator.lessThan,
+          0.1,
+        ), // Less than source + 0.1
+        ColorRelationship(
+          ColorComponent.value,
+          ComparisonOperator.greaterThan,
+          0.1,
+        ), // Greater than source + 0.1
       ],
     );
   }
@@ -94,7 +122,7 @@ class ColorConstraints {
   /// Apply constraints to an HSVColor
   HSVColor constrainColor(HSVColor color) {
     return HSVColor.fromAHSV(
-      color.alpha,
+      1.0,
       constrainHue(color.hue),
       constrainSaturation(color.saturation),
       constrainValue(color.value),
@@ -102,12 +130,18 @@ class ColorConstraints {
   }
 
   /// Create a new HSVColor by applying an offset to a component while respecting constraints
-  HSVColor applyOffset(HSVColor color, ColorComponent component, double offset) {
+  HSVColor applyOffset(
+    HSVColor color,
+    ColorComponent component,
+    double offset,
+  ) {
     switch (component) {
       case ColorComponent.hue:
         return color.withHue(constrainHue(color.hue + offset));
       case ColorComponent.saturation:
-        return color.withSaturation(constrainSaturation(color.saturation + offset));
+        return color.withSaturation(
+          constrainSaturation(color.saturation + offset),
+        );
       case ColorComponent.value:
         return color.withValue(constrainValue(color.value + offset));
     }

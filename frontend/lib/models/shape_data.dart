@@ -103,7 +103,6 @@ class ShapeData {
       'hue': hsv.hue,
       'saturation': hsv.saturation,
       'value': hsv.value,
-      'alpha': hsv.alpha,
       'zIndex': zIndex,
     };
   }
@@ -114,7 +113,7 @@ class ShapeData {
         .map((p) => Offset(p['dx'] as double, p['dy'] as double))
         .toList();
     final hsv = HSVColor.fromAHSV(
-      json['alpha'] as double,
+      1.0,
       json['hue'] as double,
       json['saturation'] as double,
       json['value'] as double,
