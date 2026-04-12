@@ -42,6 +42,8 @@ class RelationshipPainter extends CustomPainter {
     final int? firstSelected = _linkLabelIndex(isFirst: true);
     final int? lastSelected = _linkLabelIndex(isFirst: false);
 
+    _paintBackgroundCanvas(canvas);
+
     for (int i = 0; i < shapes.length; i++) {
       final bool isSelected = selectedIndices.contains(i);
       final ShapeData shape = shapes[i];
@@ -200,6 +202,20 @@ class RelationshipPainter extends CustomPainter {
     canvas.scale(textScale);
     textPainter.paint(canvas, Offset(-textPainter.width / 2, -textPainter.height / 2));
     canvas.restore();
+  }
+
+  void _paintBackgroundCanvas(Canvas canvas) {
+    const Rect canvasRect = Rect.fromLTWH(20, 20, 460, 320);
+    final Paint fillPaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+    final Paint borderPaint = Paint()
+      ..color = Colors.black12
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0 / scale;
+
+    canvas.drawRect(canvasRect, fillPaint);
+    canvas.drawRect(canvasRect, borderPaint);
   }
 
   Offset _polygonCentroid(List<Offset> points) {

@@ -390,7 +390,7 @@ class _ShapeEditorState extends State<ShapeEditor> {
             onScaleUpdate: _handleScaleUpdate,
             onScaleEnd: _handleScaleEnd,
             child: Container(
-              color: Colors.white,
+              color: Colors.grey.shade900,
               child: CustomPaint(
                 painter: RelationshipPainter(
                   shapes: allShapes,
