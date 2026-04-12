@@ -1,7 +1,9 @@
+import 'dart:convert';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:frontend/models/shape_data.dart';
 import 'package:frontend/painters/relationship_painter.dart';
 
@@ -333,6 +335,53 @@ class _ShapeEditorState extends State<ShapeEditor> {
     });
   }
 
+  Future<void> _saveShapes() async {
+    final prefs = await SharedPreferences.getInstance();
+    final json = jsonEncode(
+      allShapes.map((shape) => shape.toJson()).toList(),
+    );
+    await prefs.setString('saved_shapes', json);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Shapes saved'), duration: Duration(seconds: 1)),
+      );
+    }
+  }
+
+  Future<void> _loadShapes() async {
+    final prefs = await SharedPreferences.getInstance();
+    final json = prefs.getString('saved_shapes');
+    if (json != null) {
+      try {
+        final List<dynamic> decoded = jsonDecode(json);
+        setState(() {
+          allShapes = decoded
+              .map((item) => ShapeData.fromJson(item as Map<String, dynamic>))
+              .toList();
+          selectedIndices.clear();
+          _selectedVertexIndex = null;
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Shapes loaded'), duration: Duration(seconds: 1)),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error loading shapes: $e')),
+          );
+        }
+      }
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadShapes();
+  }
+
   @override
   Widget build(BuildContext context) {
     final bool showAddPointIndicators =
@@ -380,6 +429,16 @@ class _ShapeEditorState extends State<ShapeEditor> {
                   _selectedVertexIndex != null ? _deleteSelectedVertex : null,
               tooltip: 'Delete selected vertex',
             ),
+          IconButton(
+            icon: const Icon(Icons.save),
+            onPressed: _saveShapes,
+            tooltip: 'Save shapes',
+          ),
+          IconButton(
+            icon: const Icon(Icons.folder_open),
+            onPressed: _loadShapes,
+            tooltip: 'Load shapes',
+          ),
         ],
       ),
       body: Stack(

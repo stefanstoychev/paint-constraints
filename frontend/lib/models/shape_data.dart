@@ -28,4 +28,29 @@ class ShapeData {
 
   @override
   int get hashCode => Object.hashAll(points) ^ hsv.hashCode;
+
+  /// Convert to JSON for serialization
+  Map<String, dynamic> toJson() {
+    return {
+      'points': points.map((p) => {'dx': p.dx, 'dy': p.dy}).toList(),
+      'hue': hsv.hue,
+      'saturation': hsv.saturation,
+      'value': hsv.value,
+      'alpha': hsv.alpha,
+    };
+  }
+
+  /// Create from JSON
+  factory ShapeData.fromJson(Map<String, dynamic> json) {
+    final pointsList = (json['points'] as List)
+        .map((p) => Offset(p['dx'] as double, p['dy'] as double))
+        .toList();
+    final hsv = HSVColor.fromAHSV(
+      json['alpha'] as double,
+      json['hue'] as double,
+      json['saturation'] as double,
+      json['value'] as double,
+    );
+    return ShapeData(points: pointsList, hsv: hsv);
+  }
 }
