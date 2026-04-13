@@ -685,42 +685,43 @@ class _ShapeEditorState extends State<ShapeEditor> {
           ),
           if (isLinkMode && selectedIndices.length == 2)
             Positioned(
-              bottom: 20,
-              left: 20,
+              top: 20,
               right: 20,
               child: Card(
                 color: Colors.black87,
                 child: Padding(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: const EdgeInsets.all(8.0),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
                       const Text(
-                        'Define Relationship (B constraint relative to A)',
+                        'Define Relationship (B ← A)',
                         style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
+                          fontSize: 12,
                         ),
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 6),
                       _buildRelationshipRow(
-                        'Hue Constraints',
+                        'Hue',
                         colorConstraints.relationships
                             .where((r) => r.component == ColorComponent.hue)
                             .toList(),
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 4),
                       _buildRelationshipRow(
-                        'Saturation Constraints',
+                        'Sat',
                         colorConstraints.relationships
                             .where(
                               (r) => r.component == ColorComponent.saturation,
                             )
                             .toList(),
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 4),
                       _buildRelationshipRow(
-                        'Value Constraints',
+                        'Val',
                         colorConstraints.relationships
                             .where((r) => r.component == ColorComponent.value)
                             .toList(),
@@ -819,17 +820,21 @@ class _ShapeEditorState extends State<ShapeEditor> {
       children: <Widget>[
         Text(
           title,
-          style: const TextStyle(color: Colors.white70, fontSize: 12),
+          style: const TextStyle(color: Colors.white70, fontSize: 10),
         ),
-        const SizedBox(height: 5),
+        const SizedBox(height: 2),
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.start,
           children: relationships
               .map<Widget>(
-                (ColorRelationship relationship) => LinkButton(
-                  label: _getRelationshipLabel(relationship),
-                  relationship: relationship,
-                  onPressed: _applyRelationship,
+                (ColorRelationship relationship) => Padding(
+                  padding: const EdgeInsets.only(right: 4.0),
+                  child: LinkButton(
+                    label: _getRelationshipLabel(relationship),
+                    relationship: relationship,
+                    onPressed: _applyRelationship,
+                  ),
                 ),
               )
               .toList(),
