@@ -447,13 +447,15 @@ class RelationshipPainter extends CustomPainter {
     if (isLinkMode != oldDelegate.isLinkMode) return true;
     if (isEditVerticesMode != oldDelegate.isEditVerticesMode) return true;
     if (handleRadius != oldDelegate.handleRadius) return true;
-    if (showAddPointIndicators != oldDelegate.showAddPointIndicators)
+    if (showAddPointIndicators != oldDelegate.showAddPointIndicators) {
       return true;
+    }
     if (showRelationships != oldDelegate.showRelationships) return true;
     if (scale != oldDelegate.scale) return true;
     if (offset != oldDelegate.offset) return true;
-    if (!listEquals(activeRelationships, oldDelegate.activeRelationships))
+    if (!listEquals(activeRelationships, oldDelegate.activeRelationships)) {
       return true;
+    }
     return false;
   }
 }

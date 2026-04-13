@@ -1,10 +1,8 @@
-import 'dart:convert';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:frontend/models/canvas_data.dart';
 import 'package:frontend/storage_service.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:frontend/models/color_component.dart';
 import 'package:frontend/models/color_constraints.dart';
 import 'package:frontend/models/color_relationship.dart';
