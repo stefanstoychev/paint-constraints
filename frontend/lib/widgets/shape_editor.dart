@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:frontend/models/canvas_data.dart';
+import 'package:frontend/storage_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:frontend/models/color_component.dart';
 import 'package:frontend/models/color_constraints.dart';
@@ -496,15 +498,10 @@ class _ShapeEditorState extends State<ShapeEditor> {
   }
 
   Future<void> _saveShapes() async {
-    final prefs = await SharedPreferences.getInstance();
-    final shapesJson = jsonEncode(
-      allShapes.map((shape) => shape.toJson()).toList(),
+    await StorageService().save(
+      CanvasData(shapes: allShapes, relationships: activeRelationships),
     );
-    final relationshipsJson = jsonEncode(
-      activeRelationships.map((rel) => rel.toJson()).toList(),
-    );
-    await prefs.setString('saved_shapes', shapesJson);
-    await prefs.setString('saved_relationships', relationshipsJson);
+
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -516,44 +513,27 @@ class _ShapeEditorState extends State<ShapeEditor> {
   }
 
   Future<void> _loadShapes() async {
-    final prefs = await SharedPreferences.getInstance();
-    final shapesJson = prefs.getString('saved_shapes');
-    final relationshipsJson = prefs.getString('saved_relationships');
-    if (shapesJson != null) {
-      try {
-        final List<dynamic> shapesDecoded = jsonDecode(shapesJson);
-        final List<ShapeRelationship> relationshipsDecoded =
-            relationshipsJson != null
-            ? (jsonDecode(relationshipsJson) as List<dynamic>)
-                  .map(
-                    (item) => ShapeRelationship.fromJson(
-                      item as Map<String, dynamic>,
-                    ),
-                  )
-                  .toList()
-            : <ShapeRelationship>[];
-        setState(() {
-          allShapes = shapesDecoded
-              .map((item) => ShapeData.fromJson(item as Map<String, dynamic>))
-              .toList();
-          activeRelationships = relationshipsDecoded;
-          selectedIndices.clear();
-          _selectedVertexIndex = null;
-        });
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Shapes loaded'),
-              duration: Duration(seconds: 1),
-            ),
-          );
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Error loading shapes: $e')));
-        }
+    CanvasData data = await StorageService().load();
+    try {
+      setState(() {
+        allShapes = data.shapes;
+        activeRelationships = data.relationships;
+        selectedIndices.clear();
+        _selectedVertexIndex = null;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Shapes loaded'),
+            duration: Duration(seconds: 1),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error loading shapes: $e')));
       }
     }
   }
