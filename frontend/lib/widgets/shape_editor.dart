@@ -8,6 +8,7 @@ import 'package:frontend/models/color_constraints.dart';
 import 'package:frontend/models/color_relationship.dart';
 import 'package:frontend/models/shape_data.dart';
 import 'package:frontend/painters/relationship_painter.dart';
+import 'package:frontend/utils/geometry_utils.dart';
 import 'package:frontend/widgets/link_button.dart';
 import 'package:frontend/widgets/zoom_controls.dart';
 
@@ -163,43 +164,6 @@ class _ShapeEditorState extends State<ShapeEditor> {
     });
   }
 
-  bool _isPointInPolygon(Offset point, List<Offset> polygon) {
-    bool inside = false;
-    for (int i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-      final Offset pI = polygon[i];
-      final Offset pJ = polygon[j];
-
-      if (((pI.dy > point.dy) != (pJ.dy > point.dy)) &&
-          (point.dx <
-              (pJ.dx - pI.dx) * (point.dy - pI.dy) / (pJ.dy - pI.dy) + pI.dx)) {
-        inside = !inside;
-      }
-    }
-    return inside;
-  }
-
-  double _distanceToSegment(Offset p, Offset p1, Offset p2) {
-    final double l2 = (pow(p2.dx - p1.dx, 2) + pow(p2.dy - p1.dy, 2))
-        .toDouble();
-    if (l2 == 0.0) return (p - p1).distance;
-
-    final double t =
-        ((p.dx - p1.dx) * (p2.dx - p1.dx) + (p.dy - p1.dy) * (p2.dy - p1.dy)) /
-        l2;
-
-    late Offset projection;
-    if (t < 0.0) {
-      projection = p1;
-    } else if (t > 1.0) {
-      projection = p2;
-    } else {
-      projection = Offset(
-        p1.dx + t * (p2.dx - p1.dx),
-        p1.dy + t * (p2.dy - p1.dy),
-      );
-    }
-    return (p - projection).distance;
-  }
 
   void _handleTapDown(TapDownDetails details) {
     if (_draggingShapeIndex != null) return;
@@ -226,7 +190,7 @@ class _ShapeEditorState extends State<ShapeEditor> {
         final Offset p1 = points[i];
         final Offset p2 = points[(i + 1) % points.length];
 
-        if (_distanceToSegment(worldPosition, p1, p2) <
+        if (GeometryUtils.distanceToSegment(worldPosition, p1, p2) <
             worldSegmentTapTolerance) {
           setState(() {
             final List<ShapeData> tempAllShapes = List<ShapeData>.from(
@@ -256,7 +220,7 @@ class _ShapeEditorState extends State<ShapeEditor> {
         });
 
     for (final MapEntry<int, ShapeData> entry in sortedShapeEntries) {
-      if (_isPointInPolygon(worldPosition, entry.value.points)) {
+      if (GeometryUtils.isPointInPolygon(worldPosition, entry.value.points)) {
         tappedShapeIndex = entry.key;
         break;
       }
@@ -329,7 +293,7 @@ class _ShapeEditorState extends State<ShapeEditor> {
         selectedIndices.isNotEmpty) {
       final Offset worldPosition = _screenToWorld(localFocalPoint);
       for (final int index in selectedIndices.reversed) {
-        if (_isPointInPolygon(worldPosition, allShapes[index].points)) {
+        if (GeometryUtils.isPointInPolygon(worldPosition, allShapes[index].points)) {
           _isDraggingWholeShape = true;
           _dragStartWorldPoint = worldPosition;
           _draggedShapesInitialPoints = <int, List<Offset>>{};
