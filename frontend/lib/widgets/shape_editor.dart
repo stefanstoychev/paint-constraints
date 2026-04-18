@@ -9,6 +9,7 @@ import 'package:frontend/models/color_relationship.dart';
 import 'package:frontend/models/shape_data.dart';
 import 'package:frontend/painters/relationship_painter.dart';
 import 'package:frontend/widgets/link_button.dart';
+import 'package:frontend/widgets/zoom_controls.dart';
 
 class ShapeEditor extends StatefulWidget {
   const ShapeEditor({super.key});
@@ -709,7 +710,19 @@ class _ShapeEditorState extends State<ShapeEditor> {
                 ),
               ),
             ),
-          _buildZoomControls(context),
+          ZoomControls(
+            currentScale: _currentScale,
+            onZoomChanged: _updateZoomScale,
+            onZoomReset: () {
+              setState(() {
+                _currentScale = 1.0;
+                _currentOffset = Offset.zero;
+                _previousScale = 1.0;
+                _previousOffset = Offset.zero;
+                _previousFocalPoint = Offset.zero;
+              });
+            },
+          ),
         ],
       ),
       floatingActionButton: FloatingActionButton(
@@ -737,57 +750,6 @@ class _ShapeEditorState extends State<ShapeEditor> {
     );
   }
 
-  Widget _buildZoomControls(BuildContext context) {
-    return Positioned(
-      bottom: 20,
-      left: 20,
-      child: Card(
-        color: Colors.black54,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              IconButton(
-                icon: const Icon(Icons.zoom_out, color: Colors.white),
-                onPressed: () => _updateZoomScale(_currentScale - 0.2),
-                tooltip: 'Zoom Out',
-              ),
-              SizedBox(
-                width: 150,
-                child: Slider(
-                  value: _currentScale,
-                  min: 0.3,
-                  max: 5.0,
-                  divisions: ((5.0 - 0.3) * 10).round(),
-                  onChanged: (double newValue) => _updateZoomScale(newValue),
-                  activeColor: Colors.white,
-                  inactiveColor: Colors.white38,
-                ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.zoom_in, color: Colors.white),
-                onPressed: () => _updateZoomScale(_currentScale + 0.2),
-                tooltip: 'Zoom In',
-              ),
-              IconButton(
-                icon: const Icon(Icons.refresh, color: Colors.white),
-                onPressed: () {
-                  setState(() {
-                    _currentScale = 1.0;
-                    _currentOffset = Offset.zero;
-                    _previousScale = 1.0;
-                    _previousOffset = Offset.zero;
-                    _previousFocalPoint = Offset.zero;
-                  });
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 
   Widget _buildRelationshipRow(
     String title,
