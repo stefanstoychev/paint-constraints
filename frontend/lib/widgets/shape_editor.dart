@@ -9,6 +9,7 @@ import 'package:frontend/models/color_relationship.dart';
 import 'package:frontend/models/shape_data.dart';
 import 'package:frontend/painters/relationship_painter.dart';
 import 'package:frontend/utils/geometry_utils.dart';
+import 'package:frontend/widgets/editor_app_bar.dart';
 import 'package:frontend/widgets/relationship_panel.dart';
 import 'package:frontend/widgets/zoom_controls.dart';
 
@@ -513,88 +514,32 @@ class _ShapeEditorState extends State<ShapeEditor> {
         isEditVerticesMode && selectedIndices.length == 1;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          isEditVerticesMode
-              ? 'Edit Vertices Mode'
-              : isLinkMode
-              ? 'Select 2 Shapes to Link'
-              : 'Shape Operations',
-        ),
-        actions: <Widget>[
-          _buildModeButton(
-            label: 'Link Mode',
-            icon: Icons.link,
-            isActive: isLinkMode,
-            activeColor: Colors.green,
-            onPressed: () => setState(() {
-              isLinkMode = !isLinkMode;
-              isEditVerticesMode = false;
-              selectedIndices.clear();
-              _selectedVertexIndex = null;
-            }),
-          ),
-          _buildModeButton(
-            label: 'Edit Vertices',
-            icon: Icons.scatter_plot,
-            isActive: isEditVerticesMode,
-            activeColor: Colors.blue,
-            onPressed: () => setState(() {
-              isEditVerticesMode = !isEditVerticesMode;
-              isLinkMode = false;
-              selectedIndices.clear();
-              _selectedVertexIndex = null;
-            }),
-          ),
-          if (isEditVerticesMode)
-            IconButton(
-              icon: const Icon(Icons.delete),
-              color: _selectedVertexIndex != null
-                  ? Colors.white
-                  : Colors.white38,
-              onPressed: _selectedVertexIndex != null
-                  ? _deleteSelectedVertex
-                  : null,
-              tooltip: 'Delete selected vertex',
-            ),
-          if (!isLinkMode)
-            IconButton(
-              icon: Icon(
-                showRelationships ? Icons.visibility : Icons.visibility_off,
-              ),
-              onPressed: () =>
-                  setState(() => showRelationships = !showRelationships),
-              tooltip: showRelationships
-                  ? 'Hide relationships'
-                  : 'Show relationships',
-            ),
-          if (!isLinkMode)
-            IconButton(
-              icon: const Icon(Icons.vertical_align_top),
-              onPressed: selectedIndices.isNotEmpty
-                  ? _sendSelectedShapesToFront
-                  : null,
-              tooltip: 'Send selected shape to front',
-            ),
-          if (!isLinkMode)
-            IconButton(
-              icon: const Icon(Icons.vertical_align_bottom),
-              onPressed: selectedIndices.isNotEmpty
-                  ? _pushSelectedShapesToBack
-                  : null,
-              tooltip: 'Push selected shape to back',
-            ),
-          IconButton(
-            icon: const Icon(Icons.save),
-            onPressed: _saveShapes,
-            tooltip: 'Save shapes',
-          ),
-          IconButton(
-            icon: const Icon(Icons.folder_open),
-            onPressed: _loadShapes,
-            tooltip: 'Load shapes',
-          ),
-        ],
+      appBar: EditorAppBar(
+        isEditVerticesMode: isEditVerticesMode,
+        isLinkMode: isLinkMode,
+        showRelationships: showRelationships,
+        hasSelectedVertex: _selectedVertexIndex != null,
+        hasSelectedShapes: selectedIndices.isNotEmpty,
+        onToggleLinkMode: () => setState(() {
+          isLinkMode = !isLinkMode;
+          isEditVerticesMode = false;
+          selectedIndices.clear();
+          _selectedVertexIndex = null;
+        }),
+        onToggleEditVerticesMode: () => setState(() {
+          isEditVerticesMode = !isEditVerticesMode;
+          isLinkMode = false;
+          selectedIndices.clear();
+          _selectedVertexIndex = null;
+        }),
+        onDeleteVertex: _deleteSelectedVertex,
+        onToggleShowRelationships: () => setState(() {
+          showRelationships = !showRelationships;
+        }),
+        onSendToFront: _sendSelectedShapesToFront,
+        onPushToBack: _pushSelectedShapesToBack,
+        onSave: _saveShapes,
+        onLoad: _loadShapes,
       ),
       body: Stack(
         clipBehavior: Clip.none,
@@ -654,22 +599,7 @@ class _ShapeEditorState extends State<ShapeEditor> {
     );
   }
 
-  Widget _buildModeButton({
-    required String label,
-    required IconData icon,
-    required bool isActive,
-    required Color activeColor,
-    required VoidCallback onPressed,
-  }) {
-    return TextButton.icon(
-      onPressed: onPressed,
-      icon: Icon(icon, color: isActive ? activeColor : Colors.grey),
-      label: Text(
-        label,
-        style: TextStyle(color: isActive ? activeColor : Colors.grey),
-      ),
-    );
-  }
+
 
 
 }
