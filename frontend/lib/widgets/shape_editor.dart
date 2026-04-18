@@ -1,605 +1,88 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
-import 'package:frontend/models/canvas_data.dart';
-import 'package:frontend/storage_service.dart';
-import 'package:frontend/models/color_component.dart';
-import 'package:frontend/models/color_constraints.dart';
-import 'package:frontend/models/color_relationship.dart';
-import 'package:frontend/models/shape_data.dart';
+import 'package:provider/provider.dart';
+import 'package:frontend/controllers/canvas_controller.dart';
 import 'package:frontend/painters/relationship_painter.dart';
-import 'package:frontend/utils/geometry_utils.dart';
 import 'package:frontend/widgets/editor_app_bar.dart';
 import 'package:frontend/widgets/relationship_panel.dart';
 import 'package:frontend/widgets/zoom_controls.dart';
 
-class ShapeEditor extends StatefulWidget {
+class ShapeEditor extends StatelessWidget {
   const ShapeEditor({super.key});
 
   @override
-  State<ShapeEditor> createState() => _ShapeEditorState();
-}
-
-class _ShapeEditorState extends State<ShapeEditor> {
-  List<ShapeData> allShapes = <ShapeData>[
-    ShapeData(
-      points: <Offset>[
-        const Offset(50, 100),
-        const Offset(150, 100),
-        const Offset(150, 200),
-        const Offset(50, 200),
-      ],
-      hsv: HSVColor.fromAHSV(1, 180, 0.7, 0.8),
-    ),
-    ShapeData(
-      points: <Offset>[
-        const Offset(250, 100),
-        const Offset(350, 100),
-        const Offset(350, 200),
-        const Offset(250, 200),
-      ],
-      hsv: HSVColor.fromAHSV(1, 210, 0.7, 0.8),
-    ),
-  ];
-
-  List<int> selectedIndices = <int>[];
-  bool isLinkMode = false;
-  bool isEditVerticesMode = false;
-  bool showRelationships = true;
-
-  final ColorConstraints colorConstraints =
-      ColorConstraints.withCommonRelationships();
-
-  // Store active relationships between shapes
-  List<ShapeRelationship> activeRelationships = <ShapeRelationship>[];
-
-  double _currentScale = 1.0;
-  Offset _currentOffset = Offset.zero;
-  double _previousScale = 1.0;
-  Offset _previousOffset = Offset.zero;
-  Offset _previousFocalPoint = Offset.zero;
-
-  int? _draggingShapeIndex;
-  int? _draggingPointIndex;
-  bool _isDraggingWholeShape = false;
-  int? _selectedVertexIndex;
-  Offset? _draggedPointInitialPosition;
-  Offset? _dragStartWorldPoint;
-  Map<int, List<Offset>>? _draggedShapesInitialPoints;
-
-  static const double _handleRadius = 25.0;
-  static const double _segmentTapTolerance = 10.0;
-
-  Offset _screenToWorld(Offset screenPoint) {
-    return (screenPoint - _currentOffset) / _currentScale;
-  }
-
-  int _nextShapeZIndex() {
-    if (allShapes.isEmpty) return 0;
-    return allShapes.map<int>((ShapeData shape) => shape.zIndex).reduce(max) +
-        1;
-  }
-
-  void _addShape() {
-    setState(() {
-      const List<Offset> newShapePoints = <Offset>[
-        Offset(50, 50),
-        Offset(150, 50),
-        Offset(150, 150),
-        Offset(50, 150),
-      ];
-      final Offset offsetTranslation = Offset(
-        (allShapes.length * 20.0) % 200 + 50,
-        (allShapes.length * 20.0) % 200 + 50,
-      );
-      final List<Offset> translatedPoints = newShapePoints
-          .map<Offset>((Offset p) => p + offsetTranslation)
-          .toList();
-
-      final double randomHue = (DateTime.now().millisecond.toDouble() % 360)
-          .roundToDouble();
-
-      allShapes = <ShapeData>[
-        ...allShapes,
-        ShapeData(
-          points: translatedPoints,
-          hsv: HSVColor.fromAHSV(1, randomHue, 0.7, 0.8),
-          zIndex: _nextShapeZIndex(),
-        ),
-      ];
-      selectedIndices = <int>[allShapes.length - 1];
-      _selectedVertexIndex = null;
-    });
-  }
-
-  void _applyRelationship(ColorRelationship relationship) {
-    if (selectedIndices.length != 2) return;
-    final int sourceIdx = selectedIndices.first;
-    final int targetIdx = selectedIndices.last;
-
-    // Prevent creating a reverse relationship
-    final bool hasReverseRelationship = activeRelationships.any(
-      (ShapeRelationship r) =>
-          r.sourceShapeIndex == targetIdx &&
-          r.targetShapeIndex == sourceIdx &&
-          r.relationship.component == relationship.component,
-    );
-    if (hasReverseRelationship) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Reverse relationship already exists')),
-      );
-      return;
-    }
-
-    setState(() {
-      // Create and store the relationship, replacing any existing relationship of the same type.
-      final shapeRelationship = ShapeRelationship(
-        sourceIdx,
-        targetIdx,
-        relationship,
-      );
-      final int existingRelationshipIndex = activeRelationships.indexWhere(
-        (ShapeRelationship activeRelationship) =>
-            activeRelationship.hasSameType(shapeRelationship),
-      );
-
-      if (existingRelationshipIndex != -1) {
-        activeRelationships[existingRelationshipIndex] = shapeRelationship;
-      } else {
-        activeRelationships.add(shapeRelationship);
-      }
-
-      // Apply the relationship immediately
-      final HSVColor targetHsv = allShapes[targetIdx].hsv;
-      final HSVColor newTargetHsv = colorConstraints.applyOffset(
-        targetHsv,
-        relationship.component,
-        relationship.offset,
-      );
-
-      final List<ShapeData> tempAllShapes = List<ShapeData>.from(allShapes);
-      tempAllShapes[targetIdx] = tempAllShapes[targetIdx].copyWith(
-        hsv: newTargetHsv,
-      );
-      allShapes = tempAllShapes;
-    });
-  }
-
-
-  void _handleTapDown(TapDownDetails details) {
-    if (_draggingShapeIndex != null) return;
-
-    final Offset worldPosition = _screenToWorld(details.localPosition);
-    final double worldHandleRadius = _handleRadius / _currentScale;
-    final double worldSegmentTapTolerance =
-        _segmentTapTolerance / _currentScale;
-
-    if (isEditVerticesMode && selectedIndices.length == 1) {
-      final int selectedShapeIndex = selectedIndices.first;
-      final List<Offset> points = allShapes[selectedShapeIndex].points;
-
-      for (int i = 0; i < points.length; i++) {
-        if ((points[i] - worldPosition).distance < worldHandleRadius) {
-          setState(() {
-            _selectedVertexIndex = i;
-          });
-          return;
-        }
-      }
-
-      for (int i = 0; i < points.length; i++) {
-        final Offset p1 = points[i];
-        final Offset p2 = points[(i + 1) % points.length];
-
-        if (GeometryUtils.distanceToSegment(worldPosition, p1, p2) <
-            worldSegmentTapTolerance) {
-          setState(() {
-            final List<ShapeData> tempAllShapes = List<ShapeData>.from(
-              allShapes,
-            );
-            final List<Offset> currentPoints = List<Offset>.from(
-              tempAllShapes[selectedShapeIndex].points,
-            );
-            currentPoints.insert(i + 1, worldPosition);
-
-            tempAllShapes[selectedShapeIndex] =
-                tempAllShapes[selectedShapeIndex].copyWith(
-                  points: currentPoints,
-                );
-            allShapes = tempAllShapes;
-          });
-          return;
-        }
-      }
-    }
-
-    int? tappedShapeIndex;
-    final List<MapEntry<int, ShapeData>> sortedShapeEntries =
-        allShapes.asMap().entries.toList()..sort((a, b) {
-          final int zCompare = b.value.zIndex.compareTo(a.value.zIndex);
-          return zCompare != 0 ? zCompare : b.key.compareTo(a.key);
-        });
-
-    for (final MapEntry<int, ShapeData> entry in sortedShapeEntries) {
-      if (GeometryUtils.isPointInPolygon(worldPosition, entry.value.points)) {
-        tappedShapeIndex = entry.key;
-        break;
-      }
-    }
-
-    setState(() {
-      _selectedVertexIndex = null;
-      if (tappedShapeIndex != null) {
-        if (isEditVerticesMode) {
-          selectedIndices = <int>[tappedShapeIndex];
-        } else if (isLinkMode) {
-          if (selectedIndices.contains(tappedShapeIndex)) {
-            selectedIndices.remove(tappedShapeIndex);
-          } else {
-            if (selectedIndices.length < 2) {
-              selectedIndices.add(tappedShapeIndex);
-            } else {
-              selectedIndices.removeAt(0);
-              selectedIndices.add(tappedShapeIndex);
-            }
-          }
-        } else {
-          if (!selectedIndices.contains(tappedShapeIndex)) {
-            selectedIndices.add(tappedShapeIndex);
-          }
-        }
-      } else {
-        selectedIndices.clear();
-      }
-    });
-  }
-
-  void _handleScaleStart(ScaleStartDetails details) {
-    final Offset localFocalPoint = details.localFocalPoint;
-
-    _previousScale = _currentScale;
-    _previousOffset = _currentOffset;
-    _previousFocalPoint = localFocalPoint;
-
-    _draggingShapeIndex = null;
-    _draggingPointIndex = null;
-    _isDraggingWholeShape = false;
-    _draggedPointInitialPosition = null;
-    _dragStartWorldPoint = null;
-    _draggedShapesInitialPoints = null;
-
-    if (isEditVerticesMode &&
-        selectedIndices.length == 1 &&
-        details.pointerCount == 1) {
-      final Offset worldPosition = _screenToWorld(localFocalPoint);
-      final double worldHandleRadius = _handleRadius / _currentScale;
-
-      final int shapeIndex = selectedIndices.first;
-      final ShapeData shape = allShapes[shapeIndex];
-      for (int i = 0; i < shape.points.length; i++) {
-        final Offset point = shape.points[i];
-        if ((point - worldPosition).distance < worldHandleRadius) {
-          _draggingShapeIndex = shapeIndex;
-          _draggingPointIndex = i;
-          _selectedVertexIndex = i;
-          _draggedPointInitialPosition = point;
-          _dragStartWorldPoint = worldPosition;
-          return;
-        }
-      }
-    }
-
-    if (!isLinkMode &&
-        details.pointerCount == 1 &&
-        selectedIndices.isNotEmpty) {
-      final Offset worldPosition = _screenToWorld(localFocalPoint);
-      for (final int index in selectedIndices.reversed) {
-        if (GeometryUtils.isPointInPolygon(worldPosition, allShapes[index].points)) {
-          _isDraggingWholeShape = true;
-          _dragStartWorldPoint = worldPosition;
-          _draggedShapesInitialPoints = <int, List<Offset>>{};
-          for (final int shapeIndex in selectedIndices) {
-            _draggedShapesInitialPoints![shapeIndex] = List<Offset>.from(
-              allShapes[shapeIndex].points,
-            );
-          }
-          return;
-        }
-      }
-    }
-  }
-
-  void _handleScaleUpdate(ScaleUpdateDetails details) {
-    setState(() {
-      final Offset localFocalPoint = details.localFocalPoint;
-
-      if (_isDraggingWholeShape &&
-          details.pointerCount == 1 &&
-          _dragStartWorldPoint != null &&
-          _draggedShapesInitialPoints != null) {
-        final Offset currentWorldFocalPoint = _screenToWorld(localFocalPoint);
-        final Offset deltaWorld =
-            currentWorldFocalPoint - _dragStartWorldPoint!;
-
-        final List<ShapeData> tempAllShapes = List<ShapeData>.from(allShapes);
-        for (final int shapeIndex in selectedIndices) {
-          final List<Offset>? initialPoints =
-              _draggedShapesInitialPoints![shapeIndex];
-          if (initialPoints != null) {
-            final List<Offset> updatedPoints = initialPoints
-                .map<Offset>((Offset point) => point + deltaWorld)
-                .toList();
-            tempAllShapes[shapeIndex] = tempAllShapes[shapeIndex].copyWith(
-              points: updatedPoints,
-            );
-          }
-        }
-        allShapes = tempAllShapes;
-      } else if (_draggingShapeIndex != null &&
-          _draggingPointIndex != null &&
-          details.pointerCount == 1) {
-        _selectedVertexIndex = _draggingPointIndex;
-        final Offset currentWorldFocalPoint = _screenToWorld(localFocalPoint);
-        final Offset deltaWorld =
-            currentWorldFocalPoint - _dragStartWorldPoint!;
-
-        final List<ShapeData> tempAllShapes = List<ShapeData>.from(allShapes);
-        final List<Offset> updatedPoints = List<Offset>.from(
-          tempAllShapes[_draggingShapeIndex!].points,
-        );
-        updatedPoints[_draggingPointIndex!] =
-            _draggedPointInitialPosition! + deltaWorld;
-
-        tempAllShapes[_draggingShapeIndex!] =
-            tempAllShapes[_draggingShapeIndex!].copyWith(points: updatedPoints);
-        allShapes = tempAllShapes;
-      } else {
-        _currentScale = (_previousScale * details.scale).clamp(0.3, 5.0);
-
-        final Offset focalPointAtStartWorld =
-            (_previousFocalPoint - _previousOffset) / _previousScale;
-        _currentOffset =
-            localFocalPoint - focalPointAtStartWorld * _currentScale;
-      }
-    });
-  }
-
-  void _handleScaleEnd(ScaleEndDetails details) {
-    _draggingShapeIndex = null;
-    _draggingPointIndex = null;
-    _isDraggingWholeShape = false;
-    _draggedPointInitialPosition = null;
-    _dragStartWorldPoint = null;
-    _draggedShapesInitialPoints = null;
-
-    _previousScale = _currentScale;
-    _previousOffset = _currentOffset;
-  }
-
-  void _updateZoomScale(double newScale) {
-    setState(() {
-      _currentScale = newScale.clamp(0.3, 5.0);
-      final Offset screenCenter = Offset(
-        MediaQuery.of(context).size.width / 2,
-        MediaQuery.of(context).size.height / 2,
-      );
-      final Offset centerWorldAtPrevScale =
-          (screenCenter - _previousOffset) / _previousScale;
-      _currentOffset = screenCenter - centerWorldAtPrevScale * _currentScale;
-      _previousScale = _currentScale;
-      _previousOffset = _currentOffset;
-      _previousFocalPoint = screenCenter;
-    });
-  }
-
-  void _deleteSelectedVertex() {
-    if (!isEditVerticesMode ||
-        selectedIndices.length != 1 ||
-        _selectedVertexIndex == null) {
-      return;
-    }
-
-    final int shapeIndex = selectedIndices.first;
-    final List<Offset> points = allShapes[shapeIndex].points;
-    if (points.length <= 3) return;
-
-    setState(() {
-      final List<ShapeData> tempShapes = List<ShapeData>.from(allShapes);
-      final List<Offset> updatedPoints = List<Offset>.from(points)
-        ..removeAt(_selectedVertexIndex!);
-      tempShapes[shapeIndex] = tempShapes[shapeIndex].copyWith(
-        points: updatedPoints,
-      );
-      allShapes = tempShapes;
-      _selectedVertexIndex = null;
-      _draggingPointIndex = null;
-      _draggingShapeIndex = null;
-    });
-  }
-
-  void _pushSelectedShapesToBack() {
-    if (selectedIndices.isEmpty) return;
-
-    setState(() {
-      final List<ShapeData> tempShapes = List<ShapeData>.from(allShapes);
-      final int minZIndex = allShapes
-          .map<int>((ShapeData shape) => shape.zIndex)
-          .reduce(min);
-      final List<int> sortedSelectedIndices = List<int>.from(selectedIndices)
-        ..sort((a, b) => allShapes[a].zIndex.compareTo(allShapes[b].zIndex));
-
-      for (int i = 0; i < sortedSelectedIndices.length; i++) {
-        final int shapeIndex = sortedSelectedIndices[i];
-        tempShapes[shapeIndex] = tempShapes[shapeIndex].copyWith(
-          zIndex: minZIndex - (sortedSelectedIndices.length - i),
-        );
-      }
-
-      allShapes = tempShapes;
-    });
-  }
-
-  void _sendSelectedShapesToFront() {
-    if (selectedIndices.isEmpty) return;
-
-    setState(() {
-      final List<ShapeData> tempShapes = List<ShapeData>.from(allShapes);
-      final int maxZIndex = allShapes
-          .map<int>((ShapeData shape) => shape.zIndex)
-          .reduce(max);
-      final List<int> sortedSelectedIndices = List<int>.from(selectedIndices)
-        ..sort((a, b) => allShapes[a].zIndex.compareTo(allShapes[b].zIndex));
-
-      for (int i = 0; i < sortedSelectedIndices.length; i++) {
-        final int shapeIndex = sortedSelectedIndices[i];
-        tempShapes[shapeIndex] = tempShapes[shapeIndex].copyWith(
-          zIndex: maxZIndex + i + 1,
-        );
-      }
-
-      allShapes = tempShapes;
-    });
-  }
-
-  Future<void> _saveShapes() async {
-    await StorageService().save(
-      CanvasData(shapes: allShapes, relationships: activeRelationships),
-    );
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Shapes saved'),
-          duration: Duration(seconds: 1),
-        ),
-      );
-    }
-  }
-
-  Future<void> _loadShapes() async {
-    CanvasData data = await StorageService().load();
-    try {
-      setState(() {
-        allShapes = data.shapes;
-        activeRelationships = data.relationships;
-        selectedIndices.clear();
-        _selectedVertexIndex = null;
-      });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Shapes loaded'),
-            duration: Duration(seconds: 1),
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error loading shapes: $e')));
-      }
-    }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _loadShapes();
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final CanvasController controller = context.watch<CanvasController>();
+
     final bool showAddPointIndicators =
-        isEditVerticesMode && selectedIndices.length == 1;
+        controller.isEditVerticesMode && controller.selectedIndices.length == 1;
 
     return Scaffold(
       appBar: EditorAppBar(
-        isEditVerticesMode: isEditVerticesMode,
-        isLinkMode: isLinkMode,
-        showRelationships: showRelationships,
-        hasSelectedVertex: _selectedVertexIndex != null,
-        hasSelectedShapes: selectedIndices.isNotEmpty,
-        onToggleLinkMode: () => setState(() {
-          isLinkMode = !isLinkMode;
-          isEditVerticesMode = false;
-          selectedIndices.clear();
-          _selectedVertexIndex = null;
-        }),
-        onToggleEditVerticesMode: () => setState(() {
-          isEditVerticesMode = !isEditVerticesMode;
-          isLinkMode = false;
-          selectedIndices.clear();
-          _selectedVertexIndex = null;
-        }),
-        onDeleteVertex: _deleteSelectedVertex,
-        onToggleShowRelationships: () => setState(() {
-          showRelationships = !showRelationships;
-        }),
-        onSendToFront: _sendSelectedShapesToFront,
-        onPushToBack: _pushSelectedShapesToBack,
-        onSave: _saveShapes,
-        onLoad: _loadShapes,
+        isEditVerticesMode: controller.isEditVerticesMode,
+        isLinkMode: controller.isLinkMode,
+        showRelationships: controller.showRelationships,
+        hasSelectedVertex: controller.selectedVertexIndex != null,
+        hasSelectedShapes: controller.selectedIndices.isNotEmpty,
+        onToggleLinkMode: controller.toggleLinkMode,
+        onToggleEditVerticesMode: controller.toggleEditVerticesMode,
+        onDeleteVertex: controller.deleteSelectedVertex,
+        onToggleShowRelationships: controller.toggleShowRelationships,
+        onSendToFront: controller.sendSelectedShapesToFront,
+        onPushToBack: controller.pushSelectedShapesToBack,
+        onSave: () => controller.saveShapes(context),
+        onLoad: () => controller.loadShapes(context),
       ),
       body: Stack(
         clipBehavior: Clip.none,
         children: <Widget>[
           GestureDetector(
-            onTapDown: _handleTapDown,
-            onScaleStart: _handleScaleStart,
-            onScaleUpdate: _handleScaleUpdate,
-            onScaleEnd: _handleScaleEnd,
+            onTapDown: controller.handleTapDown,
+            onScaleStart: controller.handleScaleStart,
+            onScaleUpdate: controller.handleScaleUpdate,
+            onScaleEnd: controller.handleScaleEnd,
             child: Container(
               color: Colors.grey.shade900,
               child: CustomPaint(
                 painter: RelationshipPainter(
-                  shapes: allShapes,
-                  selectedIndices: selectedIndices,
-                  activeRelationships: activeRelationships,
-                  draggingShapeIndex: _draggingShapeIndex,
-                  draggingPointIndex: _draggingPointIndex,
-                  selectedVertexIndex: _selectedVertexIndex,
-                  handleRadius: _handleRadius,
-                  isLinkMode: isLinkMode,
-                  isEditVerticesMode: isEditVerticesMode,
+                  shapes: controller.allShapes,
+                  selectedIndices: controller.selectedIndices,
+                  activeRelationships: controller.activeRelationships,
+                  draggingShapeIndex: controller.draggingShapeIndex,
+                  draggingPointIndex: controller.draggingPointIndex,
+                  selectedVertexIndex: controller.selectedVertexIndex,
+                  handleRadius: CanvasController.handleRadius,
+                  isLinkMode: controller.isLinkMode,
+                  isEditVerticesMode: controller.isEditVerticesMode,
                   showAddPointIndicators: showAddPointIndicators,
-                  showRelationships: showRelationships,
-                  scale: _currentScale,
-                  offset: _currentOffset,
+                  showRelationships: controller.showRelationships,
+                  scale: controller.currentScale,
+                  offset: controller.currentOffset,
                 ),
                 child: Container(),
               ),
             ),
           ),
-          if (isLinkMode && selectedIndices.length == 2)
+          if (controller.isLinkMode && controller.selectedIndices.length == 2)
             RelationshipPanel(
-              colorConstraints: colorConstraints,
-              onRelationshipApplied: _applyRelationship,
+              colorConstraints: controller.colorConstraints,
+              onRelationshipApplied: (relationship) =>
+                  controller.applyRelationship(relationship, context),
             ),
           ZoomControls(
-            currentScale: _currentScale,
-            onZoomChanged: _updateZoomScale,
-            onZoomReset: () {
-              setState(() {
-                _currentScale = 1.0;
-                _currentOffset = Offset.zero;
-                _previousScale = 1.0;
-                _previousOffset = Offset.zero;
-                _previousFocalPoint = Offset.zero;
-              });
-            },
+            currentScale: controller.currentScale,
+            onZoomChanged: (scale) => controller.updateZoomScale(
+              scale,
+              MediaQuery.of(context).size,
+            ),
+            onZoomReset: controller.resetZoomScale,
           ),
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _addShape,
+        onPressed: controller.addShape,
         tooltip: 'Add New Shape',
         child: const Icon(Icons.add),
       ),
     );
   }
-
-
-
-
 }
