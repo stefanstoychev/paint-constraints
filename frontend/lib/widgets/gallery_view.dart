@@ -14,21 +14,19 @@ class GalleryView extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: Colors.grey.shade900,
-      appBar: AppBar(
-        title: const Text('My Paintings'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () => _showCreateDialog(context, projectManager),
-            tooltip: 'Add Canvas',
-          ),
-        ],
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _showCreateDialog(context, projectManager),
+        icon: const Icon(Icons.add),
+        label: const Text('New Painting'),
+        backgroundColor: Colors.blueAccent,
       ),
-      body: projectManager.isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : projectManager.projects.isEmpty
-              ? _buildEmptyState(context, projectManager)
-              : _buildGrid(context, projectManager.projects),
+      body: SafeArea(
+        child: projectManager.isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : projectManager.projects.isEmpty
+                ? _buildEmptyState(context, projectManager)
+                : _buildGrid(context, projectManager.projects),
+      ),
     );
   }
 
