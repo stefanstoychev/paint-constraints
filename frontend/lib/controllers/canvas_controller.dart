@@ -77,6 +77,11 @@ class CanvasController extends ChangeNotifier {
   Offset? _dragStartWorldPoint;
   Map<int, List<Offset>>? _draggedShapesInitialPoints;
 
+  // Gesture tracking
+  DateTime? _twoFingerGestureStartTime;
+  int _tapPointerCount = 0;
+  DateTime? _lastTwoFingerTapTime;
+
   static const double handleRadius = 25.0;
   static const double _segmentTapTolerance = 10.0;
 
@@ -280,6 +285,11 @@ class CanvasController extends ChangeNotifier {
     _dragStartWorldPoint = null;
     _draggedShapesInitialPoints = null;
 
+    _tapPointerCount = details.pointerCount;
+    if (_tapPointerCount == 2) {
+      _twoFingerGestureStartTime = DateTime.now();
+    }
+
     if (isEditVerticesMode &&
         selectedIndices.length == 1 &&
         details.pointerCount == 1) {
@@ -430,9 +440,31 @@ class CanvasController extends ChangeNotifier {
     _dragStartWorldPoint = null;
     _draggedShapesInitialPoints = null;
 
+    if (_tapPointerCount == 2 && _twoFingerGestureStartTime != null) {
+      final duration = DateTime.now().difference(_twoFingerGestureStartTime!);
+      if (duration.inMilliseconds < 300) {
+        _handleTwoFingerTap();
+      }
+    }
+    _twoFingerGestureStartTime = null;
+    _tapPointerCount = 0;
+
     _previousScale = currentScale;
     _previousOffset = currentOffset;
     notifyListeners();
+  }
+
+  void _handleTwoFingerTap() {
+    final now = DateTime.now();
+    if (_lastTwoFingerTapTime != null &&
+        now.difference(_lastTwoFingerTapTime!).inMilliseconds < 500) {
+      if (commandHistory.canUndo) {
+        undo();
+      }
+      _lastTwoFingerTapTime = null;
+    } else {
+      _lastTwoFingerTapTime = now;
+    }
   }
 
   void updateZoomScale(double newScale, Size screenSize) {
