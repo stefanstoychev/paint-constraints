@@ -6,13 +6,30 @@ import 'package:frontend/widgets/editor_app_bar.dart';
 import 'package:frontend/widgets/relationship_panel.dart';
 import 'package:frontend/widgets/zoom_controls.dart';
 import 'package:frontend/widgets/canvas_grid.dart';
+import 'package:frontend/controllers/project_manager.dart';
+import 'package:frontend/models/canvas_project.dart';
 
-class ShapeEditor extends StatelessWidget {
-  const ShapeEditor({super.key});
+class ShapeEditor extends StatefulWidget {
+  final CanvasProject project;
+  const ShapeEditor({super.key, required this.project});
+
+  @override
+  State<ShapeEditor> createState() => _ShapeEditorState();
+}
+
+class _ShapeEditorState extends State<ShapeEditor> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<CanvasController>().loadProject(widget.project);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final CanvasController controller = context.watch<CanvasController>();
+    final ProjectManager projectManager = context.read<ProjectManager>();
 
     final bool showAddPointIndicators =
         controller.isEditVerticesMode && controller.selectedIndices.length == 1;
@@ -35,8 +52,9 @@ class ShapeEditor extends StatelessWidget {
         onUndo: controller.undo,
         onRedo: controller.redo,
         onAddShape: controller.addShape,
-        onSave: () => controller.saveShapes(context),
-        onLoad: () => controller.loadShapes(context),
+        onSave: () => controller.saveCurrentProject(context, projectManager),
+        onLoad: () => controller.loadProject(widget.project), // Revert to saved
+        projectName: widget.project.name,
       ),
       body: Stack(
         clipBehavior: Clip.none,
@@ -53,6 +71,7 @@ class ShapeEditor extends StatelessWidget {
                   CanvasGrid(
                     scale: controller.currentScale,
                     offset: controller.currentOffset,
+                    canvasRect: widget.project.canvasRect,
                   ),
                   CustomPaint(
                     size: Size.infinite,

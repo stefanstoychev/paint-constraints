@@ -1,41 +1,42 @@
 import 'dart:convert';
 
-import 'package:frontend/models/canvas_data.dart';
-import 'package:frontend/models/shape_data.dart';
+import 'package:frontend/models/canvas_project.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class StorageService {
-  Future<void> save(CanvasData data) async {
+  Future<void> saveProject(CanvasProject project) async {
     final prefs = await SharedPreferences.getInstance();
-    final shapesJson = jsonEncode(data.shapes.map((s) => s.toJson()).toList());
-    final relationshipsJson = jsonEncode(
-      data.relationships.map((r) => r.toJson()).toList(),
-    );
+    final projectJson = jsonEncode(project.toJson());
+    await prefs.setString('project_${project.id}', projectJson);
 
-    await prefs.setString('saved_shapes', shapesJson);
-    await prefs.setString('saved_relationships', relationshipsJson);
+    // Update project list if not already there
+    final List<String> projectIds = prefs.getStringList('project_ids') ?? [];
+    if (!projectIds.contains(project.id)) {
+      projectIds.add(project.id);
+      await prefs.setStringList('project_ids', projectIds);
+    }
   }
 
-  Future<CanvasData> load() async {
+  Future<List<CanvasProject>> loadAllProjects() async {
     final prefs = await SharedPreferences.getInstance();
-    final shapesJson = prefs.getString('saved_shapes');
-    final relationshipsJson = prefs.getString('saved_relationships');
+    final List<String> projectIds = prefs.getStringList('project_ids') ?? [];
+    
+    final List<CanvasProject> projects = [];
+    for (final id in projectIds) {
+      final projectJson = prefs.getString('project_$id');
+      if (projectJson != null) {
+        projects.add(CanvasProject.fromJson(jsonDecode(projectJson)));
+      }
+    }
+    return projects;
+  }
 
-    final List<dynamic> shapesDecoded = jsonDecode(shapesJson!);
-    final List<ShapeRelationship> relationshipsDecoded =
-        relationshipsJson != null
-        ? (jsonDecode(relationshipsJson) as List<dynamic>)
-              .map(
-                (item) =>
-                    ShapeRelationship.fromJson(item as Map<String, dynamic>),
-              )
-              .toList()
-        : <ShapeRelationship>[];
-
-    List<ShapeData> allShapes = shapesDecoded
-        .map((item) => ShapeData.fromJson(item as Map<String, dynamic>))
-        .toList();
-
-    return CanvasData(shapes: allShapes, relationships: relationshipsDecoded);
+  Future<void> deleteProject(String id) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('project_$id');
+    
+    final List<String> projectIds = prefs.getStringList('project_ids') ?? [];
+    projectIds.remove(id);
+    await prefs.setStringList('project_ids', projectIds);
   }
 }

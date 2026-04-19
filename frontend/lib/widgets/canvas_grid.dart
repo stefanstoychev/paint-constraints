@@ -3,13 +3,19 @@ import 'package:flutter/material.dart';
 class CanvasGrid extends StatelessWidget {
   final double scale;
   final Offset offset;
+  final Rect canvasRect;
 
-  const CanvasGrid({super.key, required this.scale, required this.offset});
+  const CanvasGrid({
+    super.key,
+    required this.scale,
+    required this.offset,
+    required this.canvasRect,
+  });
 
   @override
   Widget build(BuildContext context) {
     return CustomPaint(
-      painter: _GridPainter(scale: scale, offset: offset),
+      painter: _GridPainter(scale: scale, offset: offset, canvasRect: canvasRect),
       size: Size.infinite,
     );
   }
@@ -18,8 +24,13 @@ class CanvasGrid extends StatelessWidget {
 class _GridPainter extends CustomPainter {
   final double scale;
   final Offset offset;
+  final Rect canvasRect;
 
-  _GridPainter({required this.scale, required this.offset});
+  _GridPainter({
+    required this.scale,
+    required this.offset,
+    required this.canvasRect,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -44,7 +55,6 @@ class _GridPainter extends CustomPainter {
     canvas.scale(scale);
 
     // Draw artboard background
-    const Rect artboardRect = Rect.fromLTWH(20, 20, 460, 320);
     final Paint artboardPaint = Paint()
       ..color = Colors.white
       ..style = PaintingStyle.fill;
@@ -53,8 +63,8 @@ class _GridPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.0 / scale;
 
-    canvas.drawRect(artboardRect, artboardPaint);
-    canvas.drawRect(artboardRect, artboardBorderPaint);
+    canvas.drawRect(canvasRect, artboardPaint);
+    canvas.drawRect(canvasRect, artboardBorderPaint);
 
     for (double x = startX; x <= right; x += gridSize) {
       canvas.drawLine(Offset(x, top), Offset(x, bottom), gridPaint);

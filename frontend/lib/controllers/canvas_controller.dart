@@ -2,12 +2,13 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:frontend/models/canvas_data.dart';
-import 'package:frontend/storage_service.dart';
 import 'package:frontend/models/color_constraints.dart';
 import 'package:frontend/models/color_relationship.dart';
 import 'package:frontend/models/shape_data.dart';
 import 'package:frontend/utils/geometry_utils.dart';
 
+import 'package:frontend/models/canvas_project.dart';
+import 'package:frontend/controllers/project_manager.dart';
 import 'package:frontend/commands/canvas_command.dart';
 import 'package:frontend/commands/command_history.dart';
 import 'package:frontend/commands/shape_commands.dart';
@@ -30,6 +31,45 @@ class CanvasController extends ChangeNotifier {
   void redo() {
     commandHistory.redo();
     notifyListeners();
+  }
+
+  CanvasProject? currentProject;
+
+  void loadProject(CanvasProject project) {
+    currentProject = project;
+    allShapes = List.from(project.data.shapes);
+    activeRelationships = List.from(project.data.relationships);
+    
+    // Reset view
+    currentScale = 1.0;
+    currentOffset = Offset.zero;
+    selectedIndices.clear();
+    selectedVertexIndex = null;
+    
+    notifyListeners();
+  }
+
+  Future<void> saveCurrentProject(BuildContext context, ProjectManager projectManager) async {
+    if (currentProject == null) return;
+    
+    final updatedProject = currentProject!.copyWith(
+      data: CanvasData(
+        shapes: allShapes,
+        relationships: activeRelationships,
+      ),
+    );
+    
+    await projectManager.updateProject(updatedProject);
+    currentProject = updatedProject;
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Project saved'),
+          duration: Duration(seconds: 1),
+        ),
+      );
+    }
   }
 
   List<ShapeData> allShapes = <ShapeData>[
@@ -84,16 +124,18 @@ class CanvasController extends ChangeNotifier {
 
   static const double handleRadius = 25.0;
   static const double _segmentTapTolerance = 10.0;
-  static const Rect canvasRect = Rect.fromLTWH(20, 20, 460, 320);
+
+  Rect get canvasRect => currentProject?.canvasRect ?? const Rect.fromLTWH(20, 20, 460, 320);
 
   Offset _screenToWorld(Offset screenPoint) {
     return (screenPoint - currentOffset) / currentScale;
   }
 
   Offset _clampPoint(Offset point) {
+    final rect = canvasRect;
     return Offset(
-      point.dx.clamp(canvasRect.left, canvasRect.right),
-      point.dy.clamp(canvasRect.top, canvasRect.bottom),
+      point.dx.clamp(rect.left, rect.right),
+      point.dy.clamp(rect.top, rect.bottom),
     );
   }
 
@@ -563,59 +605,5 @@ class CanvasController extends ChangeNotifier {
     executeCommand(
       ReorderShapesCommand(this, List.from(allShapes), tempShapes),
     );
-  }
-
-  Future<void> saveShapes(BuildContext context) async {
-    await StorageService().save(
-      CanvasData(shapes: allShapes, relationships: activeRelationships),
-    );
-
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Shapes saved'),
-          duration: Duration(seconds: 1),
-        ),
-      );
-    }
-  }
-
-  Future<void> loadShapes(BuildContext context) async {
-    CanvasData data = await StorageService().load();
-    allShapes = data.shapes;
-    activeRelationships = data.relationships;
-
-    if (allShapes.isEmpty) {
-      allShapes = <ShapeData>[
-        ShapeData(
-          points: <Offset>[
-            const Offset(50, 100),
-            const Offset(150, 100),
-            const Offset(150, 200),
-            const Offset(50, 200),
-          ],
-          hsv: HSVColor.fromAHSV(1, 180, 0.7, 0.8),
-        ),
-        ShapeData(
-          points: <Offset>[
-            const Offset(250, 100),
-            const Offset(350, 100),
-            const Offset(350, 200),
-            const Offset(250, 200),
-          ],
-          hsv: HSVColor.fromAHSV(1, 210, 0.7, 0.8),
-        ),
-      ];
-    }
-
-    notifyListeners();
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Shapes loaded'),
-          duration: Duration(seconds: 1),
-        ),
-      );
-    }
   }
 }

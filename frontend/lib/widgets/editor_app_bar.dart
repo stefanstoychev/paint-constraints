@@ -8,6 +8,7 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
   final bool hasSelectedShapes;
   final bool canUndo;
   final bool canRedo;
+  final String projectName;
 
   final VoidCallback onToggleLinkMode;
   final VoidCallback onToggleEditVerticesMode;
@@ -41,6 +42,7 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
     required this.onAddShape,
     required this.onSave,
     required this.onLoad,
+    required this.projectName,
   });
 
   @override
@@ -52,14 +54,21 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
 
     return AppBar(
       title: !isSmallScreen
-          ? Text(
-            isEditVerticesMode
-                ? 'Edit Vertices Mode'
-                : isLinkMode
-                ? 'Select 2 Shapes to Link'
-                : 'Shape Operations',
+          ? Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(projectName, style: const TextStyle(fontSize: 14, color: Colors.white70)),
+              Text(
+                isEditVerticesMode
+                    ? 'Edit Vertices Mode'
+                    : isLinkMode
+                    ? 'Select 2 Shapes to Link'
+                    : 'Shape Operations',
+                style: const TextStyle(fontSize: 18),
+              ),
+            ],
           )
-          : null,
+          : Text(projectName),
       actions: <Widget>[
         IconButton(
           icon: const Icon(Icons.add),
