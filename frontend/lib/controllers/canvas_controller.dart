@@ -84,9 +84,17 @@ class CanvasController extends ChangeNotifier {
 
   static const double handleRadius = 25.0;
   static const double _segmentTapTolerance = 10.0;
+  static const Rect canvasRect = Rect.fromLTWH(20, 20, 460, 320);
 
   Offset _screenToWorld(Offset screenPoint) {
     return (screenPoint - currentOffset) / currentScale;
+  }
+
+  Offset _clampPoint(Offset point) {
+    return Offset(
+      point.dx.clamp(canvasRect.left, canvasRect.right),
+      point.dy.clamp(canvasRect.top, canvasRect.bottom),
+    );
   }
 
   int _nextShapeZIndex() {
@@ -107,7 +115,7 @@ class CanvasController extends ChangeNotifier {
       (allShapes.length * 20.0) % 200 + 50,
     );
     final List<Offset> translatedPoints = newShapePoints
-        .map<Offset>((Offset p) => p + offsetTranslation)
+        .map<Offset>((Offset p) => _clampPoint(p + offsetTranslation))
         .toList();
 
     final double randomHue = (DateTime.now().millisecond.toDouble() % 360)
@@ -223,7 +231,12 @@ class CanvasController extends ChangeNotifier {
         if (GeometryUtils.distanceToSegment(worldPosition, p1, p2) <
             worldSegmentTapTolerance) {
           executeCommand(
-            AddVertexCommand(this, selectedShapeIndex, i + 1, worldPosition),
+            AddVertexCommand(
+              this,
+              selectedShapeIndex,
+              i + 1,
+              _clampPoint(worldPosition),
+            ),
           );
           return;
         }
@@ -352,7 +365,7 @@ class CanvasController extends ChangeNotifier {
             _draggedShapesInitialPoints![shapeIndex];
         if (initialPoints != null) {
           final List<Offset> updatedPoints = initialPoints
-              .map<Offset>((Offset point) => point + deltaWorld)
+              .map<Offset>((Offset point) => _clampPoint(point + deltaWorld))
               .toList();
           tempAllShapes[shapeIndex] = tempAllShapes[shapeIndex].copyWith(
             points: updatedPoints,
@@ -372,7 +385,7 @@ class CanvasController extends ChangeNotifier {
         tempAllShapes[draggingShapeIndex!].points,
       );
       updatedPoints[draggingPointIndex!] =
-          _draggedPointInitialPosition! + deltaWorld;
+          _clampPoint(_draggedPointInitialPosition! + deltaWorld);
 
       tempAllShapes[draggingShapeIndex!] = tempAllShapes[draggingShapeIndex!]
           .copyWith(points: updatedPoints);
