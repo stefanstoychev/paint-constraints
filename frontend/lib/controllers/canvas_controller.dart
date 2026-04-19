@@ -3,7 +3,6 @@ import 'dart:math';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:frontend/models/canvas_data.dart';
 import 'package:frontend/models/color_constraints.dart';
 import 'package:frontend/models/color_relationship.dart';
@@ -198,6 +197,12 @@ class CanvasController extends ChangeNotifier {
   bool isLinkMode = false;
   bool isEditVerticesMode = false;
   bool showRelationships = true;
+  bool showColorLabels = false;
+
+  void toggleShowColorLabels() {
+    showColorLabels = !showColorLabels;
+    notifyListeners();
+  }
 
   final ColorConstraints colorConstraints =
       ColorConstraints.withCommonRelationships();

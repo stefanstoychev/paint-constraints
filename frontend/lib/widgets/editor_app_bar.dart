@@ -4,6 +4,7 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
   final bool isEditVerticesMode;
   final bool isLinkMode;
   final bool showRelationships;
+  final bool showColorLabels;
   final bool hasSelectedVertex;
   final bool hasSelectedShapes;
   final bool canUndo;
@@ -14,6 +15,7 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
   final VoidCallback onToggleEditVerticesMode;
   final VoidCallback onDeleteVertex;
   final VoidCallback onToggleShowRelationships;
+  final VoidCallback onToggleShowColorLabels;
   final VoidCallback onSendToFront;
   final VoidCallback onPushToBack;
   final VoidCallback onUndo;
@@ -28,6 +30,7 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
     required this.isEditVerticesMode,
     required this.isLinkMode,
     required this.showRelationships,
+    required this.showColorLabels,
     required this.hasSelectedVertex,
     required this.hasSelectedShapes,
     required this.canUndo,
@@ -36,6 +39,7 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
     required this.onToggleEditVerticesMode,
     required this.onDeleteVertex,
     required this.onToggleShowRelationships,
+    required this.onToggleShowColorLabels,
     required this.onSendToFront,
     required this.onPushToBack,
     required this.onUndo,
@@ -138,6 +142,9 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
               case 'visibility':
                 onToggleShowRelationships();
                 break;
+              case 'colors':
+                onToggleShowColorLabels();
+                break;
               case 'front':
                 onSendToFront();
                 break;
@@ -163,6 +170,17 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
                   showRelationships
                       ? 'Hide Relationships'
                       : 'Show Relationships',
+                ),
+              ),
+            ),
+            PopupMenuItem<String>(
+              value: 'colors',
+              child: ListTile(
+                leading: Icon(
+                  showColorLabels ? Icons.label : Icons.label_off,
+                ),
+                title: Text(
+                  showColorLabels ? 'Hide Color Labels' : 'Show Color Labels',
                 ),
               ),
             ),

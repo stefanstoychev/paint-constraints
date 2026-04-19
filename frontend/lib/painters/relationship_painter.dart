@@ -9,20 +9,6 @@ class RelationshipPainter extends CustomPainter {
   static const double _relationshipLabelSpacing = 16.0;
   static const double _shapeLabelFontSize = 16.0;
   static const double _arrowSize = 8.0;
-  final List<ShapeData> shapes;
-  final List<int> selectedIndices;
-  final List<ShapeRelationship> activeRelationships;
-  final int? draggingShapeIndex;
-  final int? draggingPointIndex;
-  final int? selectedVertexIndex;
-  final double handleRadius;
-  final bool isLinkMode;
-  final bool isEditVerticesMode;
-  final bool showAddPointIndicators;
-  final bool showRelationships;
-  final double scale;
-  final Offset offset;
-
   RelationshipPainter({
     required this.shapes,
     required this.selectedIndices,
@@ -35,9 +21,25 @@ class RelationshipPainter extends CustomPainter {
     required this.isEditVerticesMode,
     required this.showAddPointIndicators,
     required this.showRelationships,
+    required this.showColorLabels,
     required this.scale,
     required this.offset,
   });
+
+  final List<ShapeData> shapes;
+  final List<int> selectedIndices;
+  final List<ShapeRelationship> activeRelationships;
+  final int? draggingShapeIndex;
+  final int? draggingPointIndex;
+  final int? selectedVertexIndex;
+  final double handleRadius;
+  final bool isLinkMode;
+  final bool isEditVerticesMode;
+  final bool showAddPointIndicators;
+  final bool showRelationships;
+  final bool showColorLabels;
+  final double scale;
+  final Offset offset;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -84,6 +86,10 @@ class RelationshipPainter extends CustomPainter {
       if (labelText != null) {
         _paintShapeLabel(canvas, labelText, shape.points, textPainter);
       }
+
+      if (showColorLabels) {
+        _paintColorLabel(canvas, shape, textPainter);
+      }
     }
 
     // Paint relationship lines
@@ -109,7 +115,7 @@ class RelationshipPainter extends CustomPainter {
 
   Paint _buildHandleFillPaint() {
     return Paint()
-      ..color = Colors.blue.withValues(alpha: 0.7)
+      ..color = Colors.blue.withOpacity(0.7)
       ..style = PaintingStyle.fill;
   }
 
@@ -137,7 +143,7 @@ class RelationshipPainter extends CustomPainter {
 
   Paint _buildSegmentPointPaint() {
     return Paint()
-      ..color = Colors.blue.withValues(alpha: 0.7)
+      ..color = Colors.blue.withOpacity(0.7)
       ..style = PaintingStyle.fill;
   }
 
@@ -248,14 +254,45 @@ class RelationshipPainter extends CustomPainter {
     canvas.restore();
   }
 
+  void _paintColorLabel(
+    Canvas canvas,
+    ShapeData shape,
+    TextPainter textPainter,
+  ) {
+    final Offset center = _polygonCentroid(shape.points);
+    final String labelText =
+        'H:${shape.hsv.hue.toInt()} S:${(shape.hsv.saturation * 100).toInt()} V:${(shape.hsv.value * 100).toInt()}';
+
+    textPainter.text = TextSpan(
+      text: labelText,
+      style: TextStyle(
+        color: Colors.white,
+        fontSize: 10,
+        fontWeight: FontWeight.bold,
+        backgroundColor: Colors.black54,
+      ),
+    );
+    textPainter.layout();
+
+    final double textScale = 1 / scale;
+    canvas.save();
+    canvas.translate(center.dx, center.dy + 15 / scale); // Slightly below center
+    canvas.scale(textScale);
+    textPainter.paint(
+      canvas,
+      Offset(-textPainter.width / 2, -textPainter.height / 2),
+    );
+    canvas.restore();
+  }
+
   void _paintRelationships(Canvas canvas, TextPainter textPainter) {
     final Paint linePaint = Paint()
-      ..color = Colors.blue.withValues(alpha: 0.7)
+      ..color = Colors.blue.withOpacity(0.7)
       ..strokeWidth = 2.0 / scale
       ..style = PaintingStyle.stroke;
 
     final Paint arrowPaint = Paint()
-      ..color = Colors.blue.withValues(alpha: 0.7)
+      ..color = Colors.blue.withOpacity(0.7)
       ..style = PaintingStyle.fill;
 
     for (final ShapeRelationship relationship in activeRelationships) {
@@ -379,7 +416,7 @@ class RelationshipPainter extends CustomPainter {
         color: Colors.blue.shade800,
         fontSize: _relationshipLabelFontSize,
         fontWeight: FontWeight.bold,
-        backgroundColor: Colors.white.withValues(alpha: 0.8),
+        backgroundColor: Colors.white.withOpacity(0.8),
       ),
     );
     textPainter.layout();
@@ -435,6 +472,7 @@ class RelationshipPainter extends CustomPainter {
       return true;
     }
     if (showRelationships != oldDelegate.showRelationships) return true;
+    if (showColorLabels != oldDelegate.showColorLabels) return true;
     if (scale != oldDelegate.scale) return true;
     if (offset != oldDelegate.offset) return true;
     if (!listEquals(activeRelationships, oldDelegate.activeRelationships)) {
