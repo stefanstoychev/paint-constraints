@@ -1,4 +1,4 @@
-import 'dart:ui';
+import 'package:flutter/material.dart';
 import 'package:frontend/controllers/canvas_controller.dart';
 import 'package:frontend/models/shape_data.dart';
 import 'canvas_command.dart';
@@ -74,6 +74,36 @@ class MoveShapeCommand implements CanvasCommand {
     for (final entry in initialPoints.entries) {
       if (entry.key < shapes.length) {
         shapes[entry.key] = shapes[entry.key].copyWith(points: entry.value);
+      }
+    }
+    controller.allShapes = shapes;
+  }
+}
+
+class UpdateShapeColorsCommand implements CanvasCommand {
+  final CanvasController controller;
+  final Map<int, HSVColor> oldColors;
+  final Map<int, HSVColor> newColors;
+
+  UpdateShapeColorsCommand(this.controller, this.oldColors, this.newColors);
+
+  @override
+  void execute() {
+    final shapes = List<ShapeData>.from(controller.allShapes);
+    for (final entry in newColors.entries) {
+      if (entry.key < shapes.length) {
+        shapes[entry.key] = shapes[entry.key].copyWith(hsv: entry.value);
+      }
+    }
+    controller.allShapes = shapes;
+  }
+
+  @override
+  void undo() {
+    final shapes = List<ShapeData>.from(controller.allShapes);
+    for (final entry in oldColors.entries) {
+      if (entry.key < shapes.length) {
+        shapes[entry.key] = shapes[entry.key].copyWith(hsv: entry.value);
       }
     }
     controller.allShapes = shapes;

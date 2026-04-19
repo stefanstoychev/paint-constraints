@@ -17,6 +17,7 @@ import 'package:frontend/commands/command_history.dart';
 import 'package:frontend/commands/shape_commands.dart';
 import 'package:frontend/commands/vertex_commands.dart';
 import 'package:frontend/commands/relationship_commands.dart';
+import 'package:frontend/services/solver_service.dart';
 
 class CanvasController extends ChangeNotifier {
   final CommandHistory commandHistory = CommandHistory();
@@ -37,6 +38,39 @@ class CanvasController extends ChangeNotifier {
   }
 
   CanvasProject? currentProject;
+  final SolverService _solverService = SolverService();
+
+  Future<void> solveRelationships(BuildContext context) async {
+    if (activeRelationships.isEmpty) return;
+
+    final results = await _solverService.solve(activeRelationships);
+    if (results != null) {
+      final Map<int, HSVColor> oldColors = {};
+      final Map<int, HSVColor> newColors = {};
+      
+      for (final result in results) {
+        if (result.index >= 0 && result.index < allShapes.length) {
+          oldColors[result.index] = allShapes[result.index].hsv;
+          newColors[result.index] = HSVColor.fromAHSV(
+            1.0, 
+            result.h, 
+            result.s / 100, 
+            result.v / 100,
+          );
+        }
+      }
+      
+      if (newColors.isNotEmpty) {
+        executeCommand(UpdateShapeColorsCommand(this, oldColors, newColors));
+      }
+    } else {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to solve constraints')),
+        );
+      }
+    }
+  }
 
   void loadProject(CanvasProject project) {
     currentProject = project;

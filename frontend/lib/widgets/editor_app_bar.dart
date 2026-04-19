@@ -21,6 +21,7 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
   final VoidCallback onAddShape;
   final VoidCallback onSave;
   final VoidCallback onLoad;
+  final VoidCallback onSolve;
 
   const EditorAppBar({
     super.key,
@@ -42,6 +43,7 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
     required this.onAddShape,
     required this.onSave,
     required this.onLoad,
+    required this.onSolve,
     required this.projectName,
   });
 
@@ -74,6 +76,12 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
           icon: const Icon(Icons.add),
           onPressed: onAddShape,
           tooltip: 'Add New Shape',
+        ),
+        IconButton(
+          icon: const Icon(Icons.auto_awesome),
+          onPressed: onSolve,
+          tooltip: 'Solve Constraints',
+          color: Colors.amber,
         ),
         if (isSmallScreen)
           _buildIconButton(
