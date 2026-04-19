@@ -8,7 +8,29 @@ import 'package:frontend/models/color_relationship.dart';
 import 'package:frontend/models/shape_data.dart';
 import 'package:frontend/utils/geometry_utils.dart';
 
+import 'package:frontend/commands/canvas_command.dart';
+import 'package:frontend/commands/command_history.dart';
+import 'package:frontend/commands/shape_commands.dart';
+import 'package:frontend/commands/vertex_commands.dart';
+import 'package:frontend/commands/relationship_commands.dart';
+
 class CanvasController extends ChangeNotifier {
+  final CommandHistory commandHistory = CommandHistory();
+
+  void executeCommand(CanvasCommand command) {
+    commandHistory.execute(command);
+    notifyListeners();
+  }
+
+  void undo() {
+    commandHistory.undo();
+    notifyListeners();
+  }
+
+  void redo() {
+    commandHistory.redo();
+    notifyListeners();
+  }
   List<ShapeData> allShapes = <ShapeData>[
     ShapeData(
       points: <Offset>[
@@ -85,17 +107,13 @@ class CanvasController extends ChangeNotifier {
     final double randomHue = (DateTime.now().millisecond.toDouble() % 360)
         .roundToDouble();
 
-    allShapes = <ShapeData>[
-      ...allShapes,
-      ShapeData(
-        points: translatedPoints,
-        hsv: HSVColor.fromAHSV(1, randomHue, 0.7, 0.8),
-        zIndex: _nextShapeZIndex(),
-      ),
-    ];
-    selectedIndices = <int>[allShapes.length - 1];
-    selectedVertexIndex = null;
-    notifyListeners();
+    final newShape = ShapeData(
+      points: translatedPoints,
+      hsv: HSVColor.fromAHSV(1, randomHue, 0.7, 0.8),
+      zIndex: _nextShapeZIndex(),
+    );
+
+    executeCommand(AddShapeCommand(this, newShape));
   }
 
   void toggleLinkMode() {
@@ -149,12 +167,6 @@ class CanvasController extends ChangeNotifier {
           activeRelationship.hasSameType(shapeRelationship),
     );
 
-    if (existingRelationshipIndex != -1) {
-      activeRelationships[existingRelationshipIndex] = shapeRelationship;
-    } else {
-      activeRelationships.add(shapeRelationship);
-    }
-
     final HSVColor targetHsv = allShapes[targetIdx].hsv;
     final HSVColor newTargetHsv = colorConstraints.applyOffset(
       targetHsv,
@@ -162,12 +174,19 @@ class CanvasController extends ChangeNotifier {
       relationship.offset,
     );
 
-    final List<ShapeData> tempAllShapes = List<ShapeData>.from(allShapes);
-    tempAllShapes[targetIdx] = tempAllShapes[targetIdx].copyWith(
-      hsv: newTargetHsv,
-    );
-    allShapes = tempAllShapes;
-    notifyListeners();
+    ShapeRelationship? prevRelationship;
+    if (existingRelationshipIndex != -1) {
+      prevRelationship = activeRelationships[existingRelationshipIndex];
+    }
+
+    executeCommand(ApplyRelationshipCommand(
+      controller: this,
+      newRelationship: shapeRelationship,
+      newTargetHsv: newTargetHsv,
+      targetShapeIndex: targetIdx,
+      previousRelationship: prevRelationship,
+      previousTargetHsv: targetHsv,
+    ));
   }
 
   void handleTapDown(TapDownDetails details) {
@@ -195,16 +214,7 @@ class CanvasController extends ChangeNotifier {
 
         if (GeometryUtils.distanceToSegment(worldPosition, p1, p2) <
             worldSegmentTapTolerance) {
-          final List<ShapeData> tempAllShapes = List<ShapeData>.from(allShapes);
-          final List<Offset> currentPoints = List<Offset>.from(
-            tempAllShapes[selectedShapeIndex].points,
-          );
-          currentPoints.insert(i + 1, worldPosition);
-
-          tempAllShapes[selectedShapeIndex] = tempAllShapes[selectedShapeIndex]
-              .copyWith(points: currentPoints);
-          allShapes = tempAllShapes;
-          notifyListeners();
+          executeCommand(AddVertexCommand(this, selectedShapeIndex, i + 1, worldPosition));
           return;
         }
       }
@@ -363,6 +373,33 @@ class CanvasController extends ChangeNotifier {
   }
 
   void handleScaleEnd(ScaleEndDetails details) {
+    if (_isDraggingWholeShape && _draggedShapesInitialPoints != null) {
+      final Map<int, List<Offset>> finalPoints = {};
+      for (final int shapeIndex in selectedIndices) {
+        finalPoints[shapeIndex] = List<Offset>.from(allShapes[shapeIndex].points);
+      }
+      
+      final tempShapes = List<ShapeData>.from(allShapes);
+      for (final int shapeIndex in selectedIndices) {
+        if (_draggedShapesInitialPoints!.containsKey(shapeIndex)) {
+          tempShapes[shapeIndex] = tempShapes[shapeIndex].copyWith(points: _draggedShapesInitialPoints![shapeIndex]);
+        }
+      }
+      allShapes = tempShapes;
+      
+      executeCommand(MoveShapeCommand(this, _draggedShapesInitialPoints!, finalPoints));
+    } else if (draggingShapeIndex != null && draggingPointIndex != null && _draggedPointInitialPosition != null) {
+      final finalPosition = allShapes[draggingShapeIndex!].points[draggingPointIndex!];
+      
+      final tempShapes = List<ShapeData>.from(allShapes);
+      final points = List<Offset>.from(tempShapes[draggingShapeIndex!].points);
+      points[draggingPointIndex!] = _draggedPointInitialPosition!;
+      tempShapes[draggingShapeIndex!] = tempShapes[draggingShapeIndex!].copyWith(points: points);
+      allShapes = tempShapes;
+
+      executeCommand(MoveVertexCommand(this, draggingShapeIndex!, draggingPointIndex!, _draggedPointInitialPosition!, finalPosition));
+    }
+
     draggingShapeIndex = null;
     draggingPointIndex = null;
     _isDraggingWholeShape = false;
@@ -410,17 +447,8 @@ class CanvasController extends ChangeNotifier {
     final List<Offset> points = allShapes[shapeIndex].points;
     if (points.length <= 3) return;
 
-    final List<ShapeData> tempShapes = List<ShapeData>.from(allShapes);
-    final List<Offset> updatedPoints = List<Offset>.from(points)
-      ..removeAt(selectedVertexIndex!);
-    tempShapes[shapeIndex] = tempShapes[shapeIndex].copyWith(
-      points: updatedPoints,
-    );
-    allShapes = tempShapes;
-    selectedVertexIndex = null;
-    draggingPointIndex = null;
-    draggingShapeIndex = null;
-    notifyListeners();
+    final position = points[selectedVertexIndex!];
+    executeCommand(DeleteVertexCommand(this, shapeIndex, selectedVertexIndex!, position));
   }
 
   void pushSelectedShapesToBack() {
@@ -440,8 +468,7 @@ class CanvasController extends ChangeNotifier {
       );
     }
 
-    allShapes = tempShapes;
-    notifyListeners();
+    executeCommand(ReorderShapesCommand(this, List.from(allShapes), tempShapes));
   }
 
   void sendSelectedShapesToFront() {
@@ -461,8 +488,7 @@ class CanvasController extends ChangeNotifier {
       );
     }
 
-    allShapes = tempShapes;
-    notifyListeners();
+    executeCommand(ReorderShapesCommand(this, List.from(allShapes), tempShapes));
   }
 
   Future<void> saveShapes(BuildContext context) async {

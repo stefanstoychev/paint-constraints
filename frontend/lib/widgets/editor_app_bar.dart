@@ -6,6 +6,8 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
   final bool showRelationships;
   final bool hasSelectedVertex;
   final bool hasSelectedShapes;
+  final bool canUndo;
+  final bool canRedo;
 
   final VoidCallback onToggleLinkMode;
   final VoidCallback onToggleEditVerticesMode;
@@ -13,6 +15,8 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
   final VoidCallback onToggleShowRelationships;
   final VoidCallback onSendToFront;
   final VoidCallback onPushToBack;
+  final VoidCallback onUndo;
+  final VoidCallback onRedo;
   final VoidCallback onSave;
   final VoidCallback onLoad;
 
@@ -23,12 +27,16 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
     required this.showRelationships,
     required this.hasSelectedVertex,
     required this.hasSelectedShapes,
+    required this.canUndo,
+    required this.canRedo,
     required this.onToggleLinkMode,
     required this.onToggleEditVerticesMode,
     required this.onDeleteVertex,
     required this.onToggleShowRelationships,
     required this.onSendToFront,
     required this.onPushToBack,
+    required this.onUndo,
+    required this.onRedo,
     required this.onSave,
     required this.onLoad,
   });
@@ -90,6 +98,16 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
             onPressed: hasSelectedShapes ? onPushToBack : null,
             tooltip: 'Push selected shape to back',
           ),
+        IconButton(
+          icon: const Icon(Icons.undo),
+          onPressed: canUndo ? onUndo : null,
+          tooltip: 'Undo',
+        ),
+        IconButton(
+          icon: const Icon(Icons.redo),
+          onPressed: canRedo ? onRedo : null,
+          tooltip: 'Redo',
+        ),
         IconButton(
           icon: const Icon(Icons.save),
           onPressed: onSave,
