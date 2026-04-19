@@ -31,6 +31,7 @@ class CanvasController extends ChangeNotifier {
     commandHistory.redo();
     notifyListeners();
   }
+
   List<ShapeData> allShapes = <ShapeData>[
     ShapeData(
       points: <Offset>[
@@ -179,14 +180,16 @@ class CanvasController extends ChangeNotifier {
       prevRelationship = activeRelationships[existingRelationshipIndex];
     }
 
-    executeCommand(ApplyRelationshipCommand(
-      controller: this,
-      newRelationship: shapeRelationship,
-      newTargetHsv: newTargetHsv,
-      targetShapeIndex: targetIdx,
-      previousRelationship: prevRelationship,
-      previousTargetHsv: targetHsv,
-    ));
+    executeCommand(
+      ApplyRelationshipCommand(
+        controller: this,
+        newRelationship: shapeRelationship,
+        newTargetHsv: newTargetHsv,
+        targetShapeIndex: targetIdx,
+        previousRelationship: prevRelationship,
+        previousTargetHsv: targetHsv,
+      ),
+    );
   }
 
   void handleTapDown(TapDownDetails details) {
@@ -214,7 +217,9 @@ class CanvasController extends ChangeNotifier {
 
         if (GeometryUtils.distanceToSegment(worldPosition, p1, p2) <
             worldSegmentTapTolerance) {
-          executeCommand(AddVertexCommand(this, selectedShapeIndex, i + 1, worldPosition));
+          executeCommand(
+            AddVertexCommand(this, selectedShapeIndex, i + 1, worldPosition),
+          );
           return;
         }
       }
@@ -376,28 +381,46 @@ class CanvasController extends ChangeNotifier {
     if (_isDraggingWholeShape && _draggedShapesInitialPoints != null) {
       final Map<int, List<Offset>> finalPoints = {};
       for (final int shapeIndex in selectedIndices) {
-        finalPoints[shapeIndex] = List<Offset>.from(allShapes[shapeIndex].points);
+        finalPoints[shapeIndex] = List<Offset>.from(
+          allShapes[shapeIndex].points,
+        );
       }
-      
+
       final tempShapes = List<ShapeData>.from(allShapes);
       for (final int shapeIndex in selectedIndices) {
         if (_draggedShapesInitialPoints!.containsKey(shapeIndex)) {
-          tempShapes[shapeIndex] = tempShapes[shapeIndex].copyWith(points: _draggedShapesInitialPoints![shapeIndex]);
+          tempShapes[shapeIndex] = tempShapes[shapeIndex].copyWith(
+            points: _draggedShapesInitialPoints![shapeIndex],
+          );
         }
       }
       allShapes = tempShapes;
-      
-      executeCommand(MoveShapeCommand(this, _draggedShapesInitialPoints!, finalPoints));
-    } else if (draggingShapeIndex != null && draggingPointIndex != null && _draggedPointInitialPosition != null) {
-      final finalPosition = allShapes[draggingShapeIndex!].points[draggingPointIndex!];
-      
+
+      executeCommand(
+        MoveShapeCommand(this, _draggedShapesInitialPoints!, finalPoints),
+      );
+    } else if (draggingShapeIndex != null &&
+        draggingPointIndex != null &&
+        _draggedPointInitialPosition != null) {
+      final finalPosition =
+          allShapes[draggingShapeIndex!].points[draggingPointIndex!];
+
       final tempShapes = List<ShapeData>.from(allShapes);
       final points = List<Offset>.from(tempShapes[draggingShapeIndex!].points);
       points[draggingPointIndex!] = _draggedPointInitialPosition!;
-      tempShapes[draggingShapeIndex!] = tempShapes[draggingShapeIndex!].copyWith(points: points);
+      tempShapes[draggingShapeIndex!] = tempShapes[draggingShapeIndex!]
+          .copyWith(points: points);
       allShapes = tempShapes;
 
-      executeCommand(MoveVertexCommand(this, draggingShapeIndex!, draggingPointIndex!, _draggedPointInitialPosition!, finalPosition));
+      executeCommand(
+        MoveVertexCommand(
+          this,
+          draggingShapeIndex!,
+          draggingPointIndex!,
+          _draggedPointInitialPosition!,
+          finalPosition,
+        ),
+      );
     }
 
     draggingShapeIndex = null;
@@ -448,7 +471,9 @@ class CanvasController extends ChangeNotifier {
     if (points.length <= 3) return;
 
     final position = points[selectedVertexIndex!];
-    executeCommand(DeleteVertexCommand(this, shapeIndex, selectedVertexIndex!, position));
+    executeCommand(
+      DeleteVertexCommand(this, shapeIndex, selectedVertexIndex!, position),
+    );
   }
 
   void pushSelectedShapesToBack() {
@@ -468,7 +493,9 @@ class CanvasController extends ChangeNotifier {
       );
     }
 
-    executeCommand(ReorderShapesCommand(this, List.from(allShapes), tempShapes));
+    executeCommand(
+      ReorderShapesCommand(this, List.from(allShapes), tempShapes),
+    );
   }
 
   void sendSelectedShapesToFront() {
@@ -488,7 +515,9 @@ class CanvasController extends ChangeNotifier {
       );
     }
 
-    executeCommand(ReorderShapesCommand(this, List.from(allShapes), tempShapes));
+    executeCommand(
+      ReorderShapesCommand(this, List.from(allShapes), tempShapes),
+    );
   }
 
   Future<void> saveShapes(BuildContext context) async {

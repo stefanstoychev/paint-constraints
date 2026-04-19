@@ -40,6 +40,9 @@ class ShapeEditor extends StatelessWidget {
         clipBehavior: Clip.none,
         children: <Widget>[
           GestureDetector(
+            onDoubleTap: controller.commandHistory.canUndo
+                ? controller.undo
+                : null,
             onTapDown: controller.handleTapDown,
             onScaleStart: controller.handleScaleStart,
             onScaleUpdate: controller.handleScaleUpdate,
