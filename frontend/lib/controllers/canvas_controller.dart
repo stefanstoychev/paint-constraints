@@ -19,7 +19,6 @@ import 'package:frontend/commands/vertex_commands.dart';
 import 'package:frontend/commands/relationship_commands.dart';
 
 class CanvasController extends ChangeNotifier {
-  final GlobalKey boundaryKey = GlobalKey();
   final CommandHistory commandHistory = CommandHistory();
 
   void executeCommand(CanvasCommand command) {
@@ -81,15 +80,58 @@ class CanvasController extends ChangeNotifier {
 
   Future<String?> captureThumbnail() async {
     try {
-      final RenderRepaintBoundary? boundary =
-          boundaryKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
-      if (boundary == null) return null;
+      final rect = canvasRect;
+      
+      // Use a slightly higher resolution for better clarity
+      const double targetWidth = 300.0;
+      final double scaleFactor = targetWidth / rect.width;
+      final double targetHeight = rect.height * scaleFactor;
 
-      // Use a lower pixel ratio for smaller thumbnails
-      final ui.Image image = await boundary.toImage(pixelRatio: 0.5);
+      final recorder = ui.PictureRecorder();
+      final canvas = Canvas(recorder);
+
+      // 1. Scale to target dimensions
+      canvas.scale(scaleFactor);
+      
+      // 2. Translate to align artboard top-left with (0,0)
+      canvas.translate(-rect.left, -rect.top);
+
+      // 3. Draw artboard background (using world coordinates)
+      final backgroundPaint = Paint()..color = Colors.white;
+      canvas.drawRect(rect, backgroundPaint);
+
+      // 4. Draw shapes
+      final shapePaint = Paint()..style = PaintingStyle.fill;
+      final strokePaint = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.0;
+
+      for (final shape in allShapes) {
+        final path = Path();
+        if (shape.points.isNotEmpty) {
+          path.moveTo(shape.points[0].dx, shape.points[0].dy);
+          for (int i = 1; i < shape.points.length; i++) {
+            path.lineTo(shape.points[i].dx, shape.points[i].dy);
+          }
+          path.close();
+        }
+
+        shapePaint.color = shape.hsv.toColor();
+        canvas.drawPath(path, shapePaint);
+
+        strokePaint.color =
+            shape.hsv.withValue(max(0, shape.hsv.value - 0.2)).toColor();
+        canvas.drawPath(path, strokePaint);
+      }
+
+      final picture = recorder.endRecording();
+      final image = await picture.toImage(
+        targetWidth.toInt(),
+        targetHeight.toInt(),
+      );
       final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-      if (byteData == null) return null;
 
+      if (byteData == null) return null;
       return base64Encode(byteData.buffer.asUint8List());
     } catch (e) {
       debugPrint('Error capturing thumbnail: $e');

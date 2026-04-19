@@ -36,11 +36,17 @@ class CanvasThumbnail extends StatelessWidget {
                 child: ClipRRect(
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
                   child: project.thumbnailBase64 != null
-                      ? Image.memory(
-                          base64Decode(project.thumbnailBase64!),
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) =>
-                              const Center(child: Icon(Icons.broken_image, color: Colors.white24)),
+                      ? Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Center(
+                            child: Image.memory(
+                              base64Decode(project.thumbnailBase64!),
+                              fit: BoxFit.contain,
+                              filterQuality: FilterQuality.medium,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  const Center(child: Icon(Icons.broken_image, color: Colors.white24)),
+                            ),
+                          ),
                         )
                       : const Center(
                           child: Icon(
