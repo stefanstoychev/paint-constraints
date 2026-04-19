@@ -25,7 +25,9 @@ class ColorRelationship {
     final opSymbol = operator.symbol;
     final offsetStr = offset == 0
         ? ''
-        : (offset > 0 ? ' + ${offset.toStringAsFixed(1)}' : ' - ${offset.abs().toStringAsFixed(1)}');
+        : (offset > 0
+              ? ' + ${offset.toStringAsFixed(1)}'
+              : ' - ${offset.abs().toStringAsFixed(1)}');
 
     return 'Target $componentName $opSymbol Source $componentName$offsetStr';
   }

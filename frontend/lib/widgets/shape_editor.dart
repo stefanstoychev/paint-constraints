@@ -70,10 +70,8 @@ class ShapeEditor extends StatelessWidget {
             ),
           ZoomControls(
             currentScale: controller.currentScale,
-            onZoomChanged: (scale) => controller.updateZoomScale(
-              scale,
-              MediaQuery.of(context).size,
-            ),
+            onZoomChanged: (scale) =>
+                controller.updateZoomScale(scale, MediaQuery.of(context).size),
             onZoomReset: controller.resetZoomScale,
           ),
         ],

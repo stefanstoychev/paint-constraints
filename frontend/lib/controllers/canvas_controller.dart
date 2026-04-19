@@ -3,7 +3,6 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:frontend/models/canvas_data.dart';
 import 'package:frontend/storage_service.dart';
-
 import 'package:frontend/models/color_constraints.dart';
 import 'package:frontend/models/color_relationship.dart';
 import 'package:frontend/models/shape_data.dart';
@@ -176,8 +175,7 @@ class CanvasController extends ChangeNotifier {
 
     final Offset worldPosition = _screenToWorld(details.localPosition);
     final double worldHandleRadius = handleRadius / currentScale;
-    final double worldSegmentTapTolerance =
-        _segmentTapTolerance / currentScale;
+    final double worldSegmentTapTolerance = _segmentTapTolerance / currentScale;
 
     if (isEditVerticesMode && selectedIndices.length == 1) {
       final int selectedShapeIndex = selectedIndices.first;
@@ -203,10 +201,8 @@ class CanvasController extends ChangeNotifier {
           );
           currentPoints.insert(i + 1, worldPosition);
 
-          tempAllShapes[selectedShapeIndex] =
-              tempAllShapes[selectedShapeIndex].copyWith(
-                points: currentPoints,
-              );
+          tempAllShapes[selectedShapeIndex] = tempAllShapes[selectedShapeIndex]
+              .copyWith(points: currentPoints);
           allShapes = tempAllShapes;
           notifyListeners();
           return;
@@ -296,7 +292,10 @@ class CanvasController extends ChangeNotifier {
         selectedIndices.isNotEmpty) {
       final Offset worldPosition = _screenToWorld(localFocalPoint);
       for (final int index in selectedIndices.reversed) {
-        if (GeometryUtils.isPointInPolygon(worldPosition, allShapes[index].points)) {
+        if (GeometryUtils.isPointInPolygon(
+          worldPosition,
+          allShapes[index].points,
+        )) {
           _isDraggingWholeShape = true;
           _dragStartWorldPoint = worldPosition;
           _draggedShapesInitialPoints = <int, List<Offset>>{};
@@ -320,8 +319,7 @@ class CanvasController extends ChangeNotifier {
         _dragStartWorldPoint != null &&
         _draggedShapesInitialPoints != null) {
       final Offset currentWorldFocalPoint = _screenToWorld(localFocalPoint);
-      final Offset deltaWorld =
-          currentWorldFocalPoint - _dragStartWorldPoint!;
+      final Offset deltaWorld = currentWorldFocalPoint - _dragStartWorldPoint!;
 
       final List<ShapeData> tempAllShapes = List<ShapeData>.from(allShapes);
       for (final int shapeIndex in selectedIndices) {
@@ -342,8 +340,7 @@ class CanvasController extends ChangeNotifier {
         details.pointerCount == 1) {
       selectedVertexIndex = draggingPointIndex;
       final Offset currentWorldFocalPoint = _screenToWorld(localFocalPoint);
-      final Offset deltaWorld =
-          currentWorldFocalPoint - _dragStartWorldPoint!;
+      final Offset deltaWorld = currentWorldFocalPoint - _dragStartWorldPoint!;
 
       final List<ShapeData> tempAllShapes = List<ShapeData>.from(allShapes);
       final List<Offset> updatedPoints = List<Offset>.from(
@@ -352,16 +349,15 @@ class CanvasController extends ChangeNotifier {
       updatedPoints[draggingPointIndex!] =
           _draggedPointInitialPosition! + deltaWorld;
 
-      tempAllShapes[draggingShapeIndex!] =
-          tempAllShapes[draggingShapeIndex!].copyWith(points: updatedPoints);
+      tempAllShapes[draggingShapeIndex!] = tempAllShapes[draggingShapeIndex!]
+          .copyWith(points: updatedPoints);
       allShapes = tempAllShapes;
     } else {
       currentScale = (_previousScale * details.scale).clamp(0.3, 5.0);
 
       final Offset focalPointAtStartWorld =
           (_previousFocalPoint - _previousOffset) / _previousScale;
-      currentOffset =
-          localFocalPoint - focalPointAtStartWorld * currentScale;
+      currentOffset = localFocalPoint - focalPointAtStartWorld * currentScale;
     }
     notifyListeners();
   }
@@ -511,7 +507,7 @@ class CanvasController extends ChangeNotifier {
         ),
       ];
     }
-    
+
     notifyListeners();
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(

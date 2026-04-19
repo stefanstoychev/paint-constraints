@@ -99,8 +99,8 @@ class RelationshipPanel extends StatelessWidget {
     final offsetStr = relationship.offset == 0
         ? ''
         : (relationship.offset > 0
-            ? ' + ${relationship.offset.toStringAsFixed(1)}'
-            : ' - ${relationship.offset.abs().toStringAsFixed(1)}');
+              ? ' + ${relationship.offset.toStringAsFixed(1)}'
+              : ' - ${relationship.offset.abs().toStringAsFixed(1)}');
 
     switch (relationship.component) {
       case ColorComponent.hue:

@@ -6,6 +6,9 @@ import 'package:frontend/controllers/canvas_controller.dart';
 void main() => runApp(
   ChangeNotifierProvider(
     create: (context) => CanvasController(),
-    child: const MaterialApp(home: ShapeEditor(), debugShowCheckedModeBanner: false),
+    child: const MaterialApp(
+      home: ShapeEditor(),
+      debugShowCheckedModeBanner: false,
+    ),
   ),
 );

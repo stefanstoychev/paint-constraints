@@ -20,11 +20,12 @@ class GeometryUtils {
 
   /// Calculates the shortest distance from a point to a line segment.
   static double distanceToSegment(Offset p, Offset p1, Offset p2) {
-    final double l2 = (pow(p2.dx - p1.dx, 2) + pow(p2.dy - p1.dy, 2)).toDouble();
+    final double l2 = (pow(p2.dx - p1.dx, 2) + pow(p2.dy - p1.dy, 2))
+        .toDouble();
     if (l2 == 0.0) return (p - p1).distance;
 
-    final double t = ((p.dx - p1.dx) * (p2.dx - p1.dx) +
-            (p.dy - p1.dy) * (p2.dy - p1.dy)) /
+    final double t =
+        ((p.dx - p1.dx) * (p2.dx - p1.dx) + (p.dy - p1.dy) * (p2.dy - p1.dy)) /
         l2;
 
     late Offset projection;

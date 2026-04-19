@@ -4,8 +4,5 @@ class CanvasData {
   final List<ShapeData> shapes;
   final List<ShapeRelationship> relationships;
 
-  CanvasData({
-    required this.shapes,
-    required this.relationships,
-  });
+  CanvasData({required this.shapes, required this.relationships});
 }

@@ -43,8 +43,8 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
         isEditVerticesMode
             ? 'Edit Vertices Mode'
             : isLinkMode
-                ? 'Select 2 Shapes to Link'
-                : 'Shape Operations',
+            ? 'Select 2 Shapes to Link'
+            : 'Shape Operations',
       ),
       actions: <Widget>[
         _buildModeButton(
