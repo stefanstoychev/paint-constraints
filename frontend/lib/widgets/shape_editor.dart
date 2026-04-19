@@ -57,7 +57,9 @@ class _ShapeEditorState extends State<ShapeEditor> {
         onSave: () => controller.saveCurrentProject(context, projectManager),
         onLoad: () => controller.loadProject(widget.project), // Revert to saved
         onSolve: () => controller.solveRelationships(context),
+        onUpdateSolverUrl: (url) => controller.solverUrl = url,
         projectName: widget.project.name,
+        solverUrl: controller.solverUrl,
       ),
       body: Stack(
         clipBehavior: Clip.none,

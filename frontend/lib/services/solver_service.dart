@@ -6,7 +6,9 @@ import 'package:frontend/models/color_component.dart';
 import 'package:frontend/models/comparison_operator.dart';
 
 class SolverService {
-  static const String baseUrl = 'http://localhost:8080';
+  String baseUrl;
+
+  SolverService({this.baseUrl = 'http://localhost:8080'});
 
   Future<List<SolveResult>?> solve(List<ShapeRelationship> relationships) async {
     try {

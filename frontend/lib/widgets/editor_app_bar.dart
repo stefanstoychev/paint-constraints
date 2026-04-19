@@ -10,6 +10,7 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
   final bool canUndo;
   final bool canRedo;
   final String projectName;
+  final String solverUrl;
 
   final VoidCallback onToggleLinkMode;
   final VoidCallback onToggleEditVerticesMode;
@@ -24,6 +25,7 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
   final VoidCallback onSave;
   final VoidCallback onLoad;
   final VoidCallback onSolve;
+  final ValueChanged<String> onUpdateSolverUrl;
 
   const EditorAppBar({
     super.key,
@@ -48,7 +50,9 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
     required this.onSave,
     required this.onLoad,
     required this.onSolve,
+    required this.onUpdateSolverUrl,
     required this.projectName,
+    required this.solverUrl,
   });
 
   @override
@@ -157,6 +161,9 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
               case 'load':
                 onLoad();
                 break;
+              case 'settings':
+                _showSettingsDialog(context);
+                break;
             }
           },
           itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
@@ -216,9 +223,53 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
                 title: Text('Load Project'),
               ),
             ),
+            const PopupMenuDivider(),
+            const PopupMenuItem<String>(
+              value: 'settings',
+              child: ListTile(
+                leading: Icon(Icons.settings),
+                title: Text('Solver Settings'),
+              ),
+            ),
           ],
         ),
       ],
+    );
+  }
+
+  void _showSettingsDialog(BuildContext context) {
+    final TextEditingController controller =
+        TextEditingController(text: solverUrl);
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Solver Settings'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: controller,
+              decoration: const InputDecoration(
+                labelText: 'Solver Server URL',
+                hintText: 'http://localhost:8080',
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              onUpdateSolverUrl(controller.text);
+              Navigator.pop(context);
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
     );
   }
 

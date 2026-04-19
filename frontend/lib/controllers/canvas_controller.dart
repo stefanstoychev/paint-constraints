@@ -39,6 +39,12 @@ class CanvasController extends ChangeNotifier {
   CanvasProject? currentProject;
   final SolverService _solverService = SolverService();
 
+  String get solverUrl => _solverService.baseUrl;
+  set solverUrl(String value) {
+    _solverService.baseUrl = value;
+    notifyListeners();
+  }
+
   Future<void> solveRelationships(BuildContext context) async {
     if (activeRelationships.isEmpty) return;
 
