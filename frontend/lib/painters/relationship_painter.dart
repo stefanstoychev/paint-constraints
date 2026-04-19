@@ -54,8 +54,6 @@ class RelationshipPainter extends CustomPainter {
     final int? firstSelected = _linkLabelIndex(isFirst: true);
     final int? lastSelected = _linkLabelIndex(isFirst: false);
 
-    _paintBackgroundCanvas(canvas);
-
     final List<MapEntry<int, ShapeData>> sortedShapes =
         shapes.asMap().entries.toList()..sort((a, b) {
           final int zCompare = a.value.zIndex.compareTo(b.value.zIndex);
@@ -104,14 +102,14 @@ class RelationshipPainter extends CustomPainter {
 
   Paint _buildShapeStrokePaint(bool isSelected) {
     return Paint()
-      ..color = isSelected ? Colors.orange : Colors.black26
-      ..strokeWidth = isSelected ? 4 / scale : 1 / scale
+      ..color = isSelected ? Colors.orange : Colors.white24
+      ..strokeWidth = isSelected ? 4 / scale : 1.5 / scale
       ..style = PaintingStyle.stroke;
   }
 
   Paint _buildHandleFillPaint() {
     return Paint()
-      ..color = Colors.blue.withOpacity(0.7)
+      ..color = Colors.blue.withValues(alpha: 0.7)
       ..style = PaintingStyle.fill;
   }
 
@@ -139,7 +137,7 @@ class RelationshipPainter extends CustomPainter {
 
   Paint _buildSegmentPointPaint() {
     return Paint()
-      ..color = Colors.blue.withOpacity(0.7)
+      ..color = Colors.blue.withValues(alpha: 0.7)
       ..style = PaintingStyle.fill;
   }
 
@@ -252,12 +250,12 @@ class RelationshipPainter extends CustomPainter {
 
   void _paintRelationships(Canvas canvas, TextPainter textPainter) {
     final Paint linePaint = Paint()
-      ..color = Colors.blue.withOpacity(0.7)
+      ..color = Colors.blue.withValues(alpha: 0.7)
       ..strokeWidth = 2.0 / scale
       ..style = PaintingStyle.stroke;
 
     final Paint arrowPaint = Paint()
-      ..color = Colors.blue.withOpacity(0.7)
+      ..color = Colors.blue.withValues(alpha: 0.7)
       ..style = PaintingStyle.fill;
 
     for (final ShapeRelationship relationship in activeRelationships) {
@@ -381,7 +379,7 @@ class RelationshipPainter extends CustomPainter {
         color: Colors.blue.shade800,
         fontSize: _relationshipLabelFontSize,
         fontWeight: FontWeight.bold,
-        backgroundColor: Colors.white.withOpacity(0.8),
+        backgroundColor: Colors.white.withValues(alpha: 0.8),
       ),
     );
     textPainter.layout();
@@ -394,20 +392,6 @@ class RelationshipPainter extends CustomPainter {
       Offset(-textPainter.width / 2, -textPainter.height / 2),
     );
     canvas.restore();
-  }
-
-  void _paintBackgroundCanvas(Canvas canvas) {
-    const Rect canvasRect = Rect.fromLTWH(20, 20, 460, 320);
-    final Paint fillPaint = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.fill;
-    final Paint borderPaint = Paint()
-      ..color = Colors.black12
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0 / scale;
-
-    canvas.drawRect(canvasRect, fillPaint);
-    canvas.drawRect(canvasRect, borderPaint);
   }
 
   Offset _polygonCentroid(List<Offset> points) {

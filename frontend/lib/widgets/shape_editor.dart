@@ -5,6 +5,7 @@ import 'package:frontend/painters/relationship_painter.dart';
 import 'package:frontend/widgets/editor_app_bar.dart';
 import 'package:frontend/widgets/relationship_panel.dart';
 import 'package:frontend/widgets/zoom_controls.dart';
+import 'package:frontend/widgets/canvas_grid.dart';
 
 class ShapeEditor extends StatelessWidget {
   const ShapeEditor({super.key});
@@ -49,23 +50,31 @@ class ShapeEditor extends StatelessWidget {
             onScaleEnd: controller.handleScaleEnd,
             child: Container(
               color: Colors.grey.shade900,
-              child: CustomPaint(
-                painter: RelationshipPainter(
-                  shapes: controller.allShapes,
-                  selectedIndices: controller.selectedIndices,
-                  activeRelationships: controller.activeRelationships,
-                  draggingShapeIndex: controller.draggingShapeIndex,
-                  draggingPointIndex: controller.draggingPointIndex,
-                  selectedVertexIndex: controller.selectedVertexIndex,
-                  handleRadius: CanvasController.handleRadius,
-                  isLinkMode: controller.isLinkMode,
-                  isEditVerticesMode: controller.isEditVerticesMode,
-                  showAddPointIndicators: showAddPointIndicators,
-                  showRelationships: controller.showRelationships,
-                  scale: controller.currentScale,
-                  offset: controller.currentOffset,
-                ),
-                child: Container(),
+              child: Stack(
+                children: [
+                  CanvasGrid(
+                    scale: controller.currentScale,
+                    offset: controller.currentOffset,
+                  ),
+                  CustomPaint(
+                    size: Size.infinite,
+                    painter: RelationshipPainter(
+                      shapes: controller.allShapes,
+                      selectedIndices: controller.selectedIndices,
+                      activeRelationships: controller.activeRelationships,
+                      draggingShapeIndex: controller.draggingShapeIndex,
+                      draggingPointIndex: controller.draggingPointIndex,
+                      selectedVertexIndex: controller.selectedVertexIndex,
+                      handleRadius: CanvasController.handleRadius,
+                      isLinkMode: controller.isLinkMode,
+                      isEditVerticesMode: controller.isEditVerticesMode,
+                      showAddPointIndicators: showAddPointIndicators,
+                      showRelationships: controller.showRelationships,
+                      scale: controller.currentScale,
+                      offset: controller.currentOffset,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
