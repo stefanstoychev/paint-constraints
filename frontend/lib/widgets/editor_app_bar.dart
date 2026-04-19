@@ -17,6 +17,7 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
   final VoidCallback onPushToBack;
   final VoidCallback onUndo;
   final VoidCallback onRedo;
+  final VoidCallback onAddShape;
   final VoidCallback onSave;
   final VoidCallback onLoad;
 
@@ -37,6 +38,7 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
     required this.onPushToBack,
     required this.onUndo,
     required this.onRedo,
+    required this.onAddShape,
     required this.onSave,
     required this.onLoad,
   });
@@ -59,6 +61,11 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
           )
           : null,
       actions: <Widget>[
+        IconButton(
+          icon: const Icon(Icons.add),
+          onPressed: onAddShape,
+          tooltip: 'Add New Shape',
+        ),
         if (isSmallScreen)
           _buildIconButton(
             icon: Icons.link,

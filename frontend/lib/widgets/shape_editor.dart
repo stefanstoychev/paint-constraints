@@ -34,6 +34,7 @@ class ShapeEditor extends StatelessWidget {
         canRedo: controller.commandHistory.canRedo,
         onUndo: controller.undo,
         onRedo: controller.redo,
+        onAddShape: controller.addShape,
         onSave: () => controller.saveShapes(context),
         onLoad: () => controller.loadShapes(context),
       ),
@@ -91,11 +92,6 @@ class ShapeEditor extends StatelessWidget {
             onZoomReset: controller.resetZoomScale,
           ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: controller.addShape,
-        tooltip: 'Add New Shape',
-        child: const Icon(Icons.add),
       ),
     );
   }
