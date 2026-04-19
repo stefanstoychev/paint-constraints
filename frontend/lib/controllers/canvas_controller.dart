@@ -1,6 +1,9 @@
+import 'dart:convert';
 import 'dart:math';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:frontend/models/canvas_data.dart';
 import 'package:frontend/models/color_constraints.dart';
 import 'package:frontend/models/color_relationship.dart';
@@ -16,6 +19,7 @@ import 'package:frontend/commands/vertex_commands.dart';
 import 'package:frontend/commands/relationship_commands.dart';
 
 class CanvasController extends ChangeNotifier {
+  final GlobalKey boundaryKey = GlobalKey();
   final CommandHistory commandHistory = CommandHistory();
 
   void executeCommand(CanvasCommand command) {
@@ -52,11 +56,14 @@ class CanvasController extends ChangeNotifier {
   Future<void> saveCurrentProject(BuildContext context, ProjectManager projectManager) async {
     if (currentProject == null) return;
     
+    final thumbnail = await captureThumbnail();
+    
     final updatedProject = currentProject!.copyWith(
       data: CanvasData(
         shapes: allShapes,
         relationships: activeRelationships,
       ),
+      thumbnailBase64: thumbnail,
     );
     
     await projectManager.updateProject(updatedProject);
@@ -69,6 +76,24 @@ class CanvasController extends ChangeNotifier {
           duration: Duration(seconds: 1),
         ),
       );
+    }
+  }
+
+  Future<String?> captureThumbnail() async {
+    try {
+      final RenderRepaintBoundary? boundary =
+          boundaryKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+      if (boundary == null) return null;
+
+      // Use a lower pixel ratio for smaller thumbnails
+      final ui.Image image = await boundary.toImage(pixelRatio: 0.5);
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      if (byteData == null) return null;
+
+      return base64Encode(byteData.buffer.asUint8List());
+    } catch (e) {
+      debugPrint('Error capturing thumbnail: $e');
+      return null;
     }
   }
 

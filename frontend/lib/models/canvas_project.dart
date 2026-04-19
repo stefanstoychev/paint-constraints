@@ -7,6 +7,7 @@ class CanvasProject {
   final Rect canvasRect;
   final CanvasData data;
   final DateTime lastModified;
+  final String? thumbnailBase64;
 
   CanvasProject({
     required this.id,
@@ -14,6 +15,7 @@ class CanvasProject {
     required this.canvasRect,
     required this.data,
     required this.lastModified,
+    this.thumbnailBase64,
   });
 
   CanvasProject copyWith({
@@ -21,6 +23,7 @@ class CanvasProject {
     Rect? canvasRect,
     CanvasData? data,
     DateTime? lastModified,
+    String? thumbnailBase64,
   }) {
     return CanvasProject(
       id: id,
@@ -28,6 +31,7 @@ class CanvasProject {
       canvasRect: canvasRect ?? this.canvasRect,
       data: data ?? this.data,
       lastModified: lastModified ?? this.lastModified,
+      thumbnailBase64: thumbnailBase64 ?? this.thumbnailBase64,
     );
   }
 
@@ -46,6 +50,7 @@ class CanvasProject {
         'relationships': data.relationships.map((r) => r.toJson()).toList(),
       },
       'lastModified': lastModified.toIso8601String(),
+      'thumbnailBase64': thumbnailBase64,
     };
   }
 
@@ -64,6 +69,7 @@ class CanvasProject {
       ),
       data: CanvasData.fromJson(dataJson),
       lastModified: DateTime.parse(json['lastModified']),
+      thumbnailBase64: json['thumbnailBase64'],
     );
   }
 }
