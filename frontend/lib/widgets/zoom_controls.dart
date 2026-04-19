@@ -14,23 +14,29 @@ class ZoomControls extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isSmallScreen = MediaQuery.of(context).size.width < 500;
+
     return Positioned(
-      bottom: 20,
-      left: 20,
+      bottom: isSmallScreen ? 10 : 20,
+      left: isSmallScreen ? 10 : 20,
       child: Card(
         color: Colors.black54,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          padding: EdgeInsets.symmetric(
+            horizontal: isSmallScreen ? 4 : 12,
+            vertical: isSmallScreen ? 2 : 8,
+          ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
               IconButton(
+                iconSize: isSmallScreen ? 20 : 24,
                 icon: const Icon(Icons.zoom_out, color: Colors.white),
                 onPressed: () => onZoomChanged(currentScale - 0.2),
                 tooltip: 'Zoom Out',
               ),
               SizedBox(
-                width: 150,
+                width: isSmallScreen ? 80 : 150,
                 child: Slider(
                   value: currentScale,
                   min: 0.3,
@@ -42,11 +48,13 @@ class ZoomControls extends StatelessWidget {
                 ),
               ),
               IconButton(
+                iconSize: isSmallScreen ? 20 : 24,
                 icon: const Icon(Icons.zoom_in, color: Colors.white),
                 onPressed: () => onZoomChanged(currentScale + 0.2),
                 tooltip: 'Zoom In',
               ),
               IconButton(
+                iconSize: isSmallScreen ? 20 : 24,
                 icon: const Icon(Icons.refresh, color: Colors.white),
                 onPressed: onZoomReset,
                 tooltip: 'Reset Zoom',

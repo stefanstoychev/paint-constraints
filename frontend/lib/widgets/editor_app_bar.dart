@@ -46,57 +46,57 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isSmallScreen = MediaQuery.of(context).size.width < 700;
+
     return AppBar(
-      title: Text(
-        isEditVerticesMode
-            ? 'Edit Vertices Mode'
-            : isLinkMode
-            ? 'Select 2 Shapes to Link'
-            : 'Shape Operations',
-      ),
+      title: !isSmallScreen
+          ? Text(
+            isEditVerticesMode
+                ? 'Edit Vertices Mode'
+                : isLinkMode
+                ? 'Select 2 Shapes to Link'
+                : 'Shape Operations',
+          )
+          : null,
       actions: <Widget>[
-        _buildModeButton(
-          label: 'Link Mode',
-          icon: Icons.link,
-          isActive: isLinkMode,
-          activeColor: Colors.green,
-          onPressed: onToggleLinkMode,
-        ),
-        _buildModeButton(
-          label: 'Edit Vertices',
-          icon: Icons.scatter_plot,
-          isActive: isEditVerticesMode,
-          activeColor: Colors.blue,
-          onPressed: onToggleEditVerticesMode,
-        ),
+        if (isSmallScreen)
+          _buildIconButton(
+            icon: Icons.link,
+            isActive: isLinkMode,
+            activeColor: Colors.green,
+            onPressed: onToggleLinkMode,
+            tooltip: 'Link Mode',
+          )
+        else
+          _buildModeButton(
+            label: 'Link Mode',
+            icon: Icons.link,
+            isActive: isLinkMode,
+            activeColor: Colors.green,
+            onPressed: onToggleLinkMode,
+          ),
+        if (isSmallScreen)
+          _buildIconButton(
+            icon: Icons.scatter_plot,
+            isActive: isEditVerticesMode,
+            activeColor: Colors.blue,
+            onPressed: onToggleEditVerticesMode,
+            tooltip: 'Edit Vertices',
+          )
+        else
+          _buildModeButton(
+            label: 'Edit Vertices',
+            icon: Icons.scatter_plot,
+            isActive: isEditVerticesMode,
+            activeColor: Colors.blue,
+            onPressed: onToggleEditVerticesMode,
+          ),
         if (isEditVerticesMode)
           IconButton(
             icon: const Icon(Icons.delete),
             color: hasSelectedVertex ? Colors.white : Colors.white38,
             onPressed: hasSelectedVertex ? onDeleteVertex : null,
             tooltip: 'Delete selected vertex',
-          ),
-        if (!isLinkMode)
-          IconButton(
-            icon: Icon(
-              showRelationships ? Icons.visibility : Icons.visibility_off,
-            ),
-            onPressed: onToggleShowRelationships,
-            tooltip: showRelationships
-                ? 'Hide relationships'
-                : 'Show relationships',
-          ),
-        if (!isLinkMode)
-          IconButton(
-            icon: const Icon(Icons.vertical_align_top),
-            onPressed: hasSelectedShapes ? onSendToFront : null,
-            tooltip: 'Send selected shape to front',
-          ),
-        if (!isLinkMode)
-          IconButton(
-            icon: const Icon(Icons.vertical_align_bottom),
-            onPressed: hasSelectedShapes ? onPushToBack : null,
-            tooltip: 'Push selected shape to back',
           ),
         IconButton(
           icon: const Icon(Icons.undo),
@@ -108,17 +108,89 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
           onPressed: canRedo ? onRedo : null,
           tooltip: 'Redo',
         ),
-        IconButton(
-          icon: const Icon(Icons.save),
-          onPressed: onSave,
-          tooltip: 'Save shapes',
-        ),
-        IconButton(
-          icon: const Icon(Icons.folder_open),
-          onPressed: onLoad,
-          tooltip: 'Load shapes',
+        PopupMenuButton<String>(
+          onSelected: (value) {
+            switch (value) {
+              case 'visibility':
+                onToggleShowRelationships();
+                break;
+              case 'front':
+                onSendToFront();
+                break;
+              case 'back':
+                onPushToBack();
+                break;
+              case 'save':
+                onSave();
+                break;
+              case 'load':
+                onLoad();
+                break;
+            }
+          },
+          itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+            PopupMenuItem<String>(
+              value: 'visibility',
+              child: ListTile(
+                leading: Icon(
+                  showRelationships ? Icons.visibility : Icons.visibility_off,
+                ),
+                title: Text(
+                  showRelationships
+                      ? 'Hide Relationships'
+                      : 'Show Relationships',
+                ),
+              ),
+            ),
+            const PopupMenuDivider(),
+            PopupMenuItem<String>(
+              value: 'front',
+              enabled: hasSelectedShapes,
+              child: const ListTile(
+                leading: Icon(Icons.vertical_align_top),
+                title: Text('Send to Front'),
+              ),
+            ),
+            PopupMenuItem<String>(
+              value: 'back',
+              enabled: hasSelectedShapes,
+              child: const ListTile(
+                leading: Icon(Icons.vertical_align_bottom),
+                title: Text('Push to Back'),
+              ),
+            ),
+            const PopupMenuDivider(),
+            const PopupMenuItem<String>(
+              value: 'save',
+              child: ListTile(
+                leading: Icon(Icons.save),
+                title: Text('Save Project'),
+              ),
+            ),
+            const PopupMenuItem<String>(
+              value: 'load',
+              child: ListTile(
+                leading: Icon(Icons.folder_open),
+                title: Text('Load Project'),
+              ),
+            ),
+          ],
         ),
       ],
+    );
+  }
+
+  Widget _buildIconButton({
+    required IconData icon,
+    required bool isActive,
+    required Color activeColor,
+    required VoidCallback onPressed,
+    required String tooltip,
+  }) {
+    return IconButton(
+      onPressed: onPressed,
+      icon: Icon(icon, color: isActive ? activeColor : Colors.grey),
+      tooltip: tooltip,
     );
   }
 

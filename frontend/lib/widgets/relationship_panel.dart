@@ -16,9 +16,12 @@ class RelationshipPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isSmallScreen = MediaQuery.of(context).size.width < 600;
+
     return Positioned(
-      top: 20,
-      right: 20,
+      top: isSmallScreen ? 70 : 20, // Avoid AppBar on small screens
+      right: isSmallScreen ? 10 : 20,
+      left: isSmallScreen ? 10 : null, // Fill width on small screens
       child: Card(
         color: Colors.black87,
         child: Padding(
@@ -75,18 +78,15 @@ class RelationshipPanel extends StatelessWidget {
           style: const TextStyle(color: Colors.white70, fontSize: 10),
         ),
         const SizedBox(height: 2),
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.start,
+        Wrap(
+          spacing: 4,
+          runSpacing: 4,
           children: relationships
               .map<Widget>(
-                (ColorRelationship relationship) => Padding(
-                  padding: const EdgeInsets.only(right: 4.0),
-                  child: LinkButton(
-                    label: _getRelationshipLabel(relationship),
-                    relationship: relationship,
-                    onPressed: onRelationshipApplied,
-                  ),
+                (ColorRelationship relationship) => LinkButton(
+                  label: _getRelationshipLabel(relationship),
+                  relationship: relationship,
+                  onPressed: onRelationshipApplied,
                 ),
               )
               .toList(),

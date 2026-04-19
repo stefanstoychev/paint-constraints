@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/controllers/canvas_controller.dart';
 import 'package:frontend/models/shape_data.dart';
-import 'package:frontend/models/color_relationship.dart';
 import 'canvas_command.dart';
 
 class ApplyRelationshipCommand implements CanvasCommand {
