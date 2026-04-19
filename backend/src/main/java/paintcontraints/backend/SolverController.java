@@ -67,7 +67,7 @@ public class SolverController {
                 long h = solver.value(shapeVars.get(index).get(ColorComponents.H));
                 long s = solver.value(shapeVars.get(index).get(ColorComponents.S));
                 long v = solver.value(shapeVars.get(index).get(ColorComponents.V));
-                results.add(new Result(index, (int) h, (int) v, (int) s));
+                results.add(new Result(index, (int) h, (int) s, (int) v));
             }
             return ResponseEntity.ok(results);
         } else {
