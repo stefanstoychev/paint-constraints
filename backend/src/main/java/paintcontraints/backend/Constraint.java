@@ -1,4 +1,4 @@
 package paintcontraints.backend;
 
-public record Constraint(ColorComponents color, Operation operation, int[] indexes) {
+public record Constraint(ColorComponents color, Operation operation, int[] indexes, int offset) {
 }

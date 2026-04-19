@@ -15,6 +15,7 @@ class SolverService {
           'color': _mapComponent(r.relationship.component),
           'operation': _mapOperator(r.relationship.operator),
           'indexes': [r.sourceShapeIndex, r.targetShapeIndex],
+          'offset': r.relationship.offset.toInt(),
         }).toList(),
       };
 
