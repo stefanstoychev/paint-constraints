@@ -39,23 +39,24 @@ public class ConstraintSolverService {
 
             IntVar varSource = shapeVars.get(constraint.indexes()[0]).get(constraint.color());
             IntVar varTarget = shapeVars.get(constraint.indexes()[1]).get(constraint.color());
-            long offset = constraint.offset();
+            double offset = constraint.offset();
+            long scaledOffset = Math.round(offset);
 
-            // Constraint: Target [op] Source + Offset
-            LinearExpr sourceWithOffset = LinearExpr.newBuilder().add(varSource).add(offset).build();
-            
+            // Constraint: Source [op] Target + Offset
+            LinearExpr targetWithOffset = LinearExpr.newBuilder().add(varTarget).add(scaledOffset).build();
+
             switch (constraint.operation()) {
-                case GT -> model.addGreaterThan(varTarget, sourceWithOffset);
-                case GTE -> model.addGreaterOrEqual(varTarget, sourceWithOffset);
-                case LT -> model.addLessThan(varTarget, sourceWithOffset);
-                case LTE -> model.addLessOrEqual(varTarget, sourceWithOffset);
-                case E -> model.addEquality(varTarget, sourceWithOffset);
-                case NE -> model.addDifferent(varTarget, sourceWithOffset);
+                case GT -> model.addGreaterThan(varSource, targetWithOffset);
+                case GTE -> model.addGreaterOrEqual(varSource, targetWithOffset);
+                case LT -> model.addLessThan(varSource, targetWithOffset);
+                case LTE -> model.addLessOrEqual(varSource, targetWithOffset);
+                case E -> model.addEquality(varSource, targetWithOffset);
+                case NE -> model.addDifferent(varSource, targetWithOffset);
             }
 
             // Unless the relationship is "Equal", enforce that the components themselves are different
             if (constraint.operation() != Operation.E) {
-                model.addDifferent(varTarget, varSource);
+                model.addDifferent(varSource, varTarget);
             }
         }
 
@@ -65,10 +66,18 @@ public class ConstraintSolverService {
         if (status == CpSolverStatus.FEASIBLE || status == CpSolverStatus.OPTIMAL) {
             List<Result> results = new ArrayList<>();
             for (int index : allIndices) {
-                long h = solver.value(shapeVars.get(index).get(ColorComponents.H));
-                long s = solver.value(shapeVars.get(index).get(ColorComponents.S));
-                long v = solver.value(shapeVars.get(index).get(ColorComponents.V));
+                Map<ColorComponents, IntVar> colorComponentsIntVarMap = shapeVars.get(index);
+                long h = solver.value(colorComponentsIntVarMap.get(ColorComponents.H));
+                long s = solver.value(colorComponentsIntVarMap.get(ColorComponents.S));
+                long v = solver.value(colorComponentsIntVarMap.get(ColorComponents.V));
                 results.add(new Result(index, (int) h, (int) s, (int) v));
+            }
+
+            for (Constraint constraint : request.constraints()) {
+                if (constraint.indexes().length < 2) continue;
+                long value = solver.value(shapeVars.get(constraint.indexes()[0]).get(constraint.color()));
+                long value2 = solver.value(shapeVars.get(constraint.indexes()[1]).get(constraint.color()));
+                System.out.println(constraint.toString(value, value2));
             }
             return results;
         } else {

@@ -35,7 +35,7 @@ class ConstraintSolverServiceTest {
                 ColorComponents.H,
                 Operation.GT,
                 new int[]{0, 1},
-                0.0
+                0
         );
         SolveRequest request = new SolveRequest(List.of(constraint).toArray(Constraint[]::new));
 
