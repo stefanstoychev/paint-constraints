@@ -335,13 +335,6 @@ class CanvasController extends ChangeNotifier {
           activeRelationship.hasSameType(shapeRelationship),
     );
 
-    final HSVColor targetHsv = allShapes[targetIdx].hsv;
-    final HSVColor newTargetHsv = colorConstraints.applyOffset(
-      targetHsv,
-      relationship.component,
-      relationship.offset,
-    );
-
     ShapeRelationship? prevRelationship;
     if (existingRelationshipIndex != -1) {
       prevRelationship = activeRelationships[existingRelationshipIndex];
@@ -351,10 +344,7 @@ class CanvasController extends ChangeNotifier {
       ApplyRelationshipCommand(
         controller: this,
         newRelationship: shapeRelationship,
-        newTargetHsv: newTargetHsv,
-        targetShapeIndex: targetIdx,
         previousRelationship: prevRelationship,
-        previousTargetHsv: targetHsv,
       ),
     );
   }
