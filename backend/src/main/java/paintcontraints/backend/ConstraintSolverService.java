@@ -36,16 +36,13 @@ public class ConstraintSolverService {
         // Apply constraints dynamically
         for (Constraint constraint : request.constraints()) {
             if (constraint.indexes().length < 2) continue;
-            
-            IntVar varTarget = shapeVars.get(constraint.indexes()[1]).get(constraint.color());
+
             IntVar varSource = shapeVars.get(constraint.indexes()[0]).get(constraint.color());
-            double offset = constraint.offset();
-            int scaledOffset = (constraint.color() == ColorComponents.H)
-                ? (int) Math.round(offset)
-                : (int) Math.round(offset * 100);
+            IntVar varTarget = shapeVars.get(constraint.indexes()[1]).get(constraint.color());
+            long offset = constraint.offset();
 
             // Constraint: Target [op] Source + Offset
-            LinearExpr sourceWithOffset = LinearExpr.newBuilder().add(varSource).add(scaledOffset).build();
+            LinearExpr sourceWithOffset = LinearExpr.newBuilder().add(varSource).add(offset).build();
             
             switch (constraint.operation()) {
                 case GT -> model.addGreaterThan(varTarget, sourceWithOffset);

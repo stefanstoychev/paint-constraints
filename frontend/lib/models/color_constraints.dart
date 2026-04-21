@@ -71,13 +71,13 @@ class ColorConstraints {
         ColorRelationship(
           ColorComponent.saturation,
           ComparisonOperator.lessThan,
-          0.1,
-        ), // Less than source + 0.1
+          10.0,
+        ), // Less than source + 10%
         ColorRelationship(
           ColorComponent.saturation,
           ComparisonOperator.greaterThan,
-          0.1,
-        ), // Greater than source + 0.1
+          10.0,
+        ), // Greater than source + 10%
         // Value relationships
         ColorRelationship(ColorComponent.value, ComparisonOperator.lessThan),
         ColorRelationship(ColorComponent.value, ComparisonOperator.greaterThan),
@@ -85,13 +85,13 @@ class ColorConstraints {
         ColorRelationship(
           ColorComponent.value,
           ComparisonOperator.lessThan,
-          0.1,
-        ), // Less than source + 0.1
+          10.0,
+        ), // Less than source + 10%
         ColorRelationship(
           ColorComponent.value,
           ComparisonOperator.greaterThan,
-          0.1,
-        ), // Greater than source + 0.1
+          10.0,
+        ), // Greater than source + 10%
       ],
     );
   }
@@ -140,10 +140,10 @@ class ColorConstraints {
         return color.withHue(constrainHue(color.hue + offset));
       case ColorComponent.saturation:
         return color.withSaturation(
-          constrainSaturation(color.saturation + offset),
+          constrainSaturation(color.saturation + (offset / 100.0)),
         );
       case ColorComponent.value:
-        return color.withValue(constrainValue(color.value + offset));
+        return color.withValue(constrainValue(color.value + (offset / 100.0)));
     }
   }
 

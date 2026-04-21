@@ -29,6 +29,27 @@ class ConstraintSolverServiceTest {
     }
 
     @Test
+    void testGreaterThanNoOffset() {
+        // Target H > Source H (Offset 0.0)
+        Constraint constraint = new Constraint(
+                ColorComponents.H,
+                Operation.GT,
+                new int[]{0, 1},
+                0.0
+        );
+        SolveRequest request = new SolveRequest(List.of(constraint).toArray(Constraint[]::new));
+
+        List<Result> results = solverService.solve(request);
+        
+        assertNotNull(results);
+        Result r0 = results.stream().filter(r -> r.index() == 0).findFirst().orElseThrow();
+        Result r1 = results.stream().filter(r -> r.index() == 1).findFirst().orElseThrow();
+        
+        // Target must be strictly greater than Source
+        assertTrue(r1.h() > r0.h());
+    }
+
+    @Test
     void testGreaterThanWithOffset() {
         // Target S > Source S + 50
         Constraint constraint = new Constraint(
