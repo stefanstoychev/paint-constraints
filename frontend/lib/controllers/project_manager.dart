@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/models/canvas_data.dart';
 import 'package:frontend/models/canvas_project.dart';
-import 'package:frontend/storage_service.dart';
+import 'package:frontend/services/storage_service.dart';
 
 class ProjectManager extends ChangeNotifier {
   final StorageService _storageService = StorageService();
