@@ -333,7 +333,7 @@ class RelationshipPainter extends CustomPainter {
           _getRelationshipLabelOffset(relationship.relationship.component) *
           labelSpacing;
 
-      final String label = _getRelationshipLabel(relationship.relationship);
+      final String label = _getFormattedRelationshipLabel(relationship);
       _paintRelationshipLabel(
         canvas,
         label,
@@ -381,7 +381,8 @@ class RelationshipPainter extends CustomPainter {
     canvas.drawPath(arrowPath, paint);
   }
 
-  String _getRelationshipLabel(ColorRelationship relationship) {
+  String _getFormattedRelationshipLabel(ShapeRelationship shapeRelationship) {
+    final ColorRelationship relationship = shapeRelationship.relationship;
     final offsetStr = relationship.offset == 0
         ? ''
         : (relationship.offset > 0
@@ -401,7 +402,13 @@ class RelationshipPainter extends CustomPainter {
         break;
     }
 
-    return '$prefix${relationship.operator.symbol}$offsetStr';
+    final int? firstSelected = selectedIndices.isNotEmpty ? selectedIndices.first : null;
+    final int? lastSelected = selectedIndices.length > 1 ? selectedIndices.last : null;
+
+    final String sourceChar = (_shapeLabel(shapeRelationship.sourceShapeIndex, firstSelected, lastSelected) ?? '?').toLowerCase();
+    final String targetChar = (_shapeLabel(shapeRelationship.targetShapeIndex, firstSelected, lastSelected) ?? '?').toLowerCase();
+
+    return '$prefix($sourceChar ${relationship.operator.symbol} $targetChar$offsetStr)';
   }
 
   void _paintRelationshipLabel(
