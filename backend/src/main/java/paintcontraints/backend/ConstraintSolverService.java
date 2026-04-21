@@ -39,18 +39,26 @@ public class ConstraintSolverService {
             
             IntVar varTarget = shapeVars.get(constraint.indexes()[1]).get(constraint.color());
             IntVar varSource = shapeVars.get(constraint.indexes()[0]).get(constraint.color());
-            int offset = constraint.offset();
+            double offset = constraint.offset();
+            int scaledOffset = (constraint.color() == ColorComponents.H)
+                ? (int) Math.round(offset)
+                : (int) Math.round(offset * 100);
 
             // Constraint: Target [op] Source + Offset
-            LinearExpr sourceWithOffset = LinearExpr.newBuilder().add(varSource).add(offset).build();
+            LinearExpr sourceWithOffset = LinearExpr.newBuilder().add(varSource).add(scaledOffset).build();
             
             switch (constraint.operation()) {
-                case GT -> model.addGreaterThan(sourceWithOffset, varTarget);
-                case GTE -> model.addGreaterOrEqual(sourceWithOffset, varTarget);
-                case LT -> model.addLessThan(sourceWithOffset, varTarget);
-                case LTE -> model.addLessOrEqual(sourceWithOffset, varTarget);
-                case E -> model.addEquality(sourceWithOffset, varTarget);
-                case NE -> model.addDifferent(sourceWithOffset, varTarget);
+                case GT -> model.addGreaterThan(varTarget, sourceWithOffset);
+                case GTE -> model.addGreaterOrEqual(varTarget, sourceWithOffset);
+                case LT -> model.addLessThan(varTarget, sourceWithOffset);
+                case LTE -> model.addLessOrEqual(varTarget, sourceWithOffset);
+                case E -> model.addEquality(varTarget, sourceWithOffset);
+                case NE -> model.addDifferent(varTarget, sourceWithOffset);
+            }
+
+            // Unless the relationship is "Equal", enforce that the components themselves are different
+            if (constraint.operation() != Operation.E) {
+                model.addDifferent(varTarget, varSource);
             }
         }
 
