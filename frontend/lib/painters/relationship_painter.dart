@@ -115,7 +115,7 @@ class RelationshipPainter extends CustomPainter {
 
   Paint _buildHandleFillPaint() {
     return Paint()
-      ..color = Colors.blue.withOpacity(0.7)
+      ..color = Colors.blue.withValues(alpha: 0.7)
       ..style = PaintingStyle.fill;
   }
 
@@ -143,7 +143,7 @@ class RelationshipPainter extends CustomPainter {
 
   Paint _buildSegmentPointPaint() {
     return Paint()
-      ..color = Colors.blue.withOpacity(0.7)
+      ..color = Colors.blue.withValues(alpha: 0.7)
       ..style = PaintingStyle.fill;
   }
 
@@ -287,12 +287,12 @@ class RelationshipPainter extends CustomPainter {
 
   void _paintRelationships(Canvas canvas, TextPainter textPainter) {
     final Paint linePaint = Paint()
-      ..color = Colors.blue.withOpacity(0.7)
+      ..color = Colors.blue.withValues(alpha: 0.7)
       ..strokeWidth = 2.0 / scale
       ..style = PaintingStyle.stroke;
 
     final Paint arrowPaint = Paint()
-      ..color = Colors.blue.withOpacity(0.7)
+      ..color = Colors.blue.withValues(alpha: 0.7)
       ..style = PaintingStyle.fill;
 
     for (final ShapeRelationship relationship in activeRelationships) {
@@ -416,7 +416,7 @@ class RelationshipPainter extends CustomPainter {
         color: Colors.blue.shade800,
         fontSize: _relationshipLabelFontSize,
         fontWeight: FontWeight.bold,
-        backgroundColor: Colors.white.withOpacity(0.8),
+        backgroundColor: Colors.white.withValues(alpha: 0.8),
       ),
     );
     textPainter.layout();

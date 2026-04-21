@@ -100,23 +100,26 @@ class GalleryView extends StatelessWidget {
               const SizedBox(height: 20),
               const Text('Dimensions', style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 10),
-              _buildSizeOption(
-                label: 'Small (300x200)',
-                size: const Size(300, 200),
-                current: selectedSize,
-                onSelect: (s) => setState(() => selectedSize = s),
-              ),
-              _buildSizeOption(
-                label: 'Medium (460x320)',
-                size: const Size(460, 320),
-                current: selectedSize,
-                onSelect: (s) => setState(() => selectedSize = s),
-              ),
-              _buildSizeOption(
-                label: 'Large (600x450)',
-                size: const Size(600, 450),
-                current: selectedSize,
-                onSelect: (s) => setState(() => selectedSize = s),
+              RadioGroup<Size>(
+                groupValue: selectedSize,
+                onChanged: (s) => setState(() => selectedSize = s!),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildSizeOption(
+                      label: 'Small (300x200)',
+                      size: const Size(300, 200),
+                    ),
+                    _buildSizeOption(
+                      label: 'Medium (460x320)',
+                      size: const Size(460, 320),
+                    ),
+                    _buildSizeOption(
+                      label: 'Large (600x450)',
+                      size: const Size(600, 450),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -158,14 +161,10 @@ class GalleryView extends StatelessWidget {
   Widget _buildSizeOption({
     required String label,
     required Size size,
-    required Size current,
-    required ValueChanged<Size> onSelect,
   }) {
     return RadioListTile<Size>(
       title: Text(label),
       value: size,
-      groupValue: current,
-      onChanged: (s) => onSelect(s!),
       contentPadding: EdgeInsets.zero,
     );
   }
