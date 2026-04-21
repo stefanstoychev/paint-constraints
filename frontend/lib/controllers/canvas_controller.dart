@@ -359,6 +359,17 @@ class CanvasController extends ChangeNotifier {
     );
   }
 
+  void clearSelectedRelationships() {
+    if (selectedIndices.length != 2) return;
+    executeCommand(
+      RemoveRelationshipsCommand(
+        controller: this,
+        shapeIndex1: selectedIndices.first,
+        shapeIndex2: selectedIndices.last,
+      ),
+    );
+  }
+
   void handleTapDown(TapDownDetails details) {
     if (draggingShapeIndex != null) return;
 

@@ -5,23 +5,25 @@ import 'package:frontend/models/color_relationship.dart';
 import 'package:frontend/widgets/link_button.dart';
 
 class RelationshipPanel extends StatelessWidget {
-  final ColorConstraints colorConstraints;
-  final ValueChanged<ColorRelationship> onRelationshipApplied;
-
   const RelationshipPanel({
     super.key,
     required this.colorConstraints,
     required this.onRelationshipApplied,
+    required this.onClearRelationships,
   });
+
+  final ColorConstraints colorConstraints;
+  final ValueChanged<ColorRelationship> onRelationshipApplied;
+  final VoidCallback onClearRelationships;
 
   @override
   Widget build(BuildContext context) {
     final bool isSmallScreen = MediaQuery.of(context).size.width < 600;
 
     return Positioned(
-      top: isSmallScreen ? 70 : 20, // Avoid AppBar on small screens
+      top: isSmallScreen ? 70 : 20,
       right: isSmallScreen ? 10 : 20,
-      left: isSmallScreen ? 10 : null, // Fill width on small screens
+      left: isSmallScreen ? 10 : null,
       child: Card(
         color: Colors.black87,
         child: Padding(
@@ -58,6 +60,20 @@ class RelationshipPanel extends StatelessWidget {
                 colorConstraints.relationships
                     .where((r) => r.component == ColorComponent.value)
                     .toList(),
+              ),
+              const SizedBox(height: 4),
+              SizedBox(
+                child: OutlinedButton.icon(
+                  onPressed: onClearRelationships,
+                  label: const Text(
+                    'Clear All',
+                    style: TextStyle(fontSize: 10, color: Colors.redAccent),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: Colors.redAccent, width: 0.5),
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                  ),
+                ),
               ),
             ],
           ),

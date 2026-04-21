@@ -106,6 +106,7 @@ class _ShapeEditorState extends State<ShapeEditor> {
               colorConstraints: controller.colorConstraints,
               onRelationshipApplied: (relationship) =>
                   controller.applyRelationship(relationship, context),
+              onClearRelationships: controller.clearSelectedRelationships,
             ),
           ZoomControls(
             currentScale: controller.currentScale,
