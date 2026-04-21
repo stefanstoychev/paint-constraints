@@ -67,7 +67,7 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
           ? Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(projectName, style: const TextStyle(fontSize: 14, color: Colors.white70)),
+              Text(projectName, style: const TextStyle(fontSize: 14, color: Colors.black)),
               Text(
                 isEditVerticesMode
                     ? 'Edit Vertices Mode'
