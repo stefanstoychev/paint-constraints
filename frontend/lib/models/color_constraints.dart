@@ -51,8 +51,8 @@ class ColorConstraints {
         ColorRelationship(
           ColorComponent.hue,
           ComparisonOperator.lessThan,
-          30.0,
-        ), // Less than source + 30°
+          -30.0,
+        ), // Less than source - 30°
         ColorRelationship(
           ColorComponent.hue,
           ComparisonOperator.greaterThan,
@@ -71,8 +71,8 @@ class ColorConstraints {
         ColorRelationship(
           ColorComponent.saturation,
           ComparisonOperator.lessThan,
-          10.0,
-        ), // Less than source + 10%
+          -10.0,
+        ), // Less than source - 10%
         ColorRelationship(
           ColorComponent.saturation,
           ComparisonOperator.greaterThan,
@@ -85,8 +85,8 @@ class ColorConstraints {
         ColorRelationship(
           ColorComponent.value,
           ComparisonOperator.lessThan,
-          10.0,
-        ), // Less than source + 10%
+          -10.0,
+        ), // Less than source - 10%
         ColorRelationship(
           ColorComponent.value,
           ComparisonOperator.greaterThan,
