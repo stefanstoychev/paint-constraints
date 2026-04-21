@@ -45,12 +45,12 @@ public class ConstraintSolverService {
             LinearExpr sourceWithOffset = LinearExpr.newBuilder().add(varSource).add(offset).build();
             
             switch (constraint.operation()) {
-                case GT -> model.addGreaterThan(varTarget, sourceWithOffset);
-                case GTE -> model.addGreaterOrEqual(varTarget, sourceWithOffset);
-                case LT -> model.addLessThan(varTarget, sourceWithOffset);
-                case LTE -> model.addLessOrEqual(varTarget, sourceWithOffset);
-                case E -> model.addEquality(varTarget, sourceWithOffset);
-                case NE -> model.addDifferent(varTarget, sourceWithOffset);
+                case GT -> model.addGreaterThan(sourceWithOffset, varTarget);
+                case GTE -> model.addGreaterOrEqual(sourceWithOffset, varTarget);
+                case LT -> model.addLessThan(sourceWithOffset, varTarget);
+                case LTE -> model.addLessOrEqual(sourceWithOffset, varTarget);
+                case E -> model.addEquality(sourceWithOffset, varTarget);
+                case NE -> model.addDifferent(sourceWithOffset, varTarget);
             }
         }
 
