@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:frontend/controllers/canvas_controller.dart';
 import 'package:frontend/painters/relationship_painter.dart';
 import 'package:frontend/widgets/editor_app_bar.dart';
+import 'package:frontend/widgets/onscreen_menu.dart';
 import 'package:frontend/widgets/relationship_panel.dart';
 import 'package:frontend/widgets/zoom_controls.dart';
 import 'package:frontend/widgets/canvas_grid.dart';
@@ -36,14 +37,8 @@ class _ShapeEditorState extends State<ShapeEditor> {
 
     return Scaffold(
       appBar: EditorAppBar(
-        isEditVerticesMode: controller.isEditVerticesMode,
-        isLinkMode: controller.isLinkMode,
         showRelationships: controller.showRelationships,
-        hasSelectedVertex: controller.selectedVertexIndex != null,
         hasSelectedShapes: controller.selectedIndices.isNotEmpty,
-        onToggleLinkMode: controller.toggleLinkMode,
-        onToggleEditVerticesMode: controller.toggleEditVerticesMode,
-        onDeleteVertex: controller.deleteSelectedVertex,
         onToggleShowRelationships: controller.toggleShowRelationships,
         showColorLabels: controller.showColorLabels,
         onToggleShowColorLabels: controller.toggleShowColorLabels,
@@ -113,6 +108,14 @@ class _ShapeEditorState extends State<ShapeEditor> {
             onZoomChanged: (scale) =>
                 controller.updateZoomScale(scale, MediaQuery.of(context).size),
             onZoomReset: controller.resetZoomScale,
+          ),
+          OnscreenMenu(
+            isEditVerticesMode: controller.isEditVerticesMode,
+            isLinkMode: controller.isLinkMode,
+            hasSelectedVertex: controller.selectedVertexIndex != null,
+            onToggleLinkMode: controller.toggleLinkMode,
+            onToggleEditVerticesMode: controller.toggleEditVerticesMode,
+            onDeleteVertex: controller.deleteSelectedVertex,
           ),
         ],
       ),

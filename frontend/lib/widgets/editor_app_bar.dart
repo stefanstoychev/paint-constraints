@@ -1,20 +1,14 @@
 import 'package:flutter/material.dart';
 
 class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
-  final bool isEditVerticesMode;
-  final bool isLinkMode;
   final bool showRelationships;
   final bool showColorLabels;
-  final bool hasSelectedVertex;
   final bool hasSelectedShapes;
   final bool canUndo;
   final bool canRedo;
   final String projectName;
   final String solverUrl;
 
-  final VoidCallback onToggleLinkMode;
-  final VoidCallback onToggleEditVerticesMode;
-  final VoidCallback onDeleteVertex;
   final VoidCallback onToggleShowRelationships;
   final VoidCallback onToggleShowColorLabels;
   final VoidCallback onSendToFront;
@@ -29,17 +23,11 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   const EditorAppBar({
     super.key,
-    required this.isEditVerticesMode,
-    required this.isLinkMode,
     required this.showRelationships,
     required this.showColorLabels,
-    required this.hasSelectedVertex,
     required this.hasSelectedShapes,
     required this.canUndo,
     required this.canRedo,
-    required this.onToggleLinkMode,
-    required this.onToggleEditVerticesMode,
-    required this.onDeleteVertex,
     required this.onToggleShowRelationships,
     required this.onToggleShowColorLabels,
     required this.onSendToFront,
@@ -63,22 +51,17 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
     final bool isSmallScreen = MediaQuery.of(context).size.width < 700;
 
     return AppBar(
-      title: !isSmallScreen
-          ? Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(projectName, style: const TextStyle(fontSize: 14, color: Colors.black)),
-              Text(
-                isEditVerticesMode
-                    ? 'Edit Vertices Mode'
-                    : isLinkMode
-                    ? 'Select 2 Shapes to Link'
-                    : 'Shape Operations',
-                style: const TextStyle(fontSize: 18),
-              ),
-            ],
-          )
-          : Text(projectName),
+      title: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(projectName,
+              style: const TextStyle(fontSize: 14, color: Colors.black)),
+          const Text(
+            'Shape Operations',
+            style: TextStyle(fontSize: 18),
+          ),
+        ],
+      ),
       actions: <Widget>[
         IconButton(
           icon: const Icon(Icons.add),
@@ -91,45 +74,6 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
           tooltip: 'Solve Constraints',
           color: Colors.amber,
         ),
-        if (isSmallScreen)
-          _buildIconButton(
-            icon: Icons.link,
-            isActive: isLinkMode,
-            activeColor: Colors.green,
-            onPressed: onToggleLinkMode,
-            tooltip: 'Link Mode',
-          )
-        else
-          _buildModeButton(
-            label: 'Link Mode',
-            icon: Icons.link,
-            isActive: isLinkMode,
-            activeColor: Colors.green,
-            onPressed: onToggleLinkMode,
-          ),
-        if (isSmallScreen)
-          _buildIconButton(
-            icon: Icons.scatter_plot,
-            isActive: isEditVerticesMode,
-            activeColor: Colors.blue,
-            onPressed: onToggleEditVerticesMode,
-            tooltip: 'Edit Vertices',
-          )
-        else
-          _buildModeButton(
-            label: 'Edit Vertices',
-            icon: Icons.scatter_plot,
-            isActive: isEditVerticesMode,
-            activeColor: Colors.blue,
-            onPressed: onToggleEditVerticesMode,
-          ),
-        if (isEditVerticesMode)
-          IconButton(
-            icon: const Icon(Icons.delete),
-            color: hasSelectedVertex ? Colors.white : Colors.white38,
-            onPressed: hasSelectedVertex ? onDeleteVertex : null,
-            tooltip: 'Delete selected vertex',
-          ),
         IconButton(
           icon: const Icon(Icons.undo),
           onPressed: canUndo ? onUndo : null,
@@ -273,34 +217,4 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
     );
   }
 
-  Widget _buildIconButton({
-    required IconData icon,
-    required bool isActive,
-    required Color activeColor,
-    required VoidCallback onPressed,
-    required String tooltip,
-  }) {
-    return IconButton(
-      onPressed: onPressed,
-      icon: Icon(icon, color: isActive ? activeColor : Colors.grey),
-      tooltip: tooltip,
-    );
-  }
-
-  Widget _buildModeButton({
-    required String label,
-    required IconData icon,
-    required bool isActive,
-    required Color activeColor,
-    required VoidCallback onPressed,
-  }) {
-    return TextButton.icon(
-      onPressed: onPressed,
-      icon: Icon(icon, color: isActive ? activeColor : Colors.grey),
-      label: Text(
-        label,
-        style: TextStyle(color: isActive ? activeColor : Colors.grey),
-      ),
-    );
-  }
 }
