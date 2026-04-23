@@ -89,7 +89,7 @@ class _MenuButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: isActive ? activeColor.withOpacity(0.15) : Colors.transparent,
+        color: isActive ? activeColor.withValues(alpha: 0.15) : Colors.transparent,
         borderRadius: BorderRadius.circular(8),
       ),
       child: IconButton(

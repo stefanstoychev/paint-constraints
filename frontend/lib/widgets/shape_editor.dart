@@ -108,6 +108,8 @@ class _ShapeEditorState extends State<ShapeEditor> {
             onZoomChanged: (scale) =>
                 controller.updateZoomScale(scale, MediaQuery.of(context).size),
             onZoomReset: controller.resetZoomScale,
+            onFitToScreen: () =>
+                controller.fitToScreen(MediaQuery.of(context).size),
           ),
           OnscreenMenu(
             isEditVerticesMode: controller.isEditVerticesMode,

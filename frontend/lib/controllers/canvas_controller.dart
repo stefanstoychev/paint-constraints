@@ -659,6 +659,31 @@ class CanvasController extends ChangeNotifier {
     notifyListeners();
   }
 
+  void fitToScreen(Size screenSize) {
+    final rect = canvasRect;
+    const double padding = 40.0;
+
+    final double availableWidth = screenSize.width - padding * 2;
+    final double availableHeight = screenSize.height - padding * 2;
+
+    final double scaleX = availableWidth / rect.width;
+    final double scaleY = availableHeight / rect.height;
+
+    currentScale = min(scaleX, scaleY).clamp(0.3, 5.0);
+
+    final double centeredX = (screenSize.width - rect.width * currentScale) / 2 -
+        rect.left * currentScale;
+    final double centeredY =
+        (screenSize.height - rect.height * currentScale) / 2 -
+            rect.top * currentScale;
+
+    currentOffset = Offset(centeredX, centeredY);
+
+    _previousScale = currentScale;
+    _previousOffset = currentOffset;
+    notifyListeners();
+  }
+
   void deleteSelectedVertex() {
     if (!isEditVerticesMode ||
         selectedIndices.length != 1 ||

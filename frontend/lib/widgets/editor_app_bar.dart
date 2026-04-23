@@ -48,8 +48,6 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool isSmallScreen = MediaQuery.of(context).size.width < 700;
-
     return AppBar(
       title: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
