@@ -10,11 +10,13 @@ class RelationshipPanel extends StatelessWidget {
     required this.colorConstraints,
     required this.onRelationshipApplied,
     required this.onClearRelationships,
+    this.activeRelationships = const [],
   });
 
   final ColorConstraints colorConstraints;
   final ValueChanged<ColorRelationship> onRelationshipApplied;
   final VoidCallback onClearRelationships;
+  final List<ColorRelationship> activeRelationships;
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +35,7 @@ class RelationshipPanel extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               const Text(
-                'Define Relationship (B ← A)',
+                'Define Relationship (A -> B)',
                 style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
@@ -103,6 +105,12 @@ class RelationshipPanel extends StatelessWidget {
                   label: _getRelationshipLabel(relationship),
                   relationship: relationship,
                   onPressed: onRelationshipApplied,
+                  isActive: activeRelationships.any(
+                    (active) =>
+                        active.component == relationship.component &&
+                        active.operator == relationship.operator &&
+                        active.offset == relationship.offset,
+                  ),
                 ),
               )
               .toList(),

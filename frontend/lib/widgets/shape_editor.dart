@@ -102,6 +102,12 @@ class _ShapeEditorState extends State<ShapeEditor> {
               onRelationshipApplied: (relationship) =>
                   controller.applyRelationship(relationship, context),
               onClearRelationships: controller.clearSelectedRelationships,
+              activeRelationships: controller.activeRelationships
+                  .where((r) =>
+                      r.sourceShapeIndex == controller.selectedIndices.first &&
+                      r.targetShapeIndex == controller.selectedIndices.last)
+                  .map((r) => r.relationship)
+                  .toList(),
             ),
           ZoomControls(
             currentScale: controller.currentScale,
