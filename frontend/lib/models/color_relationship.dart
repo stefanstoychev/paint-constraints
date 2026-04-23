@@ -31,4 +31,16 @@ class ColorRelationship {
 
     return 'Target $componentName $opSymbol Source $componentName$offsetStr';
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is ColorRelationship &&
+        other.component == component &&
+        other.operator == operator &&
+        other.offset == offset;
+  }
+
+  @override
+  int get hashCode => Object.hash(component, operator, offset);
 }

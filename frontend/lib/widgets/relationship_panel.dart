@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/models/color_component.dart';
 import 'package:frontend/models/color_constraints.dart';
 import 'package:frontend/models/color_relationship.dart';
-import 'package:frontend/widgets/link_button.dart';
+
 
 class RelationshipPanel extends StatelessWidget {
   const RelationshipPanel({
@@ -125,43 +125,52 @@ class RelationshipPanel extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 6),
-        Wrap(
-          spacing: 6,
-          runSpacing: 6,
-          children: relationships
-              .map<Widget>(
-                (ColorRelationship relationship) => LinkButton(
-                  label: _getRelationshipLabel(relationship),
-                  relationship: relationship,
-                  onPressed: onRelationshipApplied,
-                  isActive: activeRelationships.any(
-                    (active) =>
-                        active.component == relationship.component &&
-                        active.operator == relationship.operator &&
-                        active.offset == relationship.offset,
+        SizedBox(
+          width: double.infinity,
+          child: SegmentedButton<ColorRelationship>(
+            segments: relationships
+                .map(
+                  (r) => ButtonSegment<ColorRelationship>(
+                    value: r,
+                    label: Text(
+                      _getShortRelationshipLabel(r),
+                      style: const TextStyle(fontSize: 10),
+                    ),
                   ),
-                ),
-              )
-              .toList(),
+                )
+                .toList(),
+            selected: activeRelationships
+                .where((active) => relationships.contains(active))
+                .toSet(),
+            onSelectionChanged: (newSelection) {
+              if (newSelection.isNotEmpty) {
+                onRelationshipApplied(newSelection.first);
+              }
+            },
+            showSelectedIcon: false,
+            style: SegmentedButton.styleFrom(
+              backgroundColor: Colors.transparent,
+              selectedBackgroundColor: Colors.blueAccent.withValues(alpha: 0.2),
+              selectedForegroundColor: Colors.blueAccent,
+              foregroundColor: Colors.white70,
+              side: const BorderSide(color: Colors.white24, width: 0.5),
+              visualDensity: VisualDensity.compact,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+          ),
         ),
       ],
     );
   }
 
-  String _getRelationshipLabel(ColorRelationship relationship) {
+  String _getShortRelationshipLabel(ColorRelationship relationship) {
     final offsetStr = relationship.offset == 0
         ? ''
         : (relationship.offset > 0
-              ? ' + ${relationship.offset.toStringAsFixed(1)}'
-              : ' - ${relationship.offset.abs().toStringAsFixed(1)}');
+            ? ' + ${relationship.offset.toInt()}'
+            : ' - ${relationship.offset.abs().toInt()}');
 
-    switch (relationship.component) {
-      case ColorComponent.hue:
-        return 'Hue ${relationship.operator.symbol}$offsetStr';
-      case ColorComponent.saturation:
-        return 'Sat ${relationship.operator.symbol}$offsetStr';
-      case ColorComponent.value:
-        return 'Val ${relationship.operator.symbol}$offsetStr';
-    }
+    return '${relationship.operator.symbol}$offsetStr';
   }
+
 }
