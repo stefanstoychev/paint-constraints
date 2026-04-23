@@ -3,7 +3,6 @@ import 'package:frontend/models/color_component.dart';
 import 'package:frontend/models/color_constraints.dart';
 import 'package:frontend/models/color_relationship.dart';
 
-
 class RelationshipPanel extends StatelessWidget {
   const RelationshipPanel({
     super.key,
@@ -112,6 +111,9 @@ class RelationshipPanel extends StatelessWidget {
     String title,
     List<ColorRelationship> relationships,
   ) {
+    // Include a 'None' option that represents no relationship for this component.
+    final List<ColorRelationship?> options = [null, ...relationships];
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
@@ -127,24 +129,37 @@ class RelationshipPanel extends StatelessWidget {
         const SizedBox(height: 6),
         SizedBox(
           width: double.infinity,
-          child: SegmentedButton<ColorRelationship>(
-            segments: relationships
+          child: SegmentedButton<ColorRelationship?>(
+            segments: options
                 .map(
-                  (r) => ButtonSegment<ColorRelationship>(
+                  (r) => ButtonSegment<ColorRelationship?>(
                     value: r,
                     label: Text(
-                      _getShortRelationshipLabel(r),
+                      r == null ? 'None' : _getShortRelationshipLabel(r),
                       style: const TextStyle(fontSize: 10),
                     ),
                   ),
                 )
                 .toList(),
-            selected: activeRelationships
-                .where((active) => relationships.contains(active))
-                .toSet(),
+            selected: (() {
+              final selectedSet = activeRelationships
+                  .where((active) => relationships.contains(active))
+                  .toSet();
+              // If no active relationship for this component, select the 'None' segment.
+              if (selectedSet.isEmpty) {
+                return {null};
+              }
+              return selectedSet.cast<ColorRelationship?>();
+            })(),
             onSelectionChanged: (newSelection) {
               if (newSelection.isNotEmpty) {
-                onRelationshipApplied(newSelection.first);
+                final chosen = newSelection.first;
+                if (chosen == null) {
+                  // Clear relationships for this component.
+                  onClearRelationships();
+                } else {
+                  onRelationshipApplied(chosen);
+                }
               }
             },
             showSelectedIcon: false,
@@ -167,10 +182,9 @@ class RelationshipPanel extends StatelessWidget {
     final offsetStr = relationship.offset == 0
         ? ''
         : (relationship.offset > 0
-            ? ' + ${relationship.offset.toInt()}'
-            : ' - ${relationship.offset.abs().toInt()}');
+              ? ' + ${relationship.offset.toInt()}'
+              : ' - ${relationship.offset.abs().toInt()}');
 
     return '${relationship.operator.symbol}$offsetStr';
   }
-
 }
