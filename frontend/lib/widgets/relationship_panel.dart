@@ -26,58 +26,82 @@ class RelationshipPanel extends StatelessWidget {
       top: isSmallScreen ? 70 : 20,
       right: isSmallScreen ? 10 : 20,
       left: isSmallScreen ? 10 : null,
-      child: Card(
-        color: Colors.black87,
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              const Text(
-                'Define Relationship (A -> B)',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                ),
-              ),
-              const SizedBox(height: 6),
-              _buildRelationshipRow(
-                'Hue',
-                colorConstraints.relationships
-                    .where((r) => r.component == ColorComponent.hue)
-                    .toList(),
-              ),
-              const SizedBox(height: 4),
-              _buildRelationshipRow(
-                'Sat',
-                colorConstraints.relationships
-                    .where((r) => r.component == ColorComponent.saturation)
-                    .toList(),
-              ),
-              const SizedBox(height: 4),
-              _buildRelationshipRow(
-                'Val',
-                colorConstraints.relationships
-                    .where((r) => r.component == ColorComponent.value)
-                    .toList(),
-              ),
-              const SizedBox(height: 4),
-              SizedBox(
-                child: OutlinedButton.icon(
-                  onPressed: onClearRelationships,
-                  label: const Text(
-                    'Clear All',
-                    style: TextStyle(fontSize: 10, color: Colors.redAccent),
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: Colors.redAccent, width: 0.5),
-                    padding: const EdgeInsets.symmetric(vertical: 8),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 400),
+        child: Card(
+          elevation: 8,
+          color: Colors.black.withValues(alpha: 0.9),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                const Text(
+                  'Define Relationship (A -> B)',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                    letterSpacing: 0.5,
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 12),
+                _buildRelationshipRow(
+                  'Hue',
+                  colorConstraints.relationships
+                      .where((r) => r.component == ColorComponent.hue)
+                      .toList(),
+                ),
+                const SizedBox(height: 8),
+                _buildRelationshipRow(
+                  'Saturation',
+                  colorConstraints.relationships
+                      .where((r) => r.component == ColorComponent.saturation)
+                      .toList(),
+                ),
+                const SizedBox(height: 8),
+                _buildRelationshipRow(
+                  'Value',
+                  colorConstraints.relationships
+                      .where((r) => r.component == ColorComponent.value)
+                      .toList(),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: onClearRelationships,
+                    icon: const Icon(
+                      Icons.clear_all,
+                      size: 14,
+                      color: Colors.redAccent,
+                    ),
+                    label: const Text(
+                      'Clear All Relationships',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Colors.redAccent,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      side: BorderSide(
+                        color: Colors.redAccent.withValues(alpha: 0.5),
+                        width: 1,
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -92,13 +116,18 @@ class RelationshipPanel extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
         Text(
-          title,
-          style: const TextStyle(color: Colors.white70, fontSize: 10),
+          title.toUpperCase(),
+          style: const TextStyle(
+            color: Colors.white38,
+            fontSize: 9,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1,
+          ),
         ),
-        const SizedBox(height: 2),
+        const SizedBox(height: 6),
         Wrap(
-          spacing: 4,
-          runSpacing: 4,
+          spacing: 6,
+          runSpacing: 6,
           children: relationships
               .map<Widget>(
                 (ColorRelationship relationship) => LinkButton(

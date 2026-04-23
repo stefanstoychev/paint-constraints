@@ -17,16 +17,30 @@ class LinkButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton(
-      onPressed: () => onPressed(relationship),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: isActive ? Colors.blueAccent : null,
-        foregroundColor: isActive ? Colors.white : null,
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        minimumSize: Size.zero,
-        textStyle: const TextStyle(fontSize: 10),
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      child: OutlinedButton(
+        onPressed: () => onPressed(relationship),
+        style: OutlinedButton.styleFrom(
+          backgroundColor: isActive ? Colors.blueAccent.withValues(alpha: 0.2) : Colors.transparent,
+          foregroundColor: isActive ? Colors.blueAccent : Colors.white70,
+          side: BorderSide(
+            color: isActive ? Colors.blueAccent : Colors.white24,
+            width: 1,
+          ),
+          shape: const StadiumBorder(),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          minimumSize: Size.zero,
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+          ),
+        ),
       ),
-      child: Text(label),
     );
   }
 }
