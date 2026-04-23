@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:math';
 import 'dart:ui' as ui;
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/models/canvas_data.dart';
 import 'package:frontend/models/color_constraints.dart';
@@ -657,6 +658,28 @@ class CanvasController extends ChangeNotifier {
     _previousOffset = Offset.zero;
     _previousFocalPoint = Offset.zero;
     notifyListeners();
+  }
+
+  void handlePointerSignal(PointerSignalEvent event) {
+    if (event is PointerScrollEvent) {
+      final double zoomDelta = event.scrollDelta.dy > 0 ? 0.9 : 1.1;
+      final double newScale = (currentScale * zoomDelta).clamp(0.3, 5.0);
+
+      if (newScale != currentScale) {
+        final Offset localFocalPoint = event.localPosition;
+        final Offset focalPointWorld =
+            (localFocalPoint - currentOffset) / currentScale;
+
+        currentScale = newScale;
+        currentOffset = localFocalPoint - focalPointWorld * currentScale;
+
+        _previousScale = currentScale;
+        _previousOffset = currentOffset;
+        _previousFocalPoint = localFocalPoint;
+
+        notifyListeners();
+      }
+    }
   }
 
   void fitToScreen(Size screenSize) {

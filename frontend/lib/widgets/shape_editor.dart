@@ -59,40 +59,43 @@ class _ShapeEditorState extends State<ShapeEditor> {
       body: Stack(
         clipBehavior: Clip.none,
         children: <Widget>[
-          GestureDetector(
-            onTapDown: controller.handleTapDown,
-            onScaleStart: controller.handleScaleStart,
-            onScaleUpdate: controller.handleScaleUpdate,
-            onScaleEnd: controller.handleScaleEnd,
-            child: Container(
-              color: Colors.grey.shade900,
-              child: Stack(
-                children: [
-                  CanvasGrid(
-                    scale: controller.currentScale,
-                    offset: controller.currentOffset,
-                    canvasRect: widget.project.canvasRect,
-                  ),
-                  CustomPaint(
-                    size: Size.infinite,
-                    painter: RelationshipPainter(
-                      shapes: controller.allShapes,
-                      selectedIndices: controller.selectedIndices,
-                      activeRelationships: controller.activeRelationships,
-                      draggingShapeIndex: controller.draggingShapeIndex,
-                      draggingPointIndex: controller.draggingPointIndex,
-                      selectedVertexIndex: controller.selectedVertexIndex,
-                      handleRadius: CanvasController.handleRadius,
-                      isLinkMode: controller.isLinkMode,
-                      isEditVerticesMode: controller.isEditVerticesMode,
-                      showAddPointIndicators: showAddPointIndicators,
-                      showRelationships: controller.showRelationships,
-                      showColorLabels: controller.showColorLabels,
+          Listener(
+            onPointerSignal: controller.handlePointerSignal,
+            child: GestureDetector(
+              onTapDown: controller.handleTapDown,
+              onScaleStart: controller.handleScaleStart,
+              onScaleUpdate: controller.handleScaleUpdate,
+              onScaleEnd: controller.handleScaleEnd,
+              child: Container(
+                color: Colors.grey.shade900,
+                child: Stack(
+                  children: [
+                    CanvasGrid(
                       scale: controller.currentScale,
                       offset: controller.currentOffset,
+                      canvasRect: widget.project.canvasRect,
                     ),
-                  ),
-                ],
+                    CustomPaint(
+                      size: Size.infinite,
+                      painter: RelationshipPainter(
+                        shapes: controller.allShapes,
+                        selectedIndices: controller.selectedIndices,
+                        activeRelationships: controller.activeRelationships,
+                        draggingShapeIndex: controller.draggingShapeIndex,
+                        draggingPointIndex: controller.draggingPointIndex,
+                        selectedVertexIndex: controller.selectedVertexIndex,
+                        handleRadius: CanvasController.handleRadius,
+                        isLinkMode: controller.isLinkMode,
+                        isEditVerticesMode: controller.isEditVerticesMode,
+                        showAddPointIndicators: showAddPointIndicators,
+                        showRelationships: controller.showRelationships,
+                        showColorLabels: controller.showColorLabels,
+                        scale: controller.currentScale,
+                        offset: controller.currentOffset,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
