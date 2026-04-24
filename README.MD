@@ -1,1 +1,1 @@
-[🚀 Live Demo](https://stefanstoychev.github.io/paint-constraints/)
+[🚀 Live Demo](https://paint-constraints.devfriday.top/)

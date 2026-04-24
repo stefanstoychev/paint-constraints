@@ -8,17 +8,23 @@ import 'package:frontend/models/comparison_operator.dart';
 class SolverService {
   String baseUrl;
 
-  SolverService({this.baseUrl = 'http://localhost:8080'});
+  SolverService({this.baseUrl = 'http://paint-constraints-api.devfriday.top'});
 
-  Future<List<SolveResult>?> solve(List<ShapeRelationship> relationships) async {
+  Future<List<SolveResult>?> solve(
+    List<ShapeRelationship> relationships,
+  ) async {
     try {
       final requestBody = {
-        'constraints': relationships.map((r) => {
-          'color': _mapComponent(r.relationship.component),
-          'operation': _mapOperator(r.relationship.operator),
-          'indexes': [r.sourceShapeIndex, r.targetShapeIndex],
-          'offset': r.relationship.offset,
-        }).toList(),
+        'constraints': relationships
+            .map(
+              (r) => {
+                'color': _mapComponent(r.relationship.component),
+                'operation': _mapOperator(r.relationship.operator),
+                'indexes': [r.sourceShapeIndex, r.targetShapeIndex],
+                'offset': r.relationship.offset,
+              },
+            )
+            .toList(),
       };
 
       final response = await http.post(

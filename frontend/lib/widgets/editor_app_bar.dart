@@ -52,12 +52,11 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
       title: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(projectName,
-              style: const TextStyle(fontSize: 14, color: Colors.black)),
-          const Text(
-            'Shape Operations',
-            style: TextStyle(fontSize: 18),
+          Text(
+            projectName,
+            style: const TextStyle(fontSize: 14, color: Colors.black),
           ),
+          const Text('Shape Operations', style: TextStyle(fontSize: 18)),
         ],
       ),
       actions: <Widget>[
@@ -125,9 +124,7 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
             PopupMenuItem<String>(
               value: 'colors',
               child: ListTile(
-                leading: Icon(
-                  showColorLabels ? Icons.label : Icons.label_off,
-                ),
+                leading: Icon(showColorLabels ? Icons.label : Icons.label_off),
                 title: Text(
                   showColorLabels ? 'Hide Color Labels' : 'Show Color Labels',
                 ),
@@ -180,8 +177,9 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
   }
 
   void _showSettingsDialog(BuildContext context) {
-    final TextEditingController controller =
-        TextEditingController(text: solverUrl);
+    final TextEditingController controller = TextEditingController(
+      text: solverUrl,
+    );
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -193,7 +191,7 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
               controller: controller,
               decoration: const InputDecoration(
                 labelText: 'Solver Server URL',
-                hintText: 'http://localhost:8080',
+                hintText: 'http://paint-constraints-api.devfriday.top',
               ),
             ),
           ],
@@ -214,5 +212,4 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
       ),
     );
   }
-
 }
