@@ -9,4 +9,12 @@ services:
       - SPRING_PROFILES_ACTIVE=docker
     restart: unless-stopped
 
-# You can add the frontend here later if needed, but Flutter web usually requires a separate build/serve step.
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
