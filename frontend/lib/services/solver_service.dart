@@ -8,7 +8,7 @@ import 'package:frontend/models/comparison_operator.dart';
 class SolverService {
   String baseUrl;
 
-  SolverService({this.baseUrl = 'http://paint-constraints-api.devfriday.top'});
+  SolverService({this.baseUrl = 'https://paint-constraints-api.devfriday.top'});
 
   Future<List<SolveResult>?> solve(
     List<ShapeRelationship> relationships,

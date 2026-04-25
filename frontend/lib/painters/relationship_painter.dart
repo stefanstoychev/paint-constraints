@@ -103,6 +103,7 @@ class RelationshipPainter extends CustomPainter {
   Paint _buildShapeFillPaint(ShapeData shape) {
     return Paint()
       ..color = shape.color
+      ..strokeWidth = 0
       ..style = PaintingStyle.fill;
   }
 
@@ -276,7 +277,10 @@ class RelationshipPainter extends CustomPainter {
 
     final double textScale = 1 / scale;
     canvas.save();
-    canvas.translate(center.dx, center.dy + 15 / scale); // Slightly below center
+    canvas.translate(
+      center.dx,
+      center.dy + 15 / scale,
+    ); // Slightly below center
     canvas.scale(textScale);
     textPainter.paint(
       canvas,
@@ -402,11 +406,29 @@ class RelationshipPainter extends CustomPainter {
         break;
     }
 
-    final int? firstSelected = selectedIndices.isNotEmpty ? selectedIndices.first : null;
-    final int? lastSelected = selectedIndices.length > 1 ? selectedIndices.last : null;
+    final int? firstSelected = selectedIndices.isNotEmpty
+        ? selectedIndices.first
+        : null;
+    final int? lastSelected = selectedIndices.length > 1
+        ? selectedIndices.last
+        : null;
 
-    final String sourceChar = (_shapeLabel(shapeRelationship.sourceShapeIndex, firstSelected, lastSelected) ?? '?').toLowerCase();
-    final String targetChar = (_shapeLabel(shapeRelationship.targetShapeIndex, firstSelected, lastSelected) ?? '?').toLowerCase();
+    final String sourceChar =
+        (_shapeLabel(
+                  shapeRelationship.sourceShapeIndex,
+                  firstSelected,
+                  lastSelected,
+                ) ??
+                '?')
+            .toLowerCase();
+    final String targetChar =
+        (_shapeLabel(
+                  shapeRelationship.targetShapeIndex,
+                  firstSelected,
+                  lastSelected,
+                ) ??
+                '?')
+            .toLowerCase();
 
     return '$prefix($sourceChar ${relationship.operator.symbol} $targetChar$offsetStr)';
   }
