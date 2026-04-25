@@ -324,8 +324,8 @@ class RelationshipPainter extends CustomPainter {
           ? const Offset(0, 0)
           : direction / distance;
       final Offset perpendicular = Offset(
-        -normalizedDirection.dy,
-        normalizedDirection.dx,
+        0.0,
+        1.0,
       );
       final Offset midPoint = Offset(
         (sourceCenter.dx + targetCenter.dx) / 2,
@@ -350,11 +350,11 @@ class RelationshipPainter extends CustomPainter {
   double _getRelationshipLabelOffset(ColorComponent component) {
     switch (component) {
       case ColorComponent.hue:
-        return -1.0;
+        return -0.5;
       case ColorComponent.saturation:
         return 0.0;
       case ColorComponent.value:
-        return 1.0;
+        return 0.5;
     }
   }
 
