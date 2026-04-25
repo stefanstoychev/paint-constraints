@@ -4,9 +4,13 @@ class OnscreenMenu extends StatelessWidget {
   final bool isEditVerticesMode;
   final bool isLinkMode;
   final bool hasSelectedVertex;
+  final bool canUndo;
+  final bool canRedo;
   final VoidCallback onToggleLinkMode;
   final VoidCallback onToggleEditVerticesMode;
   final VoidCallback onDeleteVertex;
+  final VoidCallback onUndo;
+  final VoidCallback onRedo;
 
   const OnscreenMenu({
     super.key,
@@ -16,6 +20,10 @@ class OnscreenMenu extends StatelessWidget {
     required this.onToggleLinkMode,
     required this.onToggleEditVerticesMode,
     required this.onDeleteVertex,
+    required this.onUndo,
+    required this.onRedo,
+    required this.canUndo,
+    required this.canRedo,
   });
 
   @override
@@ -26,9 +34,7 @@ class OnscreenMenu extends StatelessWidget {
       child: Card(
         elevation: 4,
         color: Colors.black87,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         child: Padding(
           padding: const EdgeInsets.all(8.0),
           child: Column(
@@ -60,6 +66,22 @@ class OnscreenMenu extends StatelessWidget {
                   disabledColor: Colors.white24,
                 ),
               ],
+              _MenuButton(
+                icon: Icons.redo,
+                isActive: canRedo,
+                activeColor: Colors.blueGrey,
+                onPressed: canRedo ? onRedo : null,
+                tooltip: 'Redo',
+                disabledColor: Colors.white24,
+              ),
+              _MenuButton(
+                icon: Icons.undo,
+                isActive: canUndo,
+                activeColor: Colors.grey,
+                onPressed: canUndo ? onUndo : null,
+                tooltip: 'Undo',
+                disabledColor: Colors.white24,
+              ),
             ],
           ),
         ),
@@ -89,7 +111,9 @@ class _MenuButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: isActive ? activeColor.withValues(alpha: 0.15) : Colors.transparent,
+        color: isActive
+            ? activeColor.withValues(alpha: 0.15)
+            : Colors.transparent,
         borderRadius: BorderRadius.circular(8),
       ),
       child: IconButton(

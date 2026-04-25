@@ -4,8 +4,6 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
   final bool showRelationships;
   final bool showColorLabels;
   final bool hasSelectedShapes;
-  final bool canUndo;
-  final bool canRedo;
   final String projectName;
   final String solverUrl;
 
@@ -26,8 +24,6 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
     required this.showRelationships,
     required this.showColorLabels,
     required this.hasSelectedShapes,
-    required this.canUndo,
-    required this.canRedo,
     required this.onToggleShowRelationships,
     required this.onToggleShowColorLabels,
     required this.onSendToFront,
@@ -70,16 +66,6 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
           onPressed: onSolve,
           tooltip: 'Solve Constraints',
           color: Colors.amber,
-        ),
-        IconButton(
-          icon: const Icon(Icons.undo),
-          onPressed: canUndo ? onUndo : null,
-          tooltip: 'Undo',
-        ),
-        IconButton(
-          icon: const Icon(Icons.redo),
-          onPressed: canRedo ? onRedo : null,
-          tooltip: 'Redo',
         ),
         PopupMenuButton<String>(
           onSelected: (value) {
