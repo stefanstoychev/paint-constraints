@@ -191,7 +191,7 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
               controller: controller,
               decoration: const InputDecoration(
                 labelText: 'Solver Server URL',
-                hintText: 'http://paint-constraints-api.devfriday.top',
+                hintText: 'https://paint-constraints-api.devfriday.top',
               ),
             ),
           ],
