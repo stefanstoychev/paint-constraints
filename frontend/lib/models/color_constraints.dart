@@ -3,35 +3,29 @@ import 'color_component.dart';
 import 'color_relationship.dart';
 import 'comparison_operator.dart';
 
+/// Minimum and maximum values for hue (0-360 degrees)
+final int minHue = 0;
+final int maxHue= 360;
+
+/// Minimum and maximum values for saturation (0-100)
+final int minSaturation = 0;
+final int maxSaturation = 100;
+
+/// Minimum and maximum values for value/brightness (0-100)
+final int minValue = 0;
+final int maxValue = 100;
+
+/// Whether hue should wrap around (true) or be clamped (false)
+final bool hueWraps = true;
+
 /// A class that defines constraints for HSV color components and relationships between colors.
 /// This allows for configurable limits on hue, saturation, and value ranges, plus color relationships.
 class ColorConstraints {
-  /// Minimum and maximum values for hue (0-360 degrees)
-  final double minHue;
-  final double maxHue;
-
-  /// Minimum and maximum values for saturation (0.0-1.0)
-  final double minSaturation;
-  final double maxSaturation;
-
-  /// Minimum and maximum values for value/brightness (0.0-1.0)
-  final double minValue;
-  final double maxValue;
-
-  /// Whether hue should wrap around (true) or be clamped (false)
-  final bool hueWraps;
 
   /// Predefined color relationships
   final List<ColorRelationship> relationships;
 
   const ColorConstraints({
-    this.minHue = 0.0,
-    this.maxHue = 360.0,
-    this.minSaturation = 0.0,
-    this.maxSaturation = 1.0,
-    this.minValue = 0.0,
-    this.maxValue = 1.0,
-    this.hueWraps = true,
     this.relationships = const [],
   });
 
@@ -99,11 +93,11 @@ class ColorConstraints {
   }
 
   /// Apply constraints to a hue value
-  double constrainHue(double hue) {
+  int constrainHue(int hue) {
     if (hueWraps) {
       // Wrap around like angles
-      double normalizedHue = hue % 360.0;
-      if (normalizedHue < 0) normalizedHue += 360.0;
+      int normalizedHue = hue % 360;
+      if (normalizedHue < 0) normalizedHue += 360;
       return normalizedHue;
     } else {
       // Clamp to range
@@ -112,12 +106,12 @@ class ColorConstraints {
   }
 
   /// Apply constraints to a saturation value
-  double constrainSaturation(double saturation) {
+  int constrainSaturation(int saturation) {
     return saturation.clamp(minSaturation, maxSaturation);
   }
 
   /// Apply constraints to a value/brightness value
-  double constrainValue(double value) {
+  int constrainValue(int value) {
     return value.clamp(minValue, maxValue);
   }
 
@@ -125,71 +119,20 @@ class ColorConstraints {
   HSVColor constrainColor(HSVColor color) {
     return HSVColor.fromAHSV(
       1.0,
-      constrainHue(color.hue),
-      constrainSaturation(color.saturation),
-      constrainValue(color.value),
+      constrainHue(color.hue.toInt()).toDouble(),
+      constrainSaturation(color.saturation.toInt()).toDouble(),
+      constrainValue(color.value.toInt()).toDouble(),
     );
   }
 
-  /// Create a new HSVColor by applying an offset to a component while respecting constraints
-  HSVColor applyOffset(
-    HSVColor color,
-    ColorComponent component,
-    double offset,
-  ) {
-    switch (component) {
-      case ColorComponent.hue:
-        return color.withHue(constrainHue(color.hue + offset));
-      case ColorComponent.saturation:
-        return color.withSaturation(
-          constrainSaturation(color.saturation + (offset / 100.0)),
-        );
-      case ColorComponent.value:
-        return color.withValue(constrainValue(color.value + (offset / 100.0)));
-    }
-  }
-
-  /// Check if a value is within the constraints for a given component
-  bool isWithinConstraints(ColorComponent component, double value) {
-    switch (component) {
-      case ColorComponent.hue:
-        return hueWraps || (value >= minHue && value <= maxHue);
-      case ColorComponent.saturation:
-        return value >= minSaturation && value <= maxSaturation;
-      case ColorComponent.value:
-        return value >= minValue && value <= maxValue;
-    }
-  }
 
   @override
   bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    return other is ColorConstraints &&
-        other.minHue == minHue &&
-        other.maxHue == maxHue &&
-        other.minSaturation == minSaturation &&
-        other.maxSaturation == maxSaturation &&
-        other.minValue == minValue &&
-        other.maxValue == maxValue &&
-        other.hueWraps == hueWraps;
+    return identical(this, other);
   }
 
   @override
   int get hashCode {
-    return Object.hash(
-      minHue,
-      maxHue,
-      minSaturation,
-      maxSaturation,
-      minValue,
-      maxValue,
-      hueWraps,
-    );
-  }
-
-  @override
-  String toString() {
-    return 'ColorConstraints(hue: $minHue-$maxHue${hueWraps ? "(wraps)" : ""}, '
-        'saturation: $minSaturation-$maxSaturation, value: $minValue-$maxValue)';
+    return this.relationships.hashCode;
   }
 }
