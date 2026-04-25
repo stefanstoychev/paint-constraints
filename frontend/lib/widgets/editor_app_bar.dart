@@ -51,8 +51,7 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
           Text(
             projectName,
             style: const TextStyle(fontSize: 14, color: Colors.black),
-          ),
-          const Text('Shape Operations', style: TextStyle(fontSize: 18)),
+          )
         ],
       ),
       actions: <Widget>[
