@@ -71,4 +71,4 @@ jobs:
 
       - name: SSH and run make update
         run: |
-          ssh -i ~/.ssh/id_ed25519 ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} 'cd /opt/app && docker compose up -d'
+          ssh -i ~/.ssh/id_ed25519 ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} 'cd /opt/apps && docker compose up -d'
