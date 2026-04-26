@@ -202,6 +202,9 @@ class CanvasController extends ChangeNotifier {
 
   List<int> selectedIndices = <int>[];
   bool isLinkMode = false;
+  bool isHueVisible =true;
+  bool isSatVisible = true;
+  bool isValueVisible = true;
   bool isEditVerticesMode = false;
   bool showRelationships = true;
   bool showColorLabels = false;
@@ -766,5 +769,21 @@ class CanvasController extends ChangeNotifier {
     executeCommand(
       ReorderShapesCommand(this, List.from(allShapes), tempShapes),
     );
+  }
+
+  void toggleHueVisible() {
+    isHueVisible = !isHueVisible;
+    print(isHueVisible);
+    notifyListeners();
+  }
+
+  void onToggleSatVisible() {
+    isSatVisible = !isSatVisible;
+    notifyListeners();
+  }
+
+  void onToggleValueVisible() {
+    isValueVisible = !isValueVisible;
+    notifyListeners();
   }
 }

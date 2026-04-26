@@ -3,11 +3,17 @@ import 'package:flutter/material.dart';
 class OnscreenMenu extends StatelessWidget {
   final bool isEditVerticesMode;
   final bool isLinkMode;
+  final bool isHueVisible;
+  final bool isSatVisible;
+  final bool isValueVisible;
   final bool hasSelectedVertex;
   final bool canUndo;
   final bool canRedo;
   final VoidCallback onToggleLinkMode;
   final VoidCallback onToggleEditVerticesMode;
+  final VoidCallback onToggleHueVisible;
+  final VoidCallback onToggleSatVisible;
+  final VoidCallback onToggleValueVisible;
   final VoidCallback onDeleteVertex;
   final VoidCallback onUndo;
   final VoidCallback onRedo;
@@ -16,8 +22,14 @@ class OnscreenMenu extends StatelessWidget {
     super.key,
     required this.isEditVerticesMode,
     required this.isLinkMode,
+    required this.isHueVisible,
+    required this.isSatVisible,
+    required this.isValueVisible,
     required this.hasSelectedVertex,
     required this.onToggleLinkMode,
+    required this.onToggleHueVisible,
+    required this.onToggleSatVisible,
+    required this.onToggleValueVisible,
     required this.onToggleEditVerticesMode,
     required this.onDeleteVertex,
     required this.onUndo,
@@ -47,6 +59,33 @@ class OnscreenMenu extends StatelessWidget {
                 onPressed: onToggleLinkMode,
                 tooltip: 'Link Mode',
               ),
+              if (isLinkMode) ...[
+                const Divider(color: Colors.white24, height: 16),
+                _MenuButtonLetter(
+                  letter: "H",
+                  isActive: isHueVisible,
+                  activeColor: Colors.lightBlue,
+                  onPressed:onToggleHueVisible,
+                  tooltip: 'Toggle hue',
+                  disabledColor: Colors.white24,
+                ),
+                _MenuButtonLetter(
+                  letter: "S",
+                  isActive: isSatVisible,
+                  activeColor: Colors.lightBlue,
+                  onPressed: onToggleSatVisible,
+                  tooltip: 'Toggle saturation',
+                  disabledColor: Colors.white24,
+                ),
+                _MenuButtonLetter(
+                  letter: "V",
+                  isActive: isValueVisible,
+                  activeColor: Colors.lightBlue,
+                  onPressed: onToggleValueVisible,
+                  tooltip: 'Toggle value',
+                  disabledColor: Colors.white24,
+                ),
+              ],
               const SizedBox(height: 8),
               _MenuButton(
                 icon: Icons.scatter_plot,
@@ -122,6 +161,49 @@ class _MenuButton extends StatelessWidget {
           color: onPressed == null
               ? (disabledColor ?? Colors.grey)
               : (isActive ? activeColor : Colors.white70),
+        ),
+        onPressed: onPressed,
+        tooltip: tooltip,
+        splashRadius: 24,
+      ),
+    );
+  }
+}
+
+class _MenuButtonLetter extends StatelessWidget {
+  final String letter;
+  final bool isActive;
+  final Color activeColor;
+  final VoidCallback? onPressed;
+  final String tooltip;
+  final Color? disabledColor;
+
+  const _MenuButtonLetter({
+    required this.letter,
+    required this.isActive,
+    required this.activeColor,
+    required this.onPressed,
+    required this.tooltip,
+    this.disabledColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: isActive
+            ? activeColor.withValues(alpha: 0.15)
+            : Colors.transparent,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: IconButton(
+        icon: Text(
+          letter,
+          style: TextStyle(
+            color: onPressed == null
+                ? (disabledColor ?? Colors.grey)
+                : (isActive ? activeColor : Colors.white70),
+          ),
         ),
         onPressed: onPressed,
         tooltip: tooltip,

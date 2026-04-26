@@ -21,6 +21,9 @@ class RelationshipPainter extends CustomPainter {
     this.selectedVertexIndex,
     required this.handleRadius,
     required this.isLinkMode,
+    required this.isHueVisible,
+    required this.isSatVisible,
+    required this.isValueVisible,
     required this.isEditVerticesMode,
     required this.showAddPointIndicators,
     required this.showRelationships,
@@ -37,6 +40,9 @@ class RelationshipPainter extends CustomPainter {
   final int? selectedVertexIndex;
   final double handleRadius;
   final bool isLinkMode;
+  final bool isHueVisible;
+  final bool isSatVisible;
+  final bool isValueVisible;
   final bool isEditVerticesMode;
   final bool showAddPointIndicators;
   final bool showRelationships;
@@ -303,6 +309,20 @@ class RelationshipPainter extends CustomPainter {
       ..style = PaintingStyle.fill;
 
     for (final ShapeRelationship relationship in activeRelationships) {
+      switch(relationship.relationship.component){
+        case ColorComponent.hue:
+          if(!isHueVisible)
+            continue;
+          break;
+        case ColorComponent.saturation:
+          if(!isSatVisible)
+            continue;
+          break;
+        case ColorComponent.value:
+          if(!isValueVisible)
+            continue;
+          break;
+      }
       if (relationship.sourceShapeIndex >= shapes.length ||
           relationship.targetShapeIndex >= shapes.length) {
         continue;
@@ -524,6 +544,14 @@ class RelationshipPainter extends CustomPainter {
     if (!listEquals(activeRelationships, oldDelegate.activeRelationships)) {
       return true;
     }
+    if(isHueVisible != oldDelegate.isHueVisible)
+      return true;
+
+    if(isSatVisible != oldDelegate.isSatVisible)
+      return true;
+
+    if(isValueVisible != oldDelegate.isValueVisible)
+      return true;
     return false;
   }
 }
