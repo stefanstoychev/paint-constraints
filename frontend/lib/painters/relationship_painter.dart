@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/models/color_component.dart';
@@ -9,6 +11,7 @@ class RelationshipPainter extends CustomPainter {
   static const double _relationshipLabelSpacing = 16.0;
   static const double _shapeLabelFontSize = 16.0;
   static const double _arrowSize = 8.0;
+
   RelationshipPainter({
     required this.shapes,
     required this.selectedIndices,
@@ -308,14 +311,8 @@ class RelationshipPainter extends CustomPainter {
       final ShapeData sourceShape = shapes[relationship.sourceShapeIndex];
       final ShapeData targetShape = shapes[relationship.targetShapeIndex];
 
-      final Offset sourceCenter = _polygonCentroid(sourceShape.points);
-      final Offset targetCenter = _polygonCentroid(targetShape.points);
-
-      // Draw the line
-      canvas.drawLine(sourceCenter, targetCenter, linePaint);
-
-      // Draw arrowhead at target end
-      _drawArrowhead(canvas, sourceCenter, targetCenter, arrowPaint);
+      Offset sourceCenter = _polygonCentroid(sourceShape.points);
+      Offset targetCenter = _polygonCentroid(targetShape.points);
 
       // Draw relationship text in the middle with an offset so multiple labels don't overlap.
       final Offset direction = targetCenter - sourceCenter;
@@ -323,28 +320,46 @@ class RelationshipPainter extends CustomPainter {
       final Offset normalizedDirection = distance == 0
           ? const Offset(0, 0)
           : direction / distance;
-      final Offset perpendicular = Offset(
-        0.0,
-        1.0,
+
+      final Offset perpendicular = perpendicularVector(normalizedDirection);
+
+      double compOffset = 10 * _getRelationshipLabelOffset(
+        relationship.relationship.component,
       );
+      sourceCenter = Offset(
+        sourceCenter.dx + perpendicular.dx * compOffset,
+        sourceCenter.dy + perpendicular.dy * compOffset,
+      );
+      targetCenter = Offset(
+        targetCenter.dx + perpendicular.dx * compOffset,
+        targetCenter.dy + perpendicular.dy * compOffset,
+      );
+
+      // Draw the line
+      canvas.drawLine(sourceCenter, targetCenter, linePaint);
+
+      // Draw arrowhead at target end
+      _drawArrowhead(canvas, sourceCenter, targetCenter, arrowPaint);
+
       final Offset midPoint = Offset(
         (sourceCenter.dx + targetCenter.dx) / 2,
         (sourceCenter.dy + targetCenter.dy) / 2,
       );
-      final double labelSpacing = _relationshipLabelSpacing;
-      final Offset labelOffset =
-          perpendicular *
-          _getRelationshipLabelOffset(relationship.relationship.component) *
-          labelSpacing;
 
       final String label = _getFormattedRelationshipLabel(relationship);
       _paintRelationshipLabel(
         canvas,
         label,
-        midPoint + labelOffset,
+        normalizedDirection,
+        midPoint,
         textPainter,
       );
     }
+  }
+
+  Offset perpendicularVector(Offset v, {bool leftHand = true}) {
+    // Left-hand: (y, -x), Right-hand: (-y, x)
+    return leftHand ? Offset(v.dy, -v.dx) : Offset(-v.dy, v.dx);
   }
 
   double _getRelationshipLabelOffset(ColorComponent component) {
@@ -436,6 +451,7 @@ class RelationshipPainter extends CustomPainter {
   void _paintRelationshipLabel(
     Canvas canvas,
     String text,
+    Offset direction,
     Offset position,
     TextPainter textPainter,
   ) {
@@ -445,13 +461,14 @@ class RelationshipPainter extends CustomPainter {
         color: Colors.blue.shade800,
         fontSize: _relationshipLabelFontSize,
         fontWeight: FontWeight.bold,
-        backgroundColor: Colors.white.withValues(alpha: 0.8),
+        backgroundColor: Colors.white,
       ),
     );
     textPainter.layout();
     final double textScale = 1 / scale;
     canvas.save();
     canvas.translate(position.dx, position.dy);
+    canvas.rotate(math.atan2(direction.dy, direction.dx));
     canvas.scale(textScale);
     textPainter.paint(
       canvas,
