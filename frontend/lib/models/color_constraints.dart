@@ -38,56 +38,12 @@ class ColorConstraints {
   factory ColorConstraints.withCommonRelationships() {
     return const ColorConstraints(
       relationships: [
-        // Hue relationships
         ColorRelationship(ColorComponent.hue, ComparisonOperator.lessThan),
-        ColorRelationship(
-          ColorComponent.hue,
-          ComparisonOperator.lessThan,
-          -30.0,
-        ), // Less than source - 30°
         ColorRelationship(ColorComponent.hue, ComparisonOperator.equal),
-        ColorRelationship(
-          ColorComponent.hue,
-          ComparisonOperator.greaterThan,
-          30.0,
-        ), // Greater than source + 30°
-        ColorRelationship(ColorComponent.hue, ComparisonOperator.greaterThan),
-
-        // Saturation relationships
-        ColorRelationship(
-          ColorComponent.saturation,
-          ComparisonOperator.lessThan,
-        ),
-        ColorRelationship(
-          ColorComponent.saturation,
-          ComparisonOperator.lessThan,
-          -10.0,
-        ), // Less than source - 10%
+        ColorRelationship(ColorComponent.saturation, ComparisonOperator.lessThan,),
         ColorRelationship(ColorComponent.saturation, ComparisonOperator.equal),
-        ColorRelationship(
-          ColorComponent.saturation,
-          ComparisonOperator.greaterThan,
-          10.0,
-        ), // Greater than source + 10%
-        ColorRelationship(
-          ColorComponent.saturation,
-          ComparisonOperator.greaterThan,
-        ),
-
-        // Value relationships
         ColorRelationship(ColorComponent.value, ComparisonOperator.lessThan),
-        ColorRelationship(
-          ColorComponent.value,
-          ComparisonOperator.lessThan,
-          -10.0,
-        ), // Less than source - 10%
         ColorRelationship(ColorComponent.value, ComparisonOperator.equal),
-        ColorRelationship(
-          ColorComponent.value,
-          ComparisonOperator.greaterThan,
-          10.0,
-        ), // Greater than source + 10%
-        ColorRelationship(ColorComponent.value, ComparisonOperator.greaterThan),
       ],
     );
   }

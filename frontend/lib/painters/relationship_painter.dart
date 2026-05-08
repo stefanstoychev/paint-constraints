@@ -422,11 +422,6 @@ class RelationshipPainter extends CustomPainter {
 
   String _getFormattedRelationshipLabel(ShapeRelationship shapeRelationship) {
     final ColorRelationship relationship = shapeRelationship.relationship;
-    final offsetStr = relationship.offset == 0
-        ? ''
-        : (relationship.offset > 0
-              ? ' + ${relationship.offset.toStringAsFixed(1)}'
-              : ' - ${relationship.offset.abs().toStringAsFixed(1)}');
 
     final String prefix;
     switch (relationship.component) {
@@ -465,7 +460,7 @@ class RelationshipPainter extends CustomPainter {
                 '?')
             .toLowerCase();
 
-    return '$prefix($sourceChar ${relationship.operator.symbol} $targetChar$offsetStr)';
+    return '$prefix($sourceChar ${relationship.operator.symbol})';
   }
 
   void _paintRelationshipLabel(

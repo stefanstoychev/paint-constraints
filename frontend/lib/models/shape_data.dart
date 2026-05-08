@@ -41,8 +41,7 @@ class ShapeRelationship {
       'sourceShapeIndex': sourceShapeIndex,
       'targetShapeIndex': targetShapeIndex,
       'component': relationship.component.name,
-      'operator': relationship.operator.name,
-      'offset': relationship.offset,
+      'operator': relationship.operator.name
     };
   }
 
@@ -56,8 +55,7 @@ class ShapeRelationship {
     );
     final relationship = ColorRelationship(
       component,
-      operator,
-      json['offset'] as double,
+      operator
     );
     return ShapeRelationship(
       json['sourceShapeIndex'] as int,

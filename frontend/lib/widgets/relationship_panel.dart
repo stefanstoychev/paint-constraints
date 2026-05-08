@@ -179,12 +179,6 @@ class RelationshipPanel extends StatelessWidget {
   }
 
   String _getShortRelationshipLabel(ColorRelationship relationship) {
-    final offsetStr = relationship.offset == 0
-        ? ''
-        : (relationship.offset > 0
-              ? ' + ${relationship.offset.toInt()}'
-              : ' - ${relationship.offset.abs().toInt()}');
-
-    return '${relationship.operator.symbol}$offsetStr';
+    return relationship.operator.symbol;
   }
 }
