@@ -60,16 +60,8 @@ class SolverService {
     switch (operator) {
       case ComparisonOperator.lessThan:
         return 'LT';
-      case ComparisonOperator.greaterThan:
-        return 'GT';
       case ComparisonOperator.equal:
         return 'E';
-      case ComparisonOperator.lessThanOrEqual:
-        return 'LTE';
-      case ComparisonOperator.greaterThanOrEqual:
-        return 'GTE';
-      case ComparisonOperator.notEqual:
-        return 'NE';
     }
   }
 }

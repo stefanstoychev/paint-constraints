@@ -1,10 +1,6 @@
 enum ComparisonOperator {
   lessThan('<'),
-  greaterThan('>'),
-  equal('='),
-  lessThanOrEqual('<='),
-  greaterThanOrEqual('>='),
-  notEqual('!=');
+  equal('=');
 
   const ComparisonOperator(this.symbol);
 
