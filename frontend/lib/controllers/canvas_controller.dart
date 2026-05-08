@@ -243,6 +243,11 @@ class CanvasController extends ChangeNotifier {
 
   Rect get canvasRect => currentProject?.canvasRect ?? const Rect.fromLTWH(20, 20, 460, 320);
 
+  bool get hasSelected => selectedVertexIndex != null;
+
+  bool get canRedo => commandHistory.canRedo;
+  bool get canUndo => commandHistory.canUndo;
+
   Offset _screenToWorld(Offset screenPoint) {
     return (screenPoint - currentOffset) / currentScale;
   }

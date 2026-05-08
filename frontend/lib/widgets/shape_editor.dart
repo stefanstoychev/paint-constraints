@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:frontend/controllers/canvas_controller.dart';
+import 'package:frontend/controllers/project_manager.dart';
+import 'package:frontend/models/canvas_project.dart';
 import 'package:frontend/painters/relationship_painter.dart';
+import 'package:frontend/widgets/canvas_grid.dart';
 import 'package:frontend/widgets/editor_app_bar.dart';
 import 'package:frontend/widgets/onscreen_menu.dart';
 import 'package:frontend/widgets/relationship_panel.dart';
 import 'package:frontend/widgets/zoom_controls.dart';
-import 'package:frontend/widgets/canvas_grid.dart';
-import 'package:frontend/controllers/project_manager.dart';
-import 'package:frontend/models/canvas_project.dart';
+import 'package:provider/provider.dart';
 
 class ShapeEditor extends StatefulWidget {
   final CanvasProject project;
+
   const ShapeEditor({super.key, required this.project});
 
   @override
@@ -48,7 +49,8 @@ class _ShapeEditorState extends State<ShapeEditor> {
         onRedo: controller.redo,
         onAddShape: controller.addShape,
         onSave: () => controller.saveCurrentProject(context, projectManager),
-        onLoad: () => controller.loadProject(widget.project), // Revert to saved
+        onLoad: () => controller.loadProject(widget.project),
+        // Revert to saved
         onSolve: () => controller.solveRelationships(context),
         onUpdateSolverUrl: (url) => controller.solverUrl = url,
         projectName: widget.project.name,
@@ -107,9 +109,12 @@ class _ShapeEditorState extends State<ShapeEditor> {
                   controller.applyRelationship(relationship, context),
               onClearRelationships: controller.clearSelectedRelationships,
               activeRelationships: controller.activeRelationships
-                  .where((r) =>
-                      r.sourceShapeIndex == controller.selectedIndices.first &&
-                      r.targetShapeIndex == controller.selectedIndices.last)
+                  .where(
+                    (r) =>
+                        r.sourceShapeIndex ==
+                            controller.selectedIndices.first &&
+                        r.targetShapeIndex == controller.selectedIndices.last,
+                  )
                   .map((r) => r.relationship)
                   .toList(),
             ),
@@ -121,24 +126,7 @@ class _ShapeEditorState extends State<ShapeEditor> {
             onFitToScreen: () =>
                 controller.fitToScreen(MediaQuery.of(context).size),
           ),
-          OnscreenMenu(
-            isEditVerticesMode: controller.isEditVerticesMode,
-            isLinkMode: controller.isLinkMode,
-            isHueVisible: controller.isHueVisible,
-            isSatVisible: controller.isSatVisible,
-            isValueVisible: controller.isValueVisible,
-            hasSelectedVertex: controller.selectedVertexIndex != null,
-            onToggleLinkMode: controller.toggleLinkMode,
-            onToggleEditVerticesMode: controller.toggleEditVerticesMode,
-            onDeleteVertex: controller.deleteSelectedVertex,
-            onUndo: controller.undo,
-            onRedo: controller.redo,
-            canUndo: controller.commandHistory.canUndo,
-            canRedo: controller.commandHistory.canRedo,
-            onToggleHueVisible: controller.toggleHueVisible,
-            onToggleSatVisible: controller.onToggleSatVisible,
-            onToggleValueVisible: controller.onToggleValueVisible,
-          ),
+          Positioned(top: 20, left: 20, child: OnscreenMenu()),
         ],
       ),
     );
