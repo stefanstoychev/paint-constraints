@@ -6,6 +6,8 @@ import 'package:frontend/models/color_component.dart';
 import 'package:frontend/models/color_relationship.dart';
 import 'package:frontend/models/shape_data.dart';
 
+import '../utils/geometry_utils.dart';
+
 class RelationshipPainter extends CustomPainter {
   static const double _relationshipLabelFontSize = 16.0;
   static const double _relationshipLabelSpacing = 16.0;
@@ -243,7 +245,7 @@ class RelationshipPainter extends CustomPainter {
     List<Offset> points,
     TextPainter textPainter,
   ) {
-    final Offset center = _polygonCentroid(points);
+    final Offset center = GeometryUtils.getPolygonCentroid(points);
     textPainter.text = TextSpan(
       text: labelText,
       style: TextStyle(
@@ -269,7 +271,7 @@ class RelationshipPainter extends CustomPainter {
     ShapeData shape,
     TextPainter textPainter,
   ) {
-    final Offset center = _polygonCentroid(shape.points);
+    final Offset center = GeometryUtils.getPolygonCentroid(shape.points);
     final String labelText =
         'H:${shape.hsv.hue.toInt()} S:${(shape.hsv.saturation * 100).toInt()} V:${(shape.hsv.value * 100).toInt()}';
 
@@ -332,8 +334,8 @@ class RelationshipPainter extends CustomPainter {
       final ShapeData sourceShape = shapes[relationship.sourceShapeIndex];
       final ShapeData targetShape = shapes[relationship.targetShapeIndex];
 
-      Offset sourceCenter = _polygonCentroid(sourceShape.points);
-      Offset targetCenter = _polygonCentroid(targetShape.points);
+      Offset sourceCenter = GeometryUtils.getPolygonCentroid(sourceShape.points);
+      Offset targetCenter = GeometryUtils.getPolygonCentroid(targetShape.points);
 
       // Draw relationship text in the middle with an offset so multiple labels don't overlap.
       final Offset direction = targetCenter - sourceCenter;
@@ -474,34 +476,6 @@ class RelationshipPainter extends CustomPainter {
       Offset(-textPainter.width / 2, -textPainter.height / 2),
     );
     canvas.restore();
-  }
-
-  Offset _polygonCentroid(List<Offset> points) {
-    if (points.isEmpty) return Offset.zero;
-    if (points.length == 1) return points.first;
-
-    double area = 0.0;
-    double centroidX = 0.0;
-    double centroidY = 0.0;
-
-    for (int i = 0, j = points.length - 1; i < points.length; j = i++) {
-      final Offset current = points[i];
-      final Offset previous = points[j];
-      final double cross = previous.dx * current.dy - current.dx * previous.dy;
-      area += cross;
-      centroidX += (previous.dx + current.dx) * cross;
-      centroidY += (previous.dy + current.dy) * cross;
-    }
-
-    area *= 0.5;
-    if (area.abs() < 1e-9) {
-      return Offset(
-        points.map((p) => p.dx).reduce((a, b) => a + b) / points.length,
-        points.map((p) => p.dy).reduce((a, b) => a + b) / points.length,
-      );
-    }
-
-    return Offset(centroidX / (6 * area), centroidY / (6 * area));
   }
 
   @override

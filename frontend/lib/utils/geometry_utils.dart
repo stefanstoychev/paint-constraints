@@ -41,4 +41,32 @@ class GeometryUtils {
     }
     return (p - projection).distance;
   }
+
+  static Offset getPolygonCentroid(List<Offset> points) {
+    if (points.isEmpty) return Offset.zero;
+    if (points.length == 1) return points.first;
+
+    double area = 0.0;
+    double centroidX = 0.0;
+    double centroidY = 0.0;
+
+    for (int i = 0, j = points.length - 1; i < points.length; j = i++) {
+      final Offset current = points[i];
+      final Offset previous = points[j];
+      final double cross = previous.dx * current.dy - current.dx * previous.dy;
+      area += cross;
+      centroidX += (previous.dx + current.dx) * cross;
+      centroidY += (previous.dy + current.dy) * cross;
+    }
+
+    area *= 0.5;
+    if (area.abs() < 1e-9) {
+      return Offset(
+        points.map((p) => p.dx).reduce((a, b) => a + b) / points.length,
+        points.map((p) => p.dy).reduce((a, b) => a + b) / points.length,
+      );
+    }
+
+    return Offset(centroidX / (6 * area), centroidY / (6 * area));
+  }
 }
