@@ -2,7 +2,7 @@ package paintcontraints.backend;
 
 import java.util.Arrays;
 
-public record Constraint(ColorComponents color, Operation operation, int[] indexes, int offset) {
+public record Constraint(ColorComponents color, Operation operation, int[] indexes) {
 
     public String toString(long source, long target) {
         String sourceLabel = "" + source;
@@ -17,9 +17,8 @@ public record Constraint(ColorComponents color, Operation operation, int[] index
             case LTE -> "<=";
         };
 
-        String offsetStr = offset == 0 ? "" : (offset > 0 ? " + " + offset : " - " + Math.abs(offset));
 
-        return String.format("%s.%s %s %s.%s%s",
-                sourceLabel, color, opSymbol, targetLabel, color, offsetStr);
+        return String.format("%s.%s %s %s.%s",
+                sourceLabel, color, opSymbol, targetLabel, color);
     }
 }

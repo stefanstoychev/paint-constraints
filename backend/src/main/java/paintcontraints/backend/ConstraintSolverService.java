@@ -13,10 +13,10 @@ public class ConstraintSolverService {
         Loader.loadNativeLibraries();
 
         CpModel model = new CpModel();
-        
+
         // Map to store H, S, V variables for each shape index
         Map<Integer, Map<ColorComponents, IntVar>> shapeVars = new HashMap<>();
-        
+
         Set<Integer> allIndices = new HashSet<>();
         for (Constraint constraint : request.constraints()) {
             for (int index : constraint.indexes()) {
@@ -39,12 +39,14 @@ public class ConstraintSolverService {
 
             IntVar varSource = shapeVars.get(constraint.indexes()[0]).get(constraint.color());
             IntVar varTarget = shapeVars.get(constraint.indexes()[1]).get(constraint.color());
-            double offset = constraint.offset();
-            long scaledOffset = Math.round(offset);
 
-            // Constraint: Source [op] Target + Offset
-            LinearExpr targetWithOffset = LinearExpr.newBuilder().add(varTarget).add(scaledOffset).build();
+            LinearExprBuilder linearExprBuilder = LinearExpr.newBuilder().add(varTarget);
 
+            if (constraint.operation() != Operation.E) {
+                linearExprBuilder.add(-10);
+            }
+
+            LinearExpr targetWithOffset = linearExprBuilder.build();
             switch (constraint.operation()) {
                 case GT -> model.addGreaterThan(varSource, targetWithOffset);
                 case GTE -> model.addGreaterOrEqual(varSource, targetWithOffset);

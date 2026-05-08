@@ -436,31 +436,7 @@ class RelationshipPainter extends CustomPainter {
         break;
     }
 
-    final int? firstSelected = selectedIndices.isNotEmpty
-        ? selectedIndices.first
-        : null;
-    final int? lastSelected = selectedIndices.length > 1
-        ? selectedIndices.last
-        : null;
-
-    final String sourceChar =
-        (_shapeLabel(
-                  shapeRelationship.sourceShapeIndex,
-                  firstSelected,
-                  lastSelected,
-                ) ??
-                '?')
-            .toLowerCase();
-    final String targetChar =
-        (_shapeLabel(
-                  shapeRelationship.targetShapeIndex,
-                  firstSelected,
-                  lastSelected,
-                ) ??
-                '?')
-            .toLowerCase();
-
-    return '$prefix($sourceChar ${relationship.operator.symbol})';
+    return '${relationship.operator.symbol}$prefix';
   }
 
   void _paintRelationshipLabel(
