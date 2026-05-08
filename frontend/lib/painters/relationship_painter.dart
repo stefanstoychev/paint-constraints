@@ -308,6 +308,7 @@ class RelationshipPainter extends CustomPainter {
       ..color = Colors.blue.withValues(alpha: 0.7)
       ..style = PaintingStyle.fill;
 
+    var paintedArrows = Set();
     for (final ShapeRelationship relationship in activeRelationships) {
       switch(relationship.relationship.component){
         case ColorComponent.hue:
@@ -343,27 +344,34 @@ class RelationshipPainter extends CustomPainter {
 
       final Offset perpendicular = perpendicularVector(normalizedDirection);
 
-      double compOffset = 10 * _getRelationshipLabelOffset(
-        relationship.relationship.component,
-      );
+
       sourceCenter = Offset(
-        sourceCenter.dx + perpendicular.dx * compOffset,
-        sourceCenter.dy + perpendicular.dy * compOffset,
+        sourceCenter.dx + perpendicular.dx,
+        sourceCenter.dy + perpendicular.dy,
       );
       targetCenter = Offset(
-        targetCenter.dx + perpendicular.dx * compOffset,
-        targetCenter.dy + perpendicular.dy * compOffset,
+        targetCenter.dx + perpendicular.dx,
+        targetCenter.dy + perpendicular.dy,
       );
 
       // Draw the line
       canvas.drawLine(sourceCenter, targetCenter, linePaint);
 
+      bool painted = paintedArrows.contains({sourceCenter, targetCenter});
+      if(painted)
+        return;
+
+      paintedArrows.add({sourceCenter, targetCenter});
+
       // Draw arrowhead at target end
       _drawArrowhead(canvas, sourceCenter, targetCenter, arrowPaint);
 
+      double compOffset = 10 * _getRelationshipLabelOffset(
+        relationship.relationship.component,
+      );
       final Offset midPoint = Offset(
-        (sourceCenter.dx + targetCenter.dx) / 2,
-        (sourceCenter.dy + targetCenter.dy) / 2,
+        (sourceCenter.dx + targetCenter.dx) / 2 + compOffset,
+        (sourceCenter.dy + targetCenter.dy) / 2 + compOffset,
       );
 
       final String label = _getFormattedRelationshipLabel(relationship);
