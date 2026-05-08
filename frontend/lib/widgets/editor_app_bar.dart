@@ -1,19 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../controllers/canvas_controller.dart';
 
 class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
-  final bool showRelationships;
   final bool showColorLabels;
-  final bool hasSelectedShapes;
   final String projectName;
   final String solverUrl;
 
   final VoidCallback onToggleShowRelationships;
-  final VoidCallback onToggleShowColorLabels;
-  final VoidCallback onSendToFront;
-  final VoidCallback onPushToBack;
-  final VoidCallback onUndo;
-  final VoidCallback onRedo;
-  final VoidCallback onAddShape;
   final VoidCallback onSave;
   final VoidCallback onLoad;
   final VoidCallback onSolve;
@@ -21,16 +16,8 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   const EditorAppBar({
     super.key,
-    required this.showRelationships,
     required this.showColorLabels,
-    required this.hasSelectedShapes,
     required this.onToggleShowRelationships,
-    required this.onToggleShowColorLabels,
-    required this.onSendToFront,
-    required this.onPushToBack,
-    required this.onUndo,
-    required this.onRedo,
-    required this.onAddShape,
     required this.onSave,
     required this.onLoad,
     required this.onSolve,
@@ -42,8 +29,10 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 
+
   @override
   Widget build(BuildContext context) {
+    CanvasController controller = context.watch<CanvasController>();
     return AppBar(
       title: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -57,7 +46,7 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
       actions: <Widget>[
         IconButton(
           icon: const Icon(Icons.add),
-          onPressed: onAddShape,
+          onPressed: controller.addShape,
           tooltip: 'Add New Shape',
         ),
         IconButton(
@@ -70,16 +59,16 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
           onSelected: (value) {
             switch (value) {
               case 'visibility':
-                onToggleShowRelationships();
+                controller.toggleShowRelationships();
                 break;
               case 'colors':
-                onToggleShowColorLabels();
+                controller.toggleShowColorLabels();
                 break;
               case 'front':
-                onSendToFront();
+                controller.sendSelectedShapesToFront();
                 break;
               case 'back':
-                onPushToBack();
+                controller.pushSelectedShapesToBack();
                 break;
               case 'save':
                 onSave();
@@ -97,10 +86,10 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
               value: 'visibility',
               child: ListTile(
                 leading: Icon(
-                  showRelationships ? Icons.visibility : Icons.visibility_off,
+                  controller.showRelationships ? Icons.visibility : Icons.visibility_off,
                 ),
                 title: Text(
-                  showRelationships
+                  controller.showRelationships
                       ? 'Hide Relationships'
                       : 'Show Relationships',
                 ),
@@ -118,7 +107,7 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
             const PopupMenuDivider(),
             PopupMenuItem<String>(
               value: 'front',
-              enabled: hasSelectedShapes,
+              enabled: controller.hasSelected,
               child: const ListTile(
                 leading: Icon(Icons.vertical_align_top),
                 title: Text('Send to Front'),
@@ -126,7 +115,7 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
             ),
             PopupMenuItem<String>(
               value: 'back',
-              enabled: hasSelectedShapes,
+              enabled: controller.hasSelected,
               child: const ListTile(
                 leading: Icon(Icons.vertical_align_bottom),
                 title: Text('Push to Back'),

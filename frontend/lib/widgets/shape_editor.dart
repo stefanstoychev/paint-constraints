@@ -38,19 +38,10 @@ class _ShapeEditorState extends State<ShapeEditor> {
 
     return Scaffold(
       appBar: EditorAppBar(
-        showRelationships: controller.showRelationships,
-        hasSelectedShapes: controller.selectedIndices.isNotEmpty,
         onToggleShowRelationships: controller.toggleShowRelationships,
         showColorLabels: controller.showColorLabels,
-        onToggleShowColorLabels: controller.toggleShowColorLabels,
-        onSendToFront: controller.sendSelectedShapesToFront,
-        onPushToBack: controller.pushSelectedShapesToBack,
-        onUndo: controller.undo,
-        onRedo: controller.redo,
-        onAddShape: controller.addShape,
         onSave: () => controller.saveCurrentProject(context, projectManager),
         onLoad: () => controller.loadProject(widget.project),
-        // Revert to saved
         onSolve: () => controller.solveRelationships(context),
         onUpdateSolverUrl: (url) => controller.solverUrl = url,
         projectName: widget.project.name,
@@ -118,14 +109,7 @@ class _ShapeEditorState extends State<ShapeEditor> {
                   .map((r) => r.relationship)
                   .toList(),
             ),
-          ZoomControls(
-            currentScale: controller.currentScale,
-            onZoomChanged: (scale) =>
-                controller.updateZoomScale(scale, MediaQuery.of(context).size),
-            onZoomReset: controller.resetZoomScale,
-            onFitToScreen: () =>
-                controller.fitToScreen(MediaQuery.of(context).size),
-          ),
+          Positioned(bottom: 20, left: 20, child: ZoomControls()),
           Positioned(top: 20, left: 20, child: OnscreenMenu()),
         ],
       ),
