@@ -119,10 +119,10 @@ class RelationshipPainter extends CustomPainter {
       ..style = PaintingStyle.fill;
   }
 
-  Paint _buildShapeStrokePaint(bool isSelected) {
+  Paint _buildShapeSelectedStrokePaint() {
     return Paint()
-      ..color = isSelected ? Colors.orange : Colors.white24
-      ..strokeWidth = isSelected ? 4 / scale : 1.5 / scale
+      ..color = Colors.orange
+      ..strokeWidth = 4 / scale
       ..style = PaintingStyle.stroke;
   }
 
@@ -163,7 +163,9 @@ class RelationshipPainter extends CustomPainter {
   void _paintShape(Canvas canvas, ShapeData shape, bool isSelected) {
     final Path path = Path()..addPolygon(shape.points, true);
     canvas.drawPath(path, _buildShapeFillPaint(shape));
-    canvas.drawPath(path, _buildShapeStrokePaint(isSelected));
+    if(isSelected) {
+      canvas.drawPath(path, _buildShapeSelectedStrokePaint());
+    }
   }
 
   void _paintVertexHandles(Canvas canvas, ShapeData shape, int shapeIndex) {

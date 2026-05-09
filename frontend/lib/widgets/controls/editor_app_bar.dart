@@ -50,10 +50,9 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
           tooltip: 'Add New Shape',
         ),
         IconButton(
-          icon: const Icon(Icons.auto_awesome),
+          icon: const Icon(Icons.calculate),
           onPressed: onSolve,
           tooltip: 'Solve Constraints',
-          color: Colors.amber,
         ),
         PopupMenuButton<String>(
           onSelected: (value) {
