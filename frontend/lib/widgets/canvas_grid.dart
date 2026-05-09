@@ -36,19 +36,16 @@ class _GridPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final Paint gridPaint = Paint()
       ..color = Colors.white.withValues(alpha: 0.1)
-      ..strokeWidth = 1.0 / scale;
+      ..strokeWidth = 1.0;
 
     const double gridSize = 25.0;
 
-    // Calculate visible bounds in world coordinates
-    final double left = -offset.dx / scale;
-    final double top = -offset.dy / scale;
-    final double right = (size.width - offset.dx) / scale;
-    final double bottom = (size.height - offset.dy) / scale;
-
-    // Adjust starts to align with grid
-    final double startX = (left / gridSize).floor() * gridSize;
-    final double startY = (top / gridSize).floor() * gridSize;
+    for (double x = gridSize; x <= size.width; x += gridSize) {
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), gridPaint);
+    }
+    for (double y = gridSize; y <= size.height; y += gridSize) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
+    }
 
     canvas.save();
     canvas.translate(offset.dx, offset.dy);
@@ -65,13 +62,6 @@ class _GridPainter extends CustomPainter {
 
     canvas.drawRect(canvasRect, artboardPaint);
     canvas.drawRect(canvasRect, artboardBorderPaint);
-
-    for (double x = startX; x <= right; x += gridSize) {
-      canvas.drawLine(Offset(x, top), Offset(x, bottom), gridPaint);
-    }
-    for (double y = startY; y <= bottom; y += gridSize) {
-      canvas.drawLine(Offset(left, y), Offset(right, y), gridPaint);
-    }
 
     canvas.restore();
   }
