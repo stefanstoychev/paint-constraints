@@ -4,26 +4,73 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:frontend/models/canvas_data.dart';
-import 'package:frontend/models/color_relationship.dart';
-import 'package:frontend/models/shape_data.dart';
-import 'package:frontend/utils/geometry_utils.dart';
-
-import 'package:frontend/models/canvas_project.dart';
-import 'package:frontend/controllers/project_manager.dart';
 import 'package:frontend/commands/canvas_command.dart';
 import 'package:frontend/commands/command_history.dart';
+import 'package:frontend/commands/relationship_commands.dart';
 import 'package:frontend/commands/shape_commands.dart';
 import 'package:frontend/commands/vertex_commands.dart';
-import 'package:frontend/commands/relationship_commands.dart';
+import 'package:frontend/controllers/project_manager.dart';
+import 'package:frontend/models/canvas_data.dart';
+import 'package:frontend/models/canvas_project.dart';
+import 'package:frontend/models/color_relationship.dart';
+import 'package:frontend/models/shape_data.dart';
 import 'package:frontend/services/solver_service.dart';
+import 'package:frontend/utils/geometry_utils.dart';
 
-import '../models/color_component.dart';
-import '../models/comparison_operator.dart';
 import '../models/shape_relationship.dart';
 
 class CanvasController extends ChangeNotifier {
   final CommandHistory commandHistory = CommandHistory();
+
+  List<ShapeData> allShapes = <ShapeData>[];
+  List<int> selectedIndices = <int>[];
+  bool isLinkMode = false;
+  bool isHueVisible =true;
+  bool isSatVisible = true;
+  bool isValueVisible = true;
+  bool isEditVerticesMode = false;
+  bool showRelationships = true;
+  bool showColorLabels = false;
+
+  CanvasProject? currentProject;
+  final SolverService _solverService = SolverService();
+
+  String get solverUrl => _solverService.baseUrl;
+  set solverUrl(String value) {
+    _solverService.baseUrl = value;
+    notifyListeners();
+  }
+
+  List<ShapeRelationship> activeRelationships = <ShapeRelationship>[];
+
+  double currentScale = 1.0;
+  Offset currentOffset = Offset.zero;
+  double _previousScale = 1.0;
+  Offset _previousOffset = Offset.zero;
+  Offset _previousFocalPoint = Offset.zero;
+
+  int? draggingShapeIndex;
+  int? draggingPointIndex;
+  bool _isDraggingWholeShape = false;
+  int? selectedVertexIndex;
+  Offset? _draggedPointInitialPosition;
+  Offset? _dragStartWorldPoint;
+  Map<int, List<Offset>>? _draggedShapesInitialPoints;
+
+  // Gesture tracking
+  DateTime? _twoFingerGestureStartTime;
+  int _tapPointerCount = 0;
+  DateTime? _lastTwoFingerTapTime;
+
+  static const double handleRadius = 25.0;
+  static const double _segmentTapTolerance = 10.0;
+
+  Rect get canvasRect => currentProject?.canvasRect ?? const Rect.fromLTWH(20, 20, 460, 320);
+
+  bool get hasSelected => selectedVertexIndex != null;
+
+  bool get canRedo => commandHistory.canRedo;
+  bool get canUndo => commandHistory.canUndo;
 
   void executeCommand(CanvasCommand command) {
     commandHistory.execute(command);
@@ -37,15 +84,6 @@ class CanvasController extends ChangeNotifier {
 
   void redo() {
     commandHistory.redo();
-    notifyListeners();
-  }
-
-  CanvasProject? currentProject;
-  final SolverService _solverService = SolverService();
-
-  String get solverUrl => _solverService.baseUrl;
-  set solverUrl(String value) {
-    _solverService.baseUrl = value;
     notifyListeners();
   }
 
@@ -133,17 +171,13 @@ class CanvasController extends ChangeNotifier {
       final recorder = ui.PictureRecorder();
       final canvas = Canvas(recorder);
 
-      // 1. Scale to target dimensions
       canvas.scale(scaleFactor);
       
-      // 2. Translate to align artboard top-left with (0,0)
       canvas.translate(-rect.left, -rect.top);
 
-      // 3. Draw artboard background (using world coordinates)
       final backgroundPaint = Paint()..color = Colors.white;
       canvas.drawRect(rect, backgroundPaint);
 
-      // 4. Draw shapes
       final shapePaint = Paint()..style = PaintingStyle.fill;
       final strokePaint = Paint()
         ..style = PaintingStyle.stroke
@@ -182,71 +216,10 @@ class CanvasController extends ChangeNotifier {
     }
   }
 
-  List<ShapeData> allShapes = <ShapeData>[
-    ShapeData(
-      points: <Offset>[
-        const Offset(50, 100),
-        const Offset(150, 100),
-        const Offset(150, 200),
-        const Offset(50, 200),
-      ],
-      hsv: HSVColor.fromAHSV(1, 180, 0.7, 0.8),
-    ),
-    ShapeData(
-      points: <Offset>[
-        const Offset(250, 100),
-        const Offset(350, 100),
-        const Offset(350, 200),
-        const Offset(250, 200),
-      ],
-      hsv: HSVColor.fromAHSV(1, 210, 0.7, 0.8),
-    ),
-  ];
-
-  List<int> selectedIndices = <int>[];
-  bool isLinkMode = false;
-  bool isHueVisible =true;
-  bool isSatVisible = true;
-  bool isValueVisible = true;
-  bool isEditVerticesMode = false;
-  bool showRelationships = true;
-  bool showColorLabels = false;
-
   void toggleShowColorLabels() {
     showColorLabels = !showColorLabels;
     notifyListeners();
   }
-
-  List<ShapeRelationship> activeRelationships = <ShapeRelationship>[];
-
-  double currentScale = 1.0;
-  Offset currentOffset = Offset.zero;
-  double _previousScale = 1.0;
-  Offset _previousOffset = Offset.zero;
-  Offset _previousFocalPoint = Offset.zero;
-
-  int? draggingShapeIndex;
-  int? draggingPointIndex;
-  bool _isDraggingWholeShape = false;
-  int? selectedVertexIndex;
-  Offset? _draggedPointInitialPosition;
-  Offset? _dragStartWorldPoint;
-  Map<int, List<Offset>>? _draggedShapesInitialPoints;
-
-  // Gesture tracking
-  DateTime? _twoFingerGestureStartTime;
-  int _tapPointerCount = 0;
-  DateTime? _lastTwoFingerTapTime;
-
-  static const double handleRadius = 25.0;
-  static const double _segmentTapTolerance = 10.0;
-
-  Rect get canvasRect => currentProject?.canvasRect ?? const Rect.fromLTWH(20, 20, 460, 320);
-
-  bool get hasSelected => selectedVertexIndex != null;
-
-  bool get canRedo => commandHistory.canRedo;
-  bool get canUndo => commandHistory.canUndo;
 
   Offset _screenToWorld(Offset screenPoint) {
     return (screenPoint - currentOffset) / currentScale;
@@ -776,7 +749,6 @@ class CanvasController extends ChangeNotifier {
 
   void toggleHueVisible() {
     isHueVisible = !isHueVisible;
-    print(isHueVisible);
     notifyListeners();
   }
 
