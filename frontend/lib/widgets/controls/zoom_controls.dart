@@ -33,7 +33,7 @@ class _ZoomControlsState extends State<ZoomControls> {
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
             IconButton(
-              icon: const Icon(Icons.fullscreen, color: Colors.white),
+              icon: const Icon(Icons.fit_screen, color: Colors.white),
               onPressed: () => controller.fitToScreen(context),
               tooltip: 'Fit to Screen',
             ),
