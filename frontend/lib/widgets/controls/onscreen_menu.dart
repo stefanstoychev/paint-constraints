@@ -54,6 +54,13 @@ class OnscreenMenu extends StatelessWidget {
                 disabledColor: Colors.white24,
               ),
             ],
+            OnScreenMenuButton(
+              icon: Icons.ten_k,
+              isActive: controller.isClampMode,
+              activeColor: Colors.deepPurple,
+              onPressed: controller.toggleClampMode,
+              tooltip: 'Clamp Mode',
+            ),
             const SizedBox(height: 8),
             OnScreenMenuButton(
               icon: Icons.scatter_plot,

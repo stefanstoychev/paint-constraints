@@ -12,11 +12,14 @@ import 'package:frontend/commands/vertex_commands.dart';
 import 'package:frontend/controllers/project_manager.dart';
 import 'package:frontend/models/canvas_data.dart';
 import 'package:frontend/models/canvas_project.dart';
+import 'package:frontend/models/color_component.dart';
 import 'package:frontend/models/color_relationship.dart';
 import 'package:frontend/models/shape_data.dart';
 import 'package:frontend/services/solver_service.dart';
 import 'package:frontend/utils/geometry_utils.dart';
 
+import '../commands/clamp_color_commands.dart';
+import '../models/shape_color_clamp.dart';
 import '../models/shape_relationship.dart';
 
 class CanvasController extends ChangeNotifier {
@@ -25,7 +28,8 @@ class CanvasController extends ChangeNotifier {
   List<ShapeData> allShapes = <ShapeData>[];
   List<int> selectedIndices = <int>[];
   bool isLinkMode = false;
-  bool isHueVisible =true;
+  bool isClampMode = false;
+  bool isHueVisible = true;
   bool isSatVisible = true;
   bool isValueVisible = true;
   bool isEditVerticesMode = false;
@@ -36,12 +40,15 @@ class CanvasController extends ChangeNotifier {
   final SolverService _solverService = SolverService();
 
   String get solverUrl => _solverService.baseUrl;
+
   set solverUrl(String value) {
     _solverService.baseUrl = value;
     notifyListeners();
   }
 
   List<ShapeRelationship> activeRelationships = <ShapeRelationship>[];
+  Set<ShapeColorConstraint> activeShapeColorConstraint =
+      <ShapeColorConstraint>{};
 
   double currentScale = 1.0;
   Offset currentOffset = Offset.zero;
@@ -65,11 +72,13 @@ class CanvasController extends ChangeNotifier {
   static const double handleRadius = 25.0;
   static const double _segmentTapTolerance = 10.0;
 
-  Rect get canvasRect => currentProject?.canvasRect ?? const Rect.fromLTWH(20, 20, 460, 320);
+  Rect get canvasRect =>
+      currentProject?.canvasRect ?? const Rect.fromLTWH(20, 20, 460, 320);
 
   bool get hasSelected => selectedVertexIndex != null;
 
   bool get canRedo => commandHistory.canRedo;
+
   bool get canUndo => commandHistory.canUndo;
 
   void executeCommand(CanvasCommand command) {
@@ -94,19 +103,19 @@ class CanvasController extends ChangeNotifier {
     if (results != null) {
       final Map<int, HSVColor> oldColors = {};
       final Map<int, HSVColor> newColors = {};
-      
+
       for (final result in results) {
         if (result.index >= 0 && result.index < allShapes.length) {
           oldColors[result.index] = allShapes[result.index].hsv;
           newColors[result.index] = HSVColor.fromAHSV(
-            1.0, 
-            result.h, 
-            result.s / 100, 
+            1.0,
+            result.h,
+            result.s / 100,
             result.v / 100,
           );
         }
       }
-      
+
       if (newColors.isNotEmpty) {
         executeCommand(UpdateShapeColorsCommand(this, oldColors, newColors));
       }
@@ -123,29 +132,29 @@ class CanvasController extends ChangeNotifier {
     currentProject = project;
     allShapes = List.from(project.data.shapes);
     activeRelationships = List.from(project.data.relationships);
-    
+
     // Reset view
     currentScale = 1.0;
     currentOffset = Offset.zero;
     selectedIndices.clear();
     selectedVertexIndex = null;
-    
+
     notifyListeners();
   }
 
-  Future<void> saveCurrentProject(BuildContext context, ProjectManager projectManager) async {
+  Future<void> saveCurrentProject(
+    BuildContext context,
+    ProjectManager projectManager,
+  ) async {
     if (currentProject == null) return;
-    
+
     final thumbnail = await captureThumbnail();
-    
+
     final updatedProject = currentProject!.copyWith(
-      data: CanvasData(
-        shapes: allShapes,
-        relationships: activeRelationships,
-      ),
+      data: CanvasData(shapes: allShapes, relationships: activeRelationships, constraints: activeShapeColorConstraint),
       thumbnailBase64: thumbnail,
     );
-    
+
     await projectManager.updateProject(updatedProject);
     currentProject = updatedProject;
 
@@ -162,7 +171,7 @@ class CanvasController extends ChangeNotifier {
   Future<String?> captureThumbnail() async {
     try {
       final rect = canvasRect;
-      
+
       // Use a slightly higher resolution for better clarity
       const double targetWidth = 300.0;
       final double scaleFactor = targetWidth / rect.width;
@@ -172,7 +181,7 @@ class CanvasController extends ChangeNotifier {
       final canvas = Canvas(recorder);
 
       canvas.scale(scaleFactor);
-      
+
       canvas.translate(-rect.left, -rect.top);
 
       final backgroundPaint = Paint()..color = Colors.white;
@@ -196,8 +205,9 @@ class CanvasController extends ChangeNotifier {
         shapePaint.color = shape.hsv.toColor();
         canvas.drawPath(path, shapePaint);
 
-        strokePaint.color =
-            shape.hsv.withValue(max(0, shape.hsv.value - 0.2)).toColor();
+        strokePaint.color = shape.hsv
+            .withValue(max(0, shape.hsv.value - 0.2))
+            .toColor();
         canvas.drawPath(path, strokePaint);
       }
 
@@ -266,8 +276,18 @@ class CanvasController extends ChangeNotifier {
     executeCommand(AddShapeCommand(this, newShape));
   }
 
+  void toggleClampMode() {
+    isClampMode = !isClampMode;
+    isLinkMode = false;
+    isEditVerticesMode = false;
+    selectedIndices.clear();
+    selectedVertexIndex = null;
+    notifyListeners();
+  }
+
   void toggleLinkMode() {
     isLinkMode = !isLinkMode;
+    isClampMode = false;
     isEditVerticesMode = false;
     selectedIndices.clear();
     selectedVertexIndex = null;
@@ -277,6 +297,7 @@ class CanvasController extends ChangeNotifier {
   void toggleEditVerticesMode() {
     isEditVerticesMode = !isEditVerticesMode;
     isLinkMode = false;
+    isClampMode = false;
     selectedIndices.clear();
     selectedVertexIndex = null;
     notifyListeners();
@@ -521,8 +542,9 @@ class CanvasController extends ChangeNotifier {
       final List<Offset> updatedPoints = List<Offset>.from(
         tempAllShapes[draggingShapeIndex!].points,
       );
-      updatedPoints[draggingPointIndex!] =
-          _clampPoint(_draggedPointInitialPosition! + deltaWorld);
+      updatedPoints[draggingPointIndex!] = _clampPoint(
+        _draggedPointInitialPosition! + deltaWorld,
+      );
 
       tempAllShapes[draggingShapeIndex!] = tempAllShapes[draggingShapeIndex!]
           .copyWith(points: updatedPoints);
@@ -664,8 +686,8 @@ class CanvasController extends ChangeNotifier {
   }
 
   void fitToScreen(BuildContext context) {
-
-    double availableHeight = MediaQuery.of(context).size.height - kToolbarHeight;
+    double availableHeight =
+        MediaQuery.of(context).size.height - kToolbarHeight;
     double availableWidth = MediaQuery.of(context).size.width;
 
     final double scaleX = availableWidth / canvasRect.width;
@@ -673,11 +695,12 @@ class CanvasController extends ChangeNotifier {
 
     currentScale = min(scaleX, scaleY).clamp(0.3, 5.0);
 
-    final double centeredX = (availableWidth - canvasRect.width * currentScale) / 2 -
+    final double centeredX =
+        (availableWidth - canvasRect.width * currentScale) / 2 -
         canvasRect.left * currentScale;
     final double centeredY =
         (availableHeight - canvasRect.height * currentScale) / 2 -
-            canvasRect.top * currentScale;
+        canvasRect.top * currentScale;
 
     currentOffset = Offset(centeredX, centeredY);
 
@@ -760,5 +783,29 @@ class CanvasController extends ChangeNotifier {
   void onToggleValueVisible() {
     isValueVisible = !isValueVisible;
     notifyListeners();
+  }
+
+  void applyClamp(
+    int startH,
+    int endH,
+    int startS,
+    int endS,
+    int startV,
+    int endV,
+  ) {
+    var index = selectedIndices.first;
+
+    var oldConstraints = {
+      ...activeShapeColorConstraint.where((x) => x.sourceShapeIndex == index),
+    };
+    var newConstraints = {
+      ShapeColorConstraint(index, ColorComponent.hue, startH, endH),
+      ShapeColorConstraint(index, ColorComponent.saturation, startS, endS),
+      ShapeColorConstraint(index, ColorComponent.value, startV, endV),
+    };
+
+    executeCommand(
+      ApplyColorClampCommand(this, oldConstraints, newConstraints),
+    );
   }
 }

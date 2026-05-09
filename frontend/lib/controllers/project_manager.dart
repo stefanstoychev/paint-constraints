@@ -32,7 +32,7 @@ class ProjectManager extends ChangeNotifier {
       id: '${DateTime.now().millisecondsSinceEpoch}_$name',
       name: name,
       canvasRect: Rect.fromLTWH(20, 20, dimensions.width, dimensions.height),
-      data: CanvasData(shapes: [], relationships: []),
+      data: CanvasData(shapes: [], relationships: [], constraints: {}),
       lastModified: DateTime.now(),
     );
 
