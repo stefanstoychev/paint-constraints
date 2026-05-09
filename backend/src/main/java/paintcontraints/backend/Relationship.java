@@ -1,8 +1,6 @@
 package paintcontraints.backend;
 
-import java.util.Arrays;
-
-public record Constraint(ColorComponents color, Operation operation, int[] indexes) {
+public record Relationship(ColorComponents color, Operation operation, int[] indexes) {
 
     public String toString(long source, long target) {
         String sourceLabel = "" + source;

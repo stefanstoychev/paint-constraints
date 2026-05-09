@@ -3,6 +3,7 @@ package paintcontraints.backend;
 import com.google.ortools.Loader;
 import com.google.ortools.sat.*;
 import org.springframework.stereotype.Service;
+import org.yaml.snakeyaml.util.Tuple;
 
 import java.util.*;
 
@@ -18,36 +19,47 @@ public class ConstraintSolverService {
         Map<Integer, Map<ColorComponents, IntVar>> shapeVars = new HashMap<>();
 
         Set<Integer> allIndices = new HashSet<>();
-        for (Constraint constraint : request.constraints()) {
-            for (int index : constraint.indexes()) {
+        for (Relationship relationship : request.relationships()) {
+            for (int index : relationship.indexes()) {
                 allIndices.add(index);
             }
         }
 
-        // Initialize variables (H: 0-360, S: 0-100, V: 0-100)
+        Map<Integer, Map<ColorComponents, ColorConstraint>> colorComponentsMapMap = new HashMap<>();
+        for (ColorConstraint constraint : request.constraints()) {
+            colorComponentsMapMap.computeIfAbsent(constraint.index(), k -> new HashMap<>()).put(constraint.component(), constraint);
+            allIndices.add(constraint.index());
+        }
+
         for (int index : allIndices) {
             Map<ColorComponents, IntVar> components = new HashMap<>();
-            components.put(ColorComponents.H, model.newIntVar(0, 360, "h" + index));
-            components.put(ColorComponents.S, model.newIntVar(0, 100, "s" + index));
-            components.put(ColorComponents.V, model.newIntVar(0, 100, "v" + index));
+
+            Tuple<Integer, Integer> range = getRange(colorComponentsMapMap, index, ColorComponents.H);
+            components.put(ColorComponents.H, model.newIntVar(range._1(), range._2(), "h" + index));
+
+            range = getRange(colorComponentsMapMap, index, ColorComponents.S);
+            components.put(ColorComponents.S, model.newIntVar(range._1(), range._2(), "s" + index));
+
+            range = getRange(colorComponentsMapMap, index, ColorComponents.V);
+            components.put(ColorComponents.V, model.newIntVar(range._1(), range._2(), "v" + index));
             shapeVars.put(index, components);
         }
 
         // Apply constraints dynamically
-        for (Constraint constraint : request.constraints()) {
-            if (constraint.indexes().length < 2) continue;
+        for (Relationship relationship : request.relationships()) {
+            if (relationship.indexes().length < 2) continue;
 
-            IntVar varSource = shapeVars.get(constraint.indexes()[0]).get(constraint.color());
-            IntVar varTarget = shapeVars.get(constraint.indexes()[1]).get(constraint.color());
+            IntVar varSource = shapeVars.get(relationship.indexes()[0]).get(relationship.color());
+            IntVar varTarget = shapeVars.get(relationship.indexes()[1]).get(relationship.color());
 
             LinearExprBuilder linearExprBuilder = LinearExpr.newBuilder().add(varTarget);
 
-            if (constraint.operation() != Operation.E) {
+            if (relationship.operation() != Operation.E) {
                 linearExprBuilder.add(-10);
             }
 
             LinearExpr targetWithOffset = linearExprBuilder.build();
-            switch (constraint.operation()) {
+            switch (relationship.operation()) {
                 case GT -> model.addGreaterThan(varSource, targetWithOffset);
                 case GTE -> model.addGreaterOrEqual(varSource, targetWithOffset);
                 case LT -> model.addLessThan(varSource, targetWithOffset);
@@ -57,7 +69,7 @@ public class ConstraintSolverService {
             }
 
             // Unless the relationship is "Equal", enforce that the components themselves are different
-            if (constraint.operation() != Operation.E) {
+            if (relationship.operation() != Operation.E) {
                 model.addDifferent(varSource, varTarget);
             }
         }
@@ -75,15 +87,33 @@ public class ConstraintSolverService {
                 results.add(new Result(index, (int) h, (int) s, (int) v));
             }
 
-            for (Constraint constraint : request.constraints()) {
-                if (constraint.indexes().length < 2) continue;
-                long value = solver.value(shapeVars.get(constraint.indexes()[0]).get(constraint.color()));
-                long value2 = solver.value(shapeVars.get(constraint.indexes()[1]).get(constraint.color()));
-                System.out.println(constraint.toString(value, value2));
+            for (Relationship relationship : request.relationships()) {
+                if (relationship.indexes().length < 2) continue;
+                long value = solver.value(shapeVars.get(relationship.indexes()[0]).get(relationship.color()));
+                long value2 = solver.value(shapeVars.get(relationship.indexes()[1]).get(relationship.color()));
+                System.out.println(relationship.toString(value, value2));
             }
             return results;
         } else {
             return null; // or throw a custom exception
         }
+    }
+
+    private Tuple<Integer, Integer> getRange(Map<Integer, Map<ColorComponents, ColorConstraint>> colorComponentsMapMap,
+                                             int index,
+                                             ColorComponents colorComponents) {
+        Map<ColorComponents, ColorConstraint> colorComponentsColorConstraintMap = colorComponentsMapMap.get(index);
+        if (colorComponentsColorConstraintMap == null)
+            return getRange(colorComponents);
+
+        ColorConstraint colorConstraint = colorComponentsColorConstraintMap.get(colorComponents);
+        return new Tuple<>(colorConstraint.min(), colorConstraint.max());
+    }
+
+    private Tuple<Integer, Integer> getRange(ColorComponents colorComponents) {
+        if (colorComponents == ColorComponents.H) {
+            return new Tuple<>(0, 360);
+        }
+        return new Tuple<>(0, 100);
     }
 }

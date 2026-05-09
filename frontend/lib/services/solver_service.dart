@@ -1,9 +1,10 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
+
 import 'package:flutter/material.dart';
-import 'package:frontend/models/shape_data.dart';
 import 'package:frontend/models/color_component.dart';
 import 'package:frontend/models/comparison_operator.dart';
+import 'package:frontend/models/shape_color_clamp.dart';
+import 'package:http/http.dart' as http;
 
 import '../models/shape_relationship.dart';
 
@@ -14,15 +15,26 @@ class SolverService {
 
   Future<List<SolveResult>?> solve(
     List<ShapeRelationship> relationships,
+    Set<ShapeColorConstraint> activeShapeColorConstraint,
   ) async {
     try {
       final requestBody = {
-        'constraints': relationships
+        'relationships': relationships
             .map(
               (r) => {
                 'color': _mapComponent(r.relationship.component),
                 'operation': _mapOperator(r.relationship.operator),
-                'indexes': [r.sourceShapeIndex, r.targetShapeIndex]
+                'indexes': [r.sourceShapeIndex, r.targetShapeIndex],
+              },
+            )
+            .toList(),
+        'constraints': activeShapeColorConstraint
+            .map(
+              (r) => {
+                'component': _mapComponent(r.component),
+                'index': r.sourceShapeIndex,
+                'min': r.min,
+                'max': r.max,
               },
             )
             .toList(),

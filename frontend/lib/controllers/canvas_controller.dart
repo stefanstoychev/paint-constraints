@@ -99,7 +99,7 @@ class CanvasController extends ChangeNotifier {
   Future<void> solveRelationships(BuildContext context) async {
     if (activeRelationships.isEmpty) return;
 
-    final results = await _solverService.solve(activeRelationships);
+    final results = await _solverService.solve(activeRelationships,activeShapeColorConstraint );
     if (results != null) {
       final Map<int, HSVColor> oldColors = {};
       final Map<int, HSVColor> newColors = {};

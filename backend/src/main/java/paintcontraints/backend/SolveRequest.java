@@ -1,4 +1,4 @@
 package paintcontraints.backend;
 
-public record SolveRequest(Constraint[] constraints) {
+public record SolveRequest(Relationship[] relationships, ColorConstraint[] constraints) {
 }
