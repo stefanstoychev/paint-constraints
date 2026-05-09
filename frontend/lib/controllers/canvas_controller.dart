@@ -5,7 +5,6 @@ import 'dart:ui' as ui;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/models/canvas_data.dart';
-import 'package:frontend/models/color_constraints.dart';
 import 'package:frontend/models/color_relationship.dart';
 import 'package:frontend/models/shape_data.dart';
 import 'package:frontend/utils/geometry_utils.dart';
@@ -18,6 +17,9 @@ import 'package:frontend/commands/shape_commands.dart';
 import 'package:frontend/commands/vertex_commands.dart';
 import 'package:frontend/commands/relationship_commands.dart';
 import 'package:frontend/services/solver_service.dart';
+
+import '../models/color_component.dart';
+import '../models/comparison_operator.dart';
 
 class CanvasController extends ChangeNotifier {
   final CommandHistory commandHistory = CommandHistory();
@@ -213,9 +215,6 @@ class CanvasController extends ChangeNotifier {
     showColorLabels = !showColorLabels;
     notifyListeners();
   }
-
-  final ColorConstraints colorConstraints =
-      ColorConstraints.withCommonRelationships();
 
   List<ShapeRelationship> activeRelationships = <ShapeRelationship>[];
 

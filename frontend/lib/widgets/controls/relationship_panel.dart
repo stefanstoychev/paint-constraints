@@ -1,18 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/models/color_component.dart';
-import 'package:frontend/models/color_constraints.dart';
 import 'package:frontend/models/color_relationship.dart';
 
+import '../../models/comparison_operator.dart';
+
 class RelationshipPanel extends StatelessWidget {
+  final colorConstraints = const [
+    ColorRelationship(ColorComponent.hue, ComparisonOperator.lessThan),
+    ColorRelationship(ColorComponent.hue, ComparisonOperator.equal),
+    ColorRelationship(ColorComponent.saturation, ComparisonOperator.lessThan,),
+    ColorRelationship(ColorComponent.saturation, ComparisonOperator.equal),
+    ColorRelationship(ColorComponent.value, ComparisonOperator.lessThan),
+    ColorRelationship(ColorComponent.value, ComparisonOperator.equal),
+  ];
+
   const RelationshipPanel({
     super.key,
-    required this.colorConstraints,
     required this.onRelationshipApplied,
     required this.onClearRelationships,
     this.activeRelationships = const [],
   });
 
-  final ColorConstraints colorConstraints;
   final ValueChanged<ColorRelationship> onRelationshipApplied;
   final VoidCallback onClearRelationships;
   final List<ColorRelationship> activeRelationships;
@@ -51,21 +59,21 @@ class RelationshipPanel extends StatelessWidget {
                 const SizedBox(height: 12),
                 _buildRelationshipRow(
                   'Hue',
-                  colorConstraints.relationships
+                  colorConstraints
                       .where((r) => r.component == ColorComponent.hue)
                       .toList(),
                 ),
                 const SizedBox(height: 8),
                 _buildRelationshipRow(
                   'Saturation',
-                  colorConstraints.relationships
+                  colorConstraints
                       .where((r) => r.component == ColorComponent.saturation)
                       .toList(),
                 ),
                 const SizedBox(height: 8),
                 _buildRelationshipRow(
                   'Value',
-                  colorConstraints.relationships
+                  colorConstraints
                       .where((r) => r.component == ColorComponent.value)
                       .toList(),
                 ),

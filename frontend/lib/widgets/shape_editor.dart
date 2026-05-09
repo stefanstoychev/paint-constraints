@@ -13,6 +13,7 @@ import 'controls/onscreen_menu.dart';
 import 'controls/zoom_controls.dart';
 
 class ShapeEditor extends StatefulWidget {
+
   final CanvasProject project;
 
   const ShapeEditor({super.key, required this.project});
@@ -97,7 +98,6 @@ class _ShapeEditorState extends State<ShapeEditor> {
           ),
           if (controller.isLinkMode && controller.selectedIndices.length == 2)
             RelationshipPanel(
-              colorConstraints: controller.colorConstraints,
               onRelationshipApplied: (relationship) =>
                   controller.applyRelationship(relationship, context),
               onClearRelationships: controller.clearSelectedRelationships,
