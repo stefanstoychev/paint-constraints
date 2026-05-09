@@ -34,7 +34,7 @@ class _ZoomControlsState extends State<ZoomControls> {
           children: <Widget>[
             IconButton(
               icon: const Icon(Icons.fullscreen, color: Colors.white),
-              onPressed: () => controller.fitToScreen(MediaQuery.of(context).size),
+              onPressed: () => controller.fitToScreen(context),
               tooltip: 'Fit to Screen',
             ),
             IconButton(

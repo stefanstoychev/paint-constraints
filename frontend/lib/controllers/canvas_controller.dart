@@ -689,23 +689,21 @@ class CanvasController extends ChangeNotifier {
     }
   }
 
-  void fitToScreen(Size screenSize) {
-    final rect = canvasRect;
-    const double padding = 40.0;
+  void fitToScreen(BuildContext context) {
 
-    final double availableWidth = screenSize.width - padding * 2;
-    final double availableHeight = screenSize.height - padding * 2;
+    double availableHeight = MediaQuery.of(context).size.height - kToolbarHeight;
+    double availableWidth = MediaQuery.of(context).size.width;
 
-    final double scaleX = availableWidth / rect.width;
-    final double scaleY = availableHeight / rect.height;
+    final double scaleX = availableWidth / canvasRect.width;
+    final double scaleY = availableHeight / canvasRect.height;
 
     currentScale = min(scaleX, scaleY).clamp(0.3, 5.0);
 
-    final double centeredX = (screenSize.width - rect.width * currentScale) / 2 -
-        rect.left * currentScale;
+    final double centeredX = (availableWidth - canvasRect.width * currentScale) / 2 -
+        canvasRect.left * currentScale;
     final double centeredY =
-        (screenSize.height - rect.height * currentScale) / 2 -
-            rect.top * currentScale;
+        (availableHeight - canvasRect.height * currentScale) / 2 -
+            canvasRect.top * currentScale;
 
     currentOffset = Offset(centeredX, centeredY);
 
