@@ -305,12 +305,12 @@ class RelationshipPainter extends CustomPainter {
 
   void _paintRelationships(Canvas canvas, TextPainter textPainter) {
     final Paint linePaint = Paint()
-      ..color = Colors.blue.withValues(alpha: 0.7)
+      ..color = Colors.blue
       ..strokeWidth = 2.0 / scale
       ..style = PaintingStyle.stroke;
 
     final Paint arrowPaint = Paint()
-      ..color = Colors.blue.withValues(alpha: 0.7)
+      ..color = Colors.blue
       ..style = PaintingStyle.fill;
 
     var paintedArrows = Set();
