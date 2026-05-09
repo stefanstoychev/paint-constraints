@@ -1,5 +1,6 @@
 import 'package:frontend/controllers/canvas_controller.dart';
 import 'package:frontend/models/shape_data.dart';
+import '../models/shape_relationship.dart';
 import 'canvas_command.dart';
 
 class ApplyRelationshipCommand implements CanvasCommand {

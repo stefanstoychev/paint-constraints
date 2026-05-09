@@ -6,6 +6,7 @@ import 'package:frontend/models/color_component.dart';
 import 'package:frontend/models/color_relationship.dart';
 import 'package:frontend/models/shape_data.dart';
 
+import '../models/shape_relationship.dart';
 import '../utils/geometry_utils.dart';
 
 class RelationshipPainter extends CustomPainter {

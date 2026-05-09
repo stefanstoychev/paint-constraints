@@ -20,6 +20,7 @@ import 'package:frontend/services/solver_service.dart';
 
 import '../models/color_component.dart';
 import '../models/comparison_operator.dart';
+import '../models/shape_relationship.dart';
 
 class CanvasController extends ChangeNotifier {
   final CommandHistory commandHistory = CommandHistory();

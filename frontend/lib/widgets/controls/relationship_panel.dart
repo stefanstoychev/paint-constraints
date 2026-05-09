@@ -6,12 +6,12 @@ import '../../models/comparison_operator.dart';
 
 class RelationshipPanel extends StatelessWidget {
   final colorConstraints = const [
-    ColorRelationship(ColorComponent.hue, ComparisonOperator.lessThan),
-    ColorRelationship(ColorComponent.hue, ComparisonOperator.equal),
-    ColorRelationship(ColorComponent.saturation, ComparisonOperator.lessThan,),
-    ColorRelationship(ColorComponent.saturation, ComparisonOperator.equal),
-    ColorRelationship(ColorComponent.value, ComparisonOperator.lessThan),
-    ColorRelationship(ColorComponent.value, ComparisonOperator.equal),
+    ColorRelationship(ColorComponent.hue, ComparisonOperator.lt),
+    ColorRelationship(ColorComponent.hue, ComparisonOperator.e),
+    ColorRelationship(ColorComponent.saturation, ComparisonOperator.lt,),
+    ColorRelationship(ColorComponent.saturation, ComparisonOperator.e),
+    ColorRelationship(ColorComponent.value, ComparisonOperator.lt),
+    ColorRelationship(ColorComponent.value, ComparisonOperator.e),
   ];
 
   const RelationshipPanel({

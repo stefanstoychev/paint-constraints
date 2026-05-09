@@ -7,13 +7,6 @@ class ColorRelationship {
 
   const ColorRelationship(this.component, this.operator);
 
-  /// Get a human-readable description of this relationship
-  String getDescription() {
-    final componentName = component.name;
-    final opSymbol = operator.symbol;
-    return 'Target $componentName $opSymbol Source $componentName';
-  }
-
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;

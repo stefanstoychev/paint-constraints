@@ -5,6 +5,8 @@ import 'package:frontend/models/shape_data.dart';
 import 'package:frontend/models/color_component.dart';
 import 'package:frontend/models/comparison_operator.dart';
 
+import '../models/shape_relationship.dart';
+
 class SolverService {
   String baseUrl;
 
@@ -58,9 +60,9 @@ class SolverService {
 
   String _mapOperator(ComparisonOperator operator) {
     switch (operator) {
-      case ComparisonOperator.lessThan:
+      case ComparisonOperator.lt:
         return 'LT';
-      case ComparisonOperator.equal:
+      case ComparisonOperator.e:
         return 'E';
     }
   }

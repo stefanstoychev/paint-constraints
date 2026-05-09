@@ -1,4 +1,5 @@
 import 'package:frontend/models/shape_data.dart';
+import 'package:frontend/models/shape_relationship.dart';
 
 class CanvasData {
   final List<ShapeData> shapes;

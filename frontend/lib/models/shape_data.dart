@@ -1,69 +1,5 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'color_component.dart';
-import 'color_relationship.dart';
-import 'comparison_operator.dart';
-
-/// Represents a relationship between two shapes
-class ShapeRelationship {
-  final int sourceShapeIndex;
-  final int targetShapeIndex;
-  final ColorRelationship relationship;
-
-  const ShapeRelationship(
-    this.sourceShapeIndex,
-    this.targetShapeIndex,
-    this.relationship,
-  );
-
-  bool hasSameType(ShapeRelationship other) {
-    return other.sourceShapeIndex == sourceShapeIndex &&
-        other.targetShapeIndex == targetShapeIndex &&
-        other.relationship.component == relationship.component;
-  }
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    return other is ShapeRelationship &&
-        other.sourceShapeIndex == sourceShapeIndex &&
-        other.targetShapeIndex == targetShapeIndex &&
-        other.relationship == relationship;
-  }
-
-  @override
-  int get hashCode =>
-      Object.hash(sourceShapeIndex, targetShapeIndex, relationship);
-
-  /// Convert to JSON for serialization
-  Map<String, dynamic> toJson() {
-    return {
-      'sourceShapeIndex': sourceShapeIndex,
-      'targetShapeIndex': targetShapeIndex,
-      'component': relationship.component.name,
-      'operator': relationship.operator.name
-    };
-  }
-
-  /// Create from JSON
-  factory ShapeRelationship.fromJson(Map<String, dynamic> json) {
-    final component = ColorComponent.values.firstWhere(
-      (e) => e.name == json['component'],
-    );
-    final operator = ComparisonOperator.values.firstWhere(
-      (e) => e.name == json['operator'],
-    );
-    final relationship = ColorRelationship(
-      component,
-      operator
-    );
-    return ShapeRelationship(
-      json['sourceShapeIndex'] as int,
-      json['targetShapeIndex'] as int,
-      relationship,
-    );
-  }
-}
 
 class ShapeData {
   final List<Offset> points;
@@ -94,7 +30,6 @@ class ShapeData {
   @override
   int get hashCode => Object.hashAll(points) ^ hsv.hashCode ^ zIndex.hashCode;
 
-  /// Convert to JSON for serialization
   Map<String, dynamic> toJson() {
     return {
       'points': points.map((p) => {'dx': p.dx, 'dy': p.dy}).toList(),
@@ -105,7 +40,6 @@ class ShapeData {
     };
   }
 
-  /// Create from JSON
   factory ShapeData.fromJson(Map<String, dynamic> json) {
     final pointsList = (json['points'] as List)
         .map((p) => Offset(p['dx'] as double, p['dy'] as double))
