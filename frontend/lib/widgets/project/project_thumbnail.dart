@@ -2,12 +2,12 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:frontend/models/canvas_project.dart';
 
-class CanvasThumbnail extends StatelessWidget {
+class ProjectThumbnail extends StatelessWidget {
   final CanvasProject project;
   final VoidCallback onTap;
   final VoidCallback onDelete;
 
-  const CanvasThumbnail({
+  const ProjectThumbnail({
     super.key,
     required this.project,
     required this.onTap,

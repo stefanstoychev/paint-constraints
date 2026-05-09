@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/controllers/project_manager.dart';
 import 'package:frontend/models/canvas_project.dart';
-import 'package:frontend/widgets/canvas_thumbnail.dart';
+import 'package:frontend/widgets/project/project_thumbnail.dart';
 import 'package:frontend/widgets/shape_editor.dart';
 import 'package:provider/provider.dart';
 
-class GalleryView extends StatelessWidget {
-  const GalleryView({super.key});
+class ProjectGallery extends StatelessWidget {
+  const ProjectGallery({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -64,7 +64,7 @@ class GalleryView extends StatelessWidget {
       itemCount: projects.length,
       itemBuilder: (context, index) {
         final project = projects[index];
-        return CanvasThumbnail(
+        return ProjectThumbnail(
           project: project,
           onTap: () => Navigator.of(context).push(
             MaterialPageRoute(

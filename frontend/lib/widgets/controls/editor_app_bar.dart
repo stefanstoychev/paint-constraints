@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../controllers/canvas_controller.dart';
+import '../../controllers/canvas_controller.dart';
 
 class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
   final bool showColorLabels;

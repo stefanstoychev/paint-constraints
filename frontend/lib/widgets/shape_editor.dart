@@ -4,11 +4,13 @@ import 'package:frontend/controllers/project_manager.dart';
 import 'package:frontend/models/canvas_project.dart';
 import 'package:frontend/painters/relationship_painter.dart';
 import 'package:frontend/widgets/canvas_grid.dart';
-import 'package:frontend/widgets/editor_app_bar.dart';
-import 'package:frontend/widgets/onscreen_menu.dart';
-import 'package:frontend/widgets/relationship_panel.dart';
-import 'package:frontend/widgets/zoom_controls.dart';
+import 'package:frontend/widgets/controls/editor_app_bar.dart';
+import 'package:frontend/widgets/controls/relationship_panel.dart';
+
 import 'package:provider/provider.dart';
+
+import 'controls/onscreen_menu.dart';
+import 'controls/zoom_controls.dart';
 
 class ShapeEditor extends StatefulWidget {
   final CanvasProject project;

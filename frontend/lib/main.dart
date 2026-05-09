@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/widgets/gallery_view.dart';
+import 'package:frontend/widgets/project/project_gallery.dart';
 import 'package:provider/provider.dart';
 import 'package:frontend/controllers/canvas_controller.dart';
 import 'package:frontend/controllers/project_manager.dart';
@@ -11,7 +11,7 @@ void main() => runApp(
           ChangeNotifierProvider(create: (context) => CanvasController()),
         ],
         child: const MaterialApp(
-          home: GalleryView(),
+          home: ProjectGallery(),
           debugShowCheckedModeBanner: false,
         ),
       ),
