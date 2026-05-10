@@ -17,7 +17,7 @@ class CanvasData {
       relationships: (json['relationships'] as List)
           .map((r) => ShapeRelationship.fromJson(r as Map<String, dynamic>))
           .toList(),
-      constraints: (json['constraints'] as Set)
+      constraints: (json['constraints'] as List)
         .map((r) => ShapeColorConstraint.fromJson(r as Map<String, dynamic>))
         .toSet(),
     );
