@@ -42,7 +42,7 @@ class _ClampColorPanelState extends State<ClampColorPanel> {
   @override
   Widget build(BuildContext context) {
     return ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 400, maxHeight: 300),
+      constraints: const BoxConstraints(maxWidth: 400),
       child: Card(
         elevation: 8,
         color: Colors.black.withValues(alpha: 0.9),
@@ -51,48 +51,70 @@ class _ClampColorPanelState extends State<ClampColorPanel> {
           padding: const EdgeInsets.all(12.0),
           child: Column(
             children: [
-              RangeSlider(
-                values: _currentRangeValuesH,
-                max: 360,
-                divisions: 36,
-                labels: RangeLabels(
-                  _currentRangeValuesH.start.round().toString(),
-                  _currentRangeValuesH.end.round().toString(),
-                ),
-                onChanged: (RangeValues values) {
-                  setState(() {
-                    _currentRangeValuesH = values;
-                  });
-                },
+              Row(
+                children: [
+                  Text("H", style: TextStyle(color: Colors.grey),),
+                  Flexible(
+                    child: RangeSlider(
+                      values: _currentRangeValuesH,
+                      max: 360,
+                      divisions: 36,
+                      labels: RangeLabels(
+                        _currentRangeValuesH.start.round().toString(),
+                        _currentRangeValuesH.end.round().toString(),
+                      ),
+                      onChanged: (RangeValues values) {
+                        setState(() {
+                          _currentRangeValuesH = values;
+                        });
+                      },
+                    ),
+                  ),
+                ],
               ),
-              RangeSlider(
-                values: _currentRangeValuesV,
-                max: 100,
-                divisions: 10,
-                labels: RangeLabels(
-                  _currentRangeValuesV.start.round().toString(),
-                  _currentRangeValuesV.end.round().toString(),
-                ),
-                onChanged: (RangeValues values) {
-                  setState(() {
-                    _currentRangeValuesV = values;
-                  });
-                },
+              Row(
+                children: [
+                  Text("S", style: TextStyle(color: Colors.grey),),
+                  Flexible(
+                    child: RangeSlider(
+                      values: _currentRangeValuesS,
+                      max: 100,
+                      divisions: 10,
+                      labels: RangeLabels(
+                        _currentRangeValuesS.start.round().toString(),
+                        _currentRangeValuesS.end.round().toString(),
+                      ),
+                      onChanged: (RangeValues values) {
+                        setState(() {
+                          _currentRangeValuesS = values;
+                        });
+                      },
+                    ),
+                  ),
+                ],
               ),
-              RangeSlider(
-                values: _currentRangeValuesS,
-                max: 100,
-                divisions: 10,
-                labels: RangeLabels(
-                  _currentRangeValuesS.start.round().toString(),
-                  _currentRangeValuesS.end.round().toString(),
-                ),
-                onChanged: (RangeValues values) {
-                  setState(() {
-                    _currentRangeValuesS = values;
-                  });
-                },
+              Row(
+                children: [
+                  Text("V", style: TextStyle(color: Colors.grey),),
+                  Flexible(
+                    child: RangeSlider(
+                      values: _currentRangeValuesV,
+                      max: 100,
+                      divisions: 10,
+                      labels: RangeLabels(
+                        _currentRangeValuesV.start.round().toString(),
+                        _currentRangeValuesV.end.round().toString(),
+                      ),
+                      onChanged: (RangeValues values) {
+                        setState(() {
+                          _currentRangeValuesV = values;
+                        });
+                      },
+                    ),
+                  ),
+                ],
               ),
+
               ElevatedButton(
                 onPressed: () => context.read<CanvasController>().applyClamp(
                   _currentRangeValuesH.start.round(),
