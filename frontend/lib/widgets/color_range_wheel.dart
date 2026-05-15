@@ -4,13 +4,45 @@ import 'dart:math' as math;
 
 class ColorRangeModel extends ChangeNotifier {
   double _hueStart = 0, _hueEnd = 60;
+  double _valueStart = 0, _valueEnd = 60;
+  double _saturationStart = 0, _saturationEnd = 60;
 
   double get hueStart => _hueStart;
   double get hueEnd => _hueEnd;
 
-  void updateHue(double start, double end) {
+  double get valueStart => _valueStart;
+  double get valueEnd =>   _valueEnd;
+
+  double get saturationStart => _saturationStart;
+  double get saturationEnd => _saturationEnd;
+
+  void setHue(double start, double end) {
     _hueStart = start;
     _hueEnd = end;
+  }
+
+  void updateHue(double start, double end) {
+    setHue(start, end);
+    notifyListeners();
+  }
+
+  void setSaturation(double start, double end) {
+    _saturationStart = start;
+    _saturationEnd = end;
+  }
+
+  void updateSaturation(double start, double end) {
+    setSaturation(start, end);
+    notifyListeners();
+  }
+
+  void setValue(double start, double end) {
+    _valueStart = start;
+    _valueEnd = end;
+  }
+
+  void updateValue(double start, double end) {
+    setValue(start, end);
     notifyListeners();
   }
 }
@@ -20,34 +52,12 @@ class DartPadPreviewScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF121212),
-      appBar: AppBar(
-        title: const Text('Hue Wheel Controller'),
-        backgroundColor: const Color(0xFF1E1E1E),
-        foregroundColor: Colors.white,
-        elevation: 0,
-      ),
-      body: Consumer<ColorRangeModel>(
-        builder: (context, model, _) {
-          return Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                children: [
-                  const SizedBox(height: 20),
-                  HueWheel(model: model),
-                  const SizedBox(height: 40),
-                  Text(
-                    'Range: ${model.hueStart.toInt()}° - ${model.hueEnd.toInt()}°',
-                    style: const TextStyle(color: Colors.white, fontSize: 18),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
+    return Consumer<ColorRangeModel>(
+      builder: (context, model, _) {
+        return Center(
+          child: HueWheel(model: model),
+        );
+      },
     );
   }
 }
@@ -65,7 +75,7 @@ class _HueWheelState extends State<HueWheel> {
 
   @override
   Widget build(BuildContext context) {
-    const size = 280.0;
+    const size = 280.0 * 0.8;
     return GestureDetector(
       onPanStart: (details) {
         final center = const Offset(size / 2, size / 2);

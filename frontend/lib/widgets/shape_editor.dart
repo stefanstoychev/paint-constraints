@@ -111,7 +111,10 @@ class _ShapeEditorState extends State<ShapeEditor> {
                   .toList(),
             ),
           if (controller.isClampMode && controller.selectedIndices.length == 1)
-            Positioned(top: 20, right: 20, child: ClampColorPanel()),
+            Positioned(top: 20, right: 20, child: SizedBox(
+                width: 300,
+                height: 400,
+                child: ClampColorPanel())),
           Positioned(bottom: 20, left: 20, child: ZoomControls()),
           Positioned(top: 20, left: 20, child: OnscreenMenu()),
         ],

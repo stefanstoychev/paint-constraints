@@ -2,6 +2,7 @@ package paintcontraints.backend;
 
 import com.google.ortools.Loader;
 import com.google.ortools.sat.*;
+import com.google.ortools.util.Domain;
 import org.springframework.stereotype.Service;
 import org.yaml.snakeyaml.util.Tuple;
 
@@ -35,8 +36,20 @@ public class ConstraintSolverService {
             Map<ColorComponents, IntVar> components = new HashMap<>();
 
             Tuple<Integer, Integer> range = getRange(colorComponentsMapMap, index, ColorComponents.H);
-            components.put(ColorComponents.H, model.newIntVar(range._1(), range._2(), "h" + index));
+            if (range._1() > range._2()) {
+                Domain multiRangeDomain = Domain.fromIntervals(
+                        new long[][]{
+                                {range._1(), 360},
+                                {0, range._2()}
+                        }
+                );
 
+                // Create IntVar with multi-range domain
+                IntVar x = model.newIntVarFromDomain(multiRangeDomain, "h" + index);
+                components.put(ColorComponents.H, x);
+            } else {
+                components.put(ColorComponents.H, model.newIntVar(range._1(), range._2(), "h" + index));
+            }
             range = getRange(colorComponentsMapMap, index, ColorComponents.S);
             components.put(ColorComponents.S, model.newIntVar(range._1(), range._2(), "s" + index));
 
