@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/controllers/canvas_controller.dart';
 import 'package:provider/provider.dart';
 
+import '../../controllers/color_range_model.dart';
 import '../color_range_wheel.dart';
 
 class ClampColorPanel extends StatelessWidget {

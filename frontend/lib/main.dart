@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:frontend/controllers/canvas_controller.dart';
 import 'package:frontend/controllers/project_manager.dart';
 
+import 'controllers/color_range_model.dart';
 import 'models/color_component.dart';
 
 void main() => runApp(
