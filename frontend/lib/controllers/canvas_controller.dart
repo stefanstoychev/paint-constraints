@@ -6,9 +6,6 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/commands/canvas_command.dart';
 import 'package:frontend/commands/command_history.dart';
-import 'package:frontend/commands/relationship_commands.dart';
-import 'package:frontend/commands/shape_commands.dart';
-import 'package:frontend/commands/vertex_commands.dart';
 import 'package:frontend/controllers/project_manager.dart';
 import 'package:frontend/models/canvas_data.dart';
 import 'package:frontend/models/canvas_project.dart';
@@ -18,7 +15,16 @@ import 'package:frontend/models/shape_data.dart';
 import 'package:frontend/services/solver_service.dart';
 import 'package:frontend/utils/geometry_utils.dart';
 
-import '../commands/clamp_color_commands.dart';
+import '../commands/color_constraint/clamp_color_command.dart';
+import '../commands/color_relationship/apply_relationship.dart';
+import '../commands/color_relationship/remove_relationship.dart';
+import '../commands/shape/add_shape.dart';
+import '../commands/shape/move_shape.dart';
+import '../commands/shape/reorder_shapes.dart';
+import '../commands/shape/update_shape_colors.dart';
+import '../commands/vertex/add_vertex.dart';
+import '../commands/vertex/delete_vertex.dart';
+import '../commands/vertex/move_vertex.dart';
 import '../models/shape_color_clamp.dart';
 import '../models/shape_relationship.dart';
 

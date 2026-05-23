@@ -2,7 +2,7 @@
 import 'package:frontend/controllers/canvas_controller.dart';
 import 'package:frontend/models/shape_color_clamp.dart';
 
-import 'canvas_command.dart';
+import '../canvas_command.dart';
 
 class ApplyColorClampCommand implements CanvasCommand {
 
