@@ -9,13 +9,13 @@ import 'package:frontend/models/shape_data.dart';
 import '../models/shape_relationship.dart';
 import '../utils/geometry_utils.dart';
 
-class RelationshipPainter extends CustomPainter {
+class CanvasPainter extends CustomPainter {
   static const double _relationshipLabelFontSize = 16.0;
   static const double _relationshipLabelSpacing = 16.0;
   static const double _shapeLabelFontSize = 16.0;
   static const double _arrowSize = 8.0;
 
-  RelationshipPainter({
+  CanvasPainter({
     required this.shapes,
     required this.selectedIndices,
     required this.activeRelationships,
@@ -482,7 +482,7 @@ class RelationshipPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant RelationshipPainter oldDelegate) {
+  bool shouldRepaint(covariant CanvasPainter oldDelegate) {
     if (!listEquals(shapes, oldDelegate.shapes)) return true;
     if (!listEquals(selectedIndices, oldDelegate.selectedIndices)) return true;
     if (draggingShapeIndex != oldDelegate.draggingShapeIndex) return true;

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/controllers/canvas_controller.dart';
 import 'package:frontend/controllers/project_manager.dart';
 import 'package:frontend/models/canvas_project.dart';
-import 'package:frontend/painters/relationship_painter.dart';
+import 'package:frontend/painters/canvas_painter.dart';
 import 'package:frontend/widgets/canvas_grid.dart';
 import 'package:frontend/widgets/controls/clamp_color_panel.dart';
 import 'package:frontend/widgets/controls/editor_app_bar.dart';
@@ -70,7 +70,7 @@ class _ShapeEditorState extends State<ShapeEditor> {
                     ),
                     CustomPaint(
                       size: Size.infinite,
-                      painter: RelationshipPainter(
+                      painter: CanvasPainter(
                         shapes: controller.allShapes,
                         selectedIndices: controller.selectedIndices,
                         activeRelationships: controller.activeRelationships,
