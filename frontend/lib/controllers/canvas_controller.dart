@@ -193,10 +193,8 @@ class CanvasController extends ChangeNotifier {
       final backgroundPaint = Paint()..color = Colors.white;
       canvas.drawRect(rect, backgroundPaint);
 
-      final shapePaint = Paint()..style = PaintingStyle.fill;
-      final strokePaint = Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2.0;
+      final shapePaint = Paint()..style = PaintingStyle.fill
+      ..strokeWidth = 0.0;
 
       for (final shape in allShapes) {
         final path = Path();
@@ -210,11 +208,6 @@ class CanvasController extends ChangeNotifier {
 
         shapePaint.color = shape.hsv.toColor();
         canvas.drawPath(path, shapePaint);
-
-        strokePaint.color = shape.hsv
-            .withValue(max(0, shape.hsv.value - 0.2))
-            .toColor();
-        canvas.drawPath(path, strokePaint);
       }
 
       final picture = recorder.endRecording();
