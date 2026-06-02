@@ -68,7 +68,7 @@ class ProjectGallery extends StatelessWidget {
           project: project,
           onTap: () => Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (context) => ShapeEditor(project: project),
+              builder: (context) => CanvasEditor(project: project),
             ),
           ),
           onDelete: () => _showDeleteConfirm(context, projectManager: context.read<ProjectManager>(), project: project),
@@ -138,7 +138,7 @@ class ProjectGallery extends StatelessWidget {
                     Navigator.pop(context);
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (context) => ShapeEditor(project: project),
+                        builder: (context) => CanvasEditor(project: project),
                       ),
                     );
                   }

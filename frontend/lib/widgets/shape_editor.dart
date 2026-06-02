@@ -12,16 +12,16 @@ import 'package:provider/provider.dart';
 import 'controls/onscreen_menu.dart';
 import 'controls/zoom_controls.dart';
 
-class ShapeEditor extends StatefulWidget {
+class CanvasEditor extends StatefulWidget {
   final CanvasProject project;
 
-  const ShapeEditor({super.key, required this.project});
+  const CanvasEditor({super.key, required this.project});
 
   @override
-  State<ShapeEditor> createState() => _ShapeEditorState();
+  State<CanvasEditor> createState() => _CanvasEditorState();
 }
 
-class _ShapeEditorState extends State<ShapeEditor> {
+class _CanvasEditorState extends State<CanvasEditor> {
   @override
   void initState() {
     super.initState();
