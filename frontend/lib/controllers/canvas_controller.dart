@@ -15,16 +15,9 @@ import 'package:frontend/models/shape_data.dart';
 import 'package:frontend/services/solver_service.dart';
 import 'package:frontend/utils/geometry_utils.dart';
 
-import '../commands/color_constraint/clamp_color_command.dart';
-import '../commands/color_relationship/apply_relationship.dart';
-import '../commands/color_relationship/remove_relationship.dart';
-import '../commands/shape/add_shape.dart';
-import '../commands/shape/move_shape.dart';
-import '../commands/shape/reorder_shapes.dart';
-import '../commands/shape/update_shape_colors.dart';
-import '../commands/vertex/add_vertex.dart';
-import '../commands/vertex/delete_vertex.dart';
-import '../commands/vertex/move_vertex.dart';
+import '../commands/color_commands.dart';
+import '../commands/shape_commands.dart';
+import '../commands/vertex_commands.dart';
 import '../models/shape_color_clamp.dart';
 import '../models/shape_relationship.dart';
 
