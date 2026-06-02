@@ -9,7 +9,7 @@ RUN flutter pub get
 
 # Copy the rest of the source and build for web
 COPY . .
-RUN flutter build web --release --base-href "/"
+RUN flutter build web --release --pwa-strategy=offline-first --base-href "/"
 
 # ── Stage 2: Serve with Nginx ─────────────────────────────────────────────────
 FROM nginx:alpine
