@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/models/color_component.dart';
-import 'package:frontend/models/color_relationship.dart';
-
-import '../../models/comparison_operator.dart';
+import 'package:frontend/models/color_constraint_models.dart';
 
 class RelationshipPanel extends StatelessWidget {
   final colorConstraints = const [

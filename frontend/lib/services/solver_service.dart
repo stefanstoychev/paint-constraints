@@ -1,12 +1,8 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:frontend/models/color_component.dart';
-import 'package:frontend/models/comparison_operator.dart';
-import 'package:frontend/models/shape_color_clamp.dart';
+import 'package:frontend/models/color_constraint_models.dart';
 import 'package:http/http.dart' as http;
-
-import '../models/shape_relationship.dart';
 
 class SolverService {
   String baseUrl;

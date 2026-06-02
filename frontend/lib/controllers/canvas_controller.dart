@@ -9,8 +9,7 @@ import 'package:frontend/commands/command_history.dart';
 import 'package:frontend/controllers/project_manager.dart';
 import 'package:frontend/models/canvas_data.dart';
 import 'package:frontend/models/canvas_project.dart';
-import 'package:frontend/models/color_component.dart';
-import 'package:frontend/models/color_relationship.dart';
+import 'package:frontend/models/color_constraint_models.dart';
 import 'package:frontend/models/shape_data.dart';
 import 'package:frontend/services/solver_service.dart';
 import 'package:frontend/utils/geometry_utils.dart';
@@ -18,8 +17,6 @@ import 'package:frontend/utils/geometry_utils.dart';
 import '../commands/color_commands.dart';
 import '../commands/shape_commands.dart';
 import '../commands/vertex_commands.dart';
-import '../models/shape_color_clamp.dart';
-import '../models/shape_relationship.dart';
 
 class CanvasController extends ChangeNotifier {
   final CommandHistory commandHistory = CommandHistory();

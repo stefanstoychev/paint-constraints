@@ -1,6 +1,5 @@
 import '../controllers/canvas_controller.dart';
-import '../models/shape_color_clamp.dart';
-import '../models/shape_relationship.dart';
+import '../models/color_constraint_models.dart';
 import 'canvas_command.dart';
 
 class ApplyColorClampCommand implements CanvasCommand {

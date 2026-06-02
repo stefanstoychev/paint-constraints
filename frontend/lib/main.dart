@@ -6,7 +6,7 @@ import 'package:frontend/controllers/canvas_controller.dart';
 import 'package:frontend/controllers/project_manager.dart';
 
 import 'controllers/color_range_model.dart';
-import 'models/color_component.dart';
+import 'models/color_constraint_models.dart';
 
 void main() => runApp(
       MultiProvider(

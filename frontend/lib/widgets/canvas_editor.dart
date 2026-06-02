@@ -5,8 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/controllers/canvas_controller.dart';
 import 'package:frontend/controllers/project_manager.dart';
 import 'package:frontend/models/canvas_project.dart';
-import 'package:frontend/models/color_component.dart';
-import 'package:frontend/models/color_relationship.dart';
+import 'package:frontend/models/color_constraint_models.dart';
 import 'package:frontend/models/shape_data.dart';
 import 'package:frontend/widgets/canvas_grid.dart';
 import 'package:frontend/widgets/controls/clamp_color_panel.dart';
@@ -14,7 +13,6 @@ import 'package:frontend/widgets/controls/editor_app_bar.dart';
 import 'package:frontend/widgets/controls/relationship_panel.dart';
 import 'package:provider/provider.dart';
 
-import '../models/shape_relationship.dart';
 import '../utils/geometry_utils.dart';
 import 'controls/onscreen_menu.dart';
 import 'controls/zoom_controls.dart';

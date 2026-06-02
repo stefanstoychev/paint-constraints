@@ -1,6 +1,5 @@
-import 'package:frontend/models/shape_color_clamp.dart';
+import 'package:frontend/models/color_constraint_models.dart';
 import 'package:frontend/models/shape_data.dart';
-import 'package:frontend/models/shape_relationship.dart';
 
 class CanvasData {
   final List<ShapeData> shapes;
