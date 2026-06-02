@@ -28,4 +28,9 @@ class CommandHistory {
 
   bool get canUndo => _undoStack.isNotEmpty;
   bool get canRedo => _redoStack.isNotEmpty;
+
+  void clear() {
+    _redoStack.clear();
+    _undoStack.clear();
+  }
 }

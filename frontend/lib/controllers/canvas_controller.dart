@@ -136,6 +136,8 @@ class CanvasController extends ChangeNotifier {
     allShapes = List.from(project.data.shapes);
     activeRelationships = List.from(project.data.relationships);
 
+    commandHistory.clear();
+
     // Reset view
     currentScale = 1.0;
     currentOffset = Offset.zero;
