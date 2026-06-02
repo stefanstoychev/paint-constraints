@@ -2,12 +2,138 @@ import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:frontend/controllers/canvas_controller.dart';
+import 'package:frontend/controllers/project_manager.dart';
+import 'package:frontend/models/canvas_project.dart';
 import 'package:frontend/models/color_component.dart';
 import 'package:frontend/models/color_relationship.dart';
 import 'package:frontend/models/shape_data.dart';
+import 'package:frontend/widgets/canvas_grid.dart';
+import 'package:frontend/widgets/controls/clamp_color_panel.dart';
+import 'package:frontend/widgets/controls/editor_app_bar.dart';
+import 'package:frontend/widgets/controls/relationship_panel.dart';
+import 'package:provider/provider.dart';
 
 import '../models/shape_relationship.dart';
 import '../utils/geometry_utils.dart';
+import 'controls/onscreen_menu.dart';
+import 'controls/zoom_controls.dart';
+
+class CanvasEditor extends StatefulWidget {
+  final CanvasProject project;
+
+  const CanvasEditor({super.key, required this.project});
+
+  @override
+  State<CanvasEditor> createState() => _CanvasEditorState();
+}
+
+class _CanvasEditorState extends State<CanvasEditor> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<CanvasController>().loadProject(widget.project);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final CanvasController controller = context.watch<CanvasController>();
+    final ProjectManager projectManager = context.read<ProjectManager>();
+
+    final bool showAddPointIndicators =
+        controller.isEditVerticesMode && controller.selectedIndices.length == 1;
+
+    return Scaffold(
+      appBar: EditorAppBar(
+        onToggleShowRelationships: controller.toggleShowRelationships,
+        showColorLabels: controller.showColorLabels,
+        onSave: () => controller.saveCurrentProject(context, projectManager),
+        onLoad: () => controller.loadProject(widget.project),
+        onSolve: () => controller.solveRelationships(context),
+        onUpdateSolverUrl: (url) => controller.solverUrl = url,
+        projectName: widget.project.name,
+        solverUrl: controller.solverUrl,
+      ),
+      body: Stack(
+        clipBehavior: Clip.none,
+        children: <Widget>[
+          Listener(
+            onPointerSignal: controller.handlePointerSignal,
+            child: GestureDetector(
+              onTapDown: controller.handleTapDown,
+              onScaleStart: controller.handleScaleStart,
+              onScaleUpdate: controller.handleScaleUpdate,
+              onScaleEnd: controller.handleScaleEnd,
+              child: Container(
+                color: Colors.grey.shade900,
+                child: Stack(
+                  children: [
+                    CanvasGrid(
+                      scale: controller.currentScale,
+                      offset: controller.currentOffset,
+                      canvasRect: widget.project.canvasRect,
+                    ),
+                    CustomPaint(
+                      size: Size.infinite,
+                      painter: CanvasPainter(
+                        shapes: controller.allShapes,
+                        selectedIndices: controller.selectedIndices,
+                        activeRelationships: controller.activeRelationships,
+                        draggingShapeIndex: controller.draggingShapeIndex,
+                        draggingPointIndex: controller.draggingPointIndex,
+                        selectedVertexIndex: controller.selectedVertexIndex,
+                        handleRadius: CanvasController.handleRadius,
+                        isLinkMode: controller.isLinkMode,
+                        isHueVisible: controller.isHueVisible,
+                        isSatVisible: controller.isSatVisible,
+                        isValueVisible: controller.isValueVisible,
+                        isEditVerticesMode: controller.isEditVerticesMode,
+                        showAddPointIndicators: showAddPointIndicators,
+                        showRelationships: controller.showRelationships,
+                        showColorLabels: controller.showColorLabels,
+                        scale: controller.currentScale,
+                        offset: controller.currentOffset,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          if (controller.isLinkMode && controller.selectedIndices.length == 2)
+            RelationshipPanel(
+              onRelationshipApplied: (relationship) =>
+                  controller.applyRelationship(relationship, context),
+              onClearRelationships: controller.clearSelectedRelationships,
+              activeRelationships: controller.activeRelationships
+                  .where(
+                    (r) =>
+                        r.sourceShapeIndex ==
+                            controller.selectedIndices.first &&
+                        r.targetShapeIndex == controller.selectedIndices.last,
+                  )
+                  .map((r) => r.relationship)
+                  .toList(),
+            ),
+          if (controller.isClampMode && controller.selectedIndices.length == 1)
+            Positioned(
+              top: 20,
+              right: 20,
+              child: SizedBox(
+                width: 300,
+                height: 400,
+                child: ClampColorPanel(),
+              ),
+            ),
+          Positioned(bottom: 20, left: 20, child: ZoomControls()),
+          Positioned(top: 20, left: 20, child: OnscreenMenu()),
+        ],
+      ),
+    );
+  }
+}
 
 class CanvasPainter extends CustomPainter {
   static const double _relationshipLabelFontSize = 16.0;
@@ -163,7 +289,7 @@ class CanvasPainter extends CustomPainter {
   void _paintShape(Canvas canvas, ShapeData shape, bool isSelected) {
     final Path path = Path()..addPolygon(shape.points, true);
     canvas.drawPath(path, _buildShapeFillPaint(shape));
-    if(isSelected) {
+    if (isSelected) {
       canvas.drawPath(path, _buildShapeSelectedStrokePaint());
     }
   }
@@ -315,18 +441,15 @@ class CanvasPainter extends CustomPainter {
 
     var paintedArrows = Set();
     for (final ShapeRelationship relationship in activeRelationships) {
-      switch(relationship.relationship.component){
+      switch (relationship.relationship.component) {
         case ColorComponent.hue:
-          if(!isHueVisible)
-            continue;
+          if (!isHueVisible) continue;
           break;
         case ColorComponent.saturation:
-          if(!isSatVisible)
-            continue;
+          if (!isSatVisible) continue;
           break;
         case ColorComponent.value:
-          if(!isValueVisible)
-            continue;
+          if (!isValueVisible) continue;
           break;
       }
       if (relationship.sourceShapeIndex >= shapes.length ||
@@ -337,8 +460,12 @@ class CanvasPainter extends CustomPainter {
       final ShapeData sourceShape = shapes[relationship.sourceShapeIndex];
       final ShapeData targetShape = shapes[relationship.targetShapeIndex];
 
-      Offset sourceCenter = GeometryUtils.getPolygonCentroid(sourceShape.points);
-      Offset targetCenter = GeometryUtils.getPolygonCentroid(targetShape.points);
+      Offset sourceCenter = GeometryUtils.getPolygonCentroid(
+        sourceShape.points,
+      );
+      Offset targetCenter = GeometryUtils.getPolygonCentroid(
+        targetShape.points,
+      );
 
       // Draw relationship text in the middle with an offset so multiple labels don't overlap.
       final Offset direction = targetCenter - sourceCenter;
@@ -348,7 +475,6 @@ class CanvasPainter extends CustomPainter {
           : direction / distance;
 
       final Offset perpendicular = perpendicularVector(normalizedDirection);
-
 
       sourceCenter = Offset(
         sourceCenter.dx + perpendicular.dx,
@@ -363,17 +489,15 @@ class CanvasPainter extends CustomPainter {
       canvas.drawLine(sourceCenter, targetCenter, linePaint);
 
       bool painted = paintedArrows.contains({sourceCenter, targetCenter});
-      if(painted)
-        return;
+      if (painted) return;
 
       paintedArrows.add({sourceCenter, targetCenter});
 
       // Draw arrowhead at target end
       _drawArrowhead(canvas, sourceCenter, targetCenter, arrowPaint);
 
-      double compOffset = 10 * _getRelationshipLabelOffset(
-        relationship.relationship.component,
-      );
+      double compOffset =
+          10 * _getRelationshipLabelOffset(relationship.relationship.component);
       final Offset midPoint = Offset(
         (sourceCenter.dx + targetCenter.dx) / 2 + compOffset,
         (sourceCenter.dy + targetCenter.dy) / 2 + compOffset,
@@ -500,14 +624,11 @@ class CanvasPainter extends CustomPainter {
     if (!listEquals(activeRelationships, oldDelegate.activeRelationships)) {
       return true;
     }
-    if(isHueVisible != oldDelegate.isHueVisible)
-      return true;
+    if (isHueVisible != oldDelegate.isHueVisible) return true;
 
-    if(isSatVisible != oldDelegate.isSatVisible)
-      return true;
+    if (isSatVisible != oldDelegate.isSatVisible) return true;
 
-    if(isValueVisible != oldDelegate.isValueVisible)
-      return true;
+    if (isValueVisible != oldDelegate.isValueVisible) return true;
     return false;
   }
 }

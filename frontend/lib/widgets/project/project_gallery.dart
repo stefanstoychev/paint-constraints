@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/controllers/project_manager.dart';
 import 'package:frontend/models/canvas_project.dart';
 import 'package:frontend/widgets/project/project_thumbnail.dart';
-import 'package:frontend/widgets/shape_editor.dart';
+import 'package:frontend/widgets/canvas_editor.dart';
 import 'package:provider/provider.dart';
 
 class ProjectGallery extends StatelessWidget {
