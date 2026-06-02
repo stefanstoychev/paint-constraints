@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/models/color_component.dart';
+import 'package:frontend/models/color_constraint_models.dart';
 
 class ColorRangeModel extends ChangeNotifier {
   double _hueStart = 0, _hueEnd = 360;

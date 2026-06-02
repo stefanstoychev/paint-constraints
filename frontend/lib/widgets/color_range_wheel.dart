@@ -5,23 +5,8 @@ import 'package:provider/provider.dart';
 
 import '../controllers/color_range_model.dart';
 
-class DartPadPreviewScreen extends StatelessWidget {
-  const DartPadPreviewScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Consumer<ColorRangeModel>(
-      builder: (context, model, _) {
-        return Center(child: HueWheel(model: model));
-      },
-    );
-  }
-}
-
 class HueWheel extends StatefulWidget {
-  final ColorRangeModel model;
-
-  const HueWheel({super.key, required this.model});
+  const HueWheel({super.key});
 
   @override
   State<HueWheel> createState() => _HueWheelState();
@@ -32,6 +17,7 @@ class _HueWheelState extends State<HueWheel> {
 
   @override
   Widget build(BuildContext context) {
+    var model = context.watch<ColorRangeModel>();
     const size = 280.0 * 0.8;
     return GestureDetector(
       onPanStart: (details) {
@@ -40,8 +26,8 @@ class _HueWheelState extends State<HueWheel> {
         double angle = math.atan2(touch.dy, touch.dx) * 180 / math.pi;
         if (angle < 0) angle += 360;
 
-        final startRad = widget.model.hueStart * math.pi / 180;
-        final endRad = widget.model.hueEnd * math.pi / 180;
+        final startRad = model.hueStart * math.pi / 180;
+        final endRad = model.hueEnd * math.pi / 180;
         final startPos =
             Offset(math.cos(startRad), math.sin(startRad)) * (size / 2);
         final endPos = Offset(math.cos(endRad), math.sin(endRad)) * (size / 2);
@@ -63,25 +49,25 @@ class _HueWheelState extends State<HueWheel> {
         if (angle < 0) angle += 360;
 
         if (_draggingHandle == 0) {
-          widget.model.updateHue(angle, widget.model.hueEnd);
+          model.updateHue(angle, model.hueEnd);
         } else {
-          widget.model.updateHue(widget.model.hueStart, angle);
+          model.updateHue(model.hueStart, angle);
         }
       },
       onPanEnd: (_) => _draggingHandle = null,
       child: CustomPaint(
         size: const Size(size, size),
-        painter: HueWheelPainter(widget.model.hueStart, widget.model.hueEnd),
+        painter: _HueWheelPainter(model.hueStart, model.hueEnd),
       ),
     );
   }
 }
 
-class HueWheelPainter extends CustomPainter {
+class _HueWheelPainter extends CustomPainter {
   final double start;
   final double end;
 
-  HueWheelPainter(this.start, this.end);
+  _HueWheelPainter(this.start, this.end);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -151,7 +137,7 @@ class HueWheelPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant HueWheelPainter oldDelegate) {
+  bool shouldRepaint(covariant _HueWheelPainter oldDelegate) {
     return oldDelegate.start != start || oldDelegate.end != end;
   }
 }

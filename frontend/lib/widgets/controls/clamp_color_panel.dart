@@ -19,7 +19,7 @@ class ClampColorPanel extends StatelessWidget {
         padding: const EdgeInsets.all(12.0),
         child: Column(
           children: [
-            DartPadPreviewScreen(),
+            HueWheel(),
             Row(
               children: [
                 Text("S", style: TextStyle(color: Colors.grey)),
