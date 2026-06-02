@@ -1,6 +1,13 @@
 import 'package:frontend/models/color_constraint_models.dart';
 import 'package:frontend/models/shape_data.dart';
 
+enum Mode{
+  LINK_SHAPES_COLOR,
+  EDIT_SHAPE_VERTEXES,
+  CLAMP_COLOR,
+  SELECT_SHAPE
+}
+
 class CanvasData {
   final List<ShapeData> shapes;
   final List<ShapeRelationship> relationships;

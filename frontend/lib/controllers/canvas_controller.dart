@@ -23,12 +23,16 @@ class CanvasController extends ChangeNotifier {
 
   List<ShapeData> allShapes = <ShapeData>[];
   List<int> selectedIndices = <int>[];
-  bool isLinkMode = false;
-  bool isClampMode = false;
+  Mode mode = Mode.SELECT_SHAPE;
+
+  bool get isLinkMode => mode == Mode.LINK_SHAPES_COLOR;
+  bool get isClampMode => mode == Mode.CLAMP_COLOR;
+  bool get isEditVerticesMode => mode == Mode.EDIT_SHAPE_VERTEXES;
+
   bool isHueVisible = true;
   bool isSatVisible = true;
   bool isValueVisible = true;
-  bool isEditVerticesMode = false;
+
   bool showRelationships = true;
   bool showColorLabels = false;
 
@@ -95,7 +99,10 @@ class CanvasController extends ChangeNotifier {
   Future<void> solveRelationships(BuildContext context) async {
     if (activeRelationships.isEmpty) return;
 
-    final results = await _solverService.solve(activeRelationships,activeShapeColorConstraint );
+    final results = await _solverService.solve(
+      activeRelationships,
+      activeShapeColorConstraint,
+    );
     if (results != null) {
       final Map<int, HSVColor> oldColors = {};
       final Map<int, HSVColor> newColors = {};
@@ -147,7 +154,11 @@ class CanvasController extends ChangeNotifier {
     final thumbnail = await captureThumbnail();
 
     final updatedProject = currentProject!.copyWith(
-      data: CanvasData(shapes: allShapes, relationships: activeRelationships, constraints: activeShapeColorConstraint),
+      data: CanvasData(
+        shapes: allShapes,
+        relationships: activeRelationships,
+        constraints: activeShapeColorConstraint,
+      ),
       thumbnailBase64: thumbnail,
     );
 
@@ -183,8 +194,9 @@ class CanvasController extends ChangeNotifier {
       final backgroundPaint = Paint()..color = Colors.white;
       canvas.drawRect(rect, backgroundPaint);
 
-      final shapePaint = Paint()..style = PaintingStyle.fill
-      ..strokeWidth = 0.0;
+      final shapePaint = Paint()
+        ..style = PaintingStyle.fill
+        ..strokeWidth = 0.0;
 
       for (final shape in allShapes) {
         final path = Path();
@@ -266,27 +278,29 @@ class CanvasController extends ChangeNotifier {
   }
 
   void toggleClampMode() {
-    isClampMode = !isClampMode;
-    isLinkMode = false;
-    isEditVerticesMode = false;
+    toggleMode(Mode.CLAMP_COLOR);
     selectedIndices.clear();
     selectedVertexIndex = null;
     notifyListeners();
   }
 
+  void toggleMode(Mode mode){
+    if (mode != this.mode) {
+      this.mode = mode;
+    } else {
+      this.mode = Mode.SELECT_SHAPE;
+    }
+  }
+
   void toggleLinkMode() {
-    isLinkMode = !isLinkMode;
-    isClampMode = false;
-    isEditVerticesMode = false;
+    toggleMode(Mode.LINK_SHAPES_COLOR);
     selectedIndices.clear();
     selectedVertexIndex = null;
     notifyListeners();
   }
 
   void toggleEditVerticesMode() {
-    isEditVerticesMode = !isEditVerticesMode;
-    isLinkMode = false;
-    isClampMode = false;
+    toggleMode(Mode.EDIT_SHAPE_VERTEXES);
     selectedIndices.clear();
     selectedVertexIndex = null;
     notifyListeners();
