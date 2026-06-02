@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/widgets/color_range_wheel.dart';
 import 'package:frontend/widgets/project/project_gallery.dart';
 import 'package:provider/provider.dart';
 import 'package:frontend/controllers/canvas_controller.dart';
@@ -25,17 +24,17 @@ void main() => runApp(
               controller.activeShapeColorConstraint
                   .where((x) => x.sourceShapeIndex == index)
                   .forEach((element) {
-                switch(element.component){
-                  case ColorComponent.hue:
-                    colorRangeModel?.setHue(element.min as double, element.max as double);
-                    break;
-                  case ColorComponent.value:
-                    colorRangeModel?.setValue(element.min as double, element.max as double);
-                    break;
-                  case ColorComponent.saturation:
-                    colorRangeModel?.setSaturation(element.min as double, element.max as double);
-                    break;
-                }
+                final minValue = element.min as double?;
+                final maxValue = element.max as double?;
+                
+                if (minValue == null || maxValue == null) return;
+                
+                colorRangeModel?.setRange(
+                  element.component,
+                  minValue,
+                  maxValue,
+                  notify: false,
+                );
               });
 
               return colorRangeModel!;
