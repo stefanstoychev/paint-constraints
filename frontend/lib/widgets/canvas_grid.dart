@@ -38,7 +38,7 @@ class _GridPainter extends CustomPainter {
       ..color = Colors.white.withValues(alpha: 0.1)
       ..strokeWidth = 1.0;
 
-    const double gridSize = 50.0;
+    const double gridSize = 25.0;
 
     for (double x = gridSize; x <= size.width; x += gridSize) {
       canvas.drawLine(Offset(x, 0), Offset(x, size.height), gridPaint);
