@@ -9,12 +9,17 @@ class ColorRangeModel extends ChangeNotifier {
     final model = ColorRangeModel();
     if (controller.selectedIndices.isNotEmpty) {
       final index = controller.selectedIndices.first;
-      for (final element in controller.activeShapeColorConstraint) {
+      for (final element in controller.constraints.activeShapeColorConstraint) {
         if (element.sourceShapeIndex == index) {
           final minValue = element.min as double?;
           final maxValue = element.max as double?;
           if (minValue != null && maxValue != null) {
-            model.setRange(element.component, minValue, maxValue, notify: false);
+            model.setRange(
+              element.component,
+              minValue,
+              maxValue,
+              notify: false,
+            );
           }
         }
       }

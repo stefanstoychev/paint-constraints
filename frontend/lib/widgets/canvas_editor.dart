@@ -67,8 +67,8 @@ class _CanvasEditorState extends State<CanvasEditor> {
                 child: Stack(
                   children: [
                     CanvasGrid(
-                      scale: controller.currentScale,
-                      offset: controller.currentOffset,
+                      scale: controller.viewport.currentScale,
+                      offset: controller.viewport.currentOffset,
                       canvasRect: widget.project.canvasRect,
                     ),
                     CustomPaint(
@@ -76,7 +76,8 @@ class _CanvasEditorState extends State<CanvasEditor> {
                       painter: CanvasPainter(
                         shapes: controller.allShapes,
                         selectedIndices: controller.selectedIndices,
-                        activeRelationships: controller.activeRelationships,
+                        activeRelationships:
+                            controller.constraints.activeRelationships,
                         draggingShapeIndex: controller.draggingShapeIndex,
                         draggingPointIndex: controller.draggingPointIndex,
                         selectedVertexIndex: controller.selectedVertexIndex,
@@ -89,8 +90,8 @@ class _CanvasEditorState extends State<CanvasEditor> {
                         showAddPointIndicators: showAddPointIndicators,
                         showRelationships: controller.showRelationships,
                         showColorLabels: controller.showColorLabels,
-                        scale: controller.currentScale,
-                        offset: controller.currentOffset,
+                        scale: controller.viewport.currentScale,
+                        offset: controller.viewport.currentOffset,
                       ),
                     ),
                   ],
@@ -103,7 +104,7 @@ class _CanvasEditorState extends State<CanvasEditor> {
               onRelationshipApplied: (relationship) =>
                   controller.applyRelationship(relationship, context),
               onClearRelationships: controller.clearSelectedRelationships,
-              activeRelationships: controller.activeRelationships
+              activeRelationships: controller.constraints.activeRelationships
                   .where(
                     (r) =>
                         r.sourceShapeIndex ==

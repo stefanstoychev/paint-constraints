@@ -14,12 +14,19 @@ import 'package:frontend/models/shape_data.dart';
 import 'package:frontend/services/solver_service.dart';
 import 'package:frontend/utils/geometry_utils.dart';
 
-import '../commands/color_commands.dart';
 import '../commands/shape_commands.dart';
 import '../commands/vertex_commands.dart';
+import 'constraint_manager.dart';
+import 'viewport_controller.dart';
 
 class CanvasController extends ChangeNotifier {
   final CommandHistory commandHistory = CommandHistory();
+
+  // Sub-controllers
+  late final ViewportController viewport = ViewportController()
+    ..addListener(notifyListeners);
+  late final ConstraintManager constraints = ConstraintManager()
+    ..addListener(notifyListeners);
 
   List<ShapeData> allShapes = <ShapeData>[];
   List<int> selectedIndices = <int>[];
@@ -39,16 +46,6 @@ class CanvasController extends ChangeNotifier {
 
   CanvasProject? currentProject;
   late SolverService? _solverService;
-
-  List<ShapeRelationship> activeRelationships = <ShapeRelationship>[];
-  Set<ShapeColorConstraint> activeShapeColorConstraint =
-      <ShapeColorConstraint>{};
-
-  double currentScale = 1.0;
-  Offset currentOffset = Offset.zero;
-  double _previousScale = 1.0;
-  Offset _previousOffset = Offset.zero;
-  Offset _previousFocalPoint = Offset.zero;
 
   int? draggingShapeIndex;
   int? draggingPointIndex;
@@ -75,7 +72,7 @@ class CanvasController extends ChangeNotifier {
 
   bool get canUndo => commandHistory.canUndo;
 
-  void setSolver(SolverService solver){
+  void setSolver(SolverService solver) {
     _solverService = solver;
   }
 
@@ -95,50 +92,26 @@ class CanvasController extends ChangeNotifier {
   }
 
   Future<void> solveRelationships(BuildContext context) async {
-    if (activeRelationships.isEmpty) return;
-
-    final results = await _solverService?.solve(
-      activeRelationships,
-      activeShapeColorConstraint,
+    await constraints.solveRelationships(
+      context,
+      solverService: _solverService,
+      allShapes: allShapes,
+      controller: this,
     );
-    if (results != null) {
-      final Map<int, HSVColor> oldColors = {};
-      final Map<int, HSVColor> newColors = {};
-
-      for (final result in results) {
-        if (result.index >= 0 && result.index < allShapes.length) {
-          oldColors[result.index] = allShapes[result.index].hsv;
-          newColors[result.index] = HSVColor.fromAHSV(
-            1.0,
-            result.h,
-            result.s / 100,
-            result.v / 100,
-          );
-        }
-      }
-
-      if (newColors.isNotEmpty) {
-        executeCommand(UpdateShapeColorsCommand(this, oldColors, newColors));
-      }
-    } else {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to solve constraints')),
-        );
-      }
-    }
   }
 
   void loadProject(CanvasProject project) {
     currentProject = project;
     allShapes = List.from(project.data.shapes);
-    activeRelationships = List.from(project.data.relationships);
+    constraints.loadConstraints(
+      project.data.relationships,
+      project.data.constraints,
+    );
 
     commandHistory.clear();
 
     // Reset view
-    currentScale = 1.0;
-    currentOffset = Offset.zero;
+    viewport.resetZoomScale();
     selectedIndices.clear();
     selectedVertexIndex = null;
 
@@ -156,8 +129,8 @@ class CanvasController extends ChangeNotifier {
     final updatedProject = currentProject!.copyWith(
       data: CanvasData(
         shapes: allShapes,
-        relationships: activeRelationships,
-        constraints: activeShapeColorConstraint,
+        relationships: constraints.activeRelationships,
+        constraints: constraints.activeShapeColorConstraint,
       ),
       thumbnailBase64: thumbnail,
     );
@@ -232,18 +205,6 @@ class CanvasController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Offset _screenToWorld(Offset screenPoint) {
-    return (screenPoint - currentOffset) / currentScale;
-  }
-
-  Offset _clampPoint(Offset point) {
-    final rect = canvasRect;
-    return Offset(
-      point.dx.clamp(rect.left, rect.right),
-      point.dy.clamp(rect.top, rect.bottom),
-    );
-  }
-
   int _nextShapeZIndex() {
     if (allShapes.isEmpty) return 0;
     return allShapes.map<int>((ShapeData shape) => shape.zIndex).reduce(max) +
@@ -262,7 +223,9 @@ class CanvasController extends ChangeNotifier {
       (allShapes.length * 20.0) % 200 + 50,
     );
     final List<Offset> translatedPoints = newShapePoints
-        .map<Offset>((Offset p) => _clampPoint(p + offsetTranslation))
+        .map<Offset>(
+          (Offset p) => viewport.clampPoint(p + offsetTranslation, canvasRect),
+        )
         .toList();
 
     final double randomHue = (DateTime.now().millisecond.toDouble() % 360)
@@ -313,65 +276,31 @@ class CanvasController extends ChangeNotifier {
 
   void applyRelationship(ColorRelationship relationship, BuildContext context) {
     if (selectedIndices.length != 2) return;
-    final int sourceIdx = selectedIndices.first;
-    final int targetIdx = selectedIndices.last;
-
-    final bool hasReverseRelationship = activeRelationships.any(
-      (ShapeRelationship r) =>
-          r.sourceShapeIndex == targetIdx &&
-          r.targetShapeIndex == sourceIdx &&
-          r.relationship.component == relationship.component,
-    );
-    if (hasReverseRelationship) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Reverse relationship already exists')),
-        );
-      }
-      return;
-    }
-
-    final shapeRelationship = ShapeRelationship(
-      sourceIdx,
-      targetIdx,
-      relationship,
-    );
-    final int existingRelationshipIndex = activeRelationships.indexWhere(
-      (ShapeRelationship activeRelationship) =>
-          activeRelationship.hasSameType(shapeRelationship),
-    );
-
-    ShapeRelationship? prevRelationship;
-    if (existingRelationshipIndex != -1) {
-      prevRelationship = activeRelationships[existingRelationshipIndex];
-    }
-
-    executeCommand(
-      ApplyRelationshipCommand(
-        controller: this,
-        newRelationship: shapeRelationship,
-        previousRelationship: prevRelationship,
-      ),
+    constraints.applyRelationship(
+      sourceIdx: selectedIndices.first,
+      targetIdx: selectedIndices.last,
+      relationship: relationship,
+      context: context,
+      controller: this,
     );
   }
 
   void clearSelectedRelationships() {
     if (selectedIndices.length != 2) return;
-    executeCommand(
-      RemoveRelationshipsCommand(
-        controller: this,
-        shapeIndex1: selectedIndices.first,
-        shapeIndex2: selectedIndices.last,
-      ),
+    constraints.clearSelectedRelationships(
+      shapeIndex1: selectedIndices.first,
+      shapeIndex2: selectedIndices.last,
+      controller: this,
     );
   }
 
   void handleTapDown(TapDownDetails details) {
     if (draggingShapeIndex != null) return;
 
-    final Offset worldPosition = _screenToWorld(details.localPosition);
-    final double worldHandleRadius = handleRadius / currentScale;
-    final double worldSegmentTapTolerance = _segmentTapTolerance / currentScale;
+    final Offset worldPosition = viewport.screenToWorld(details.localPosition);
+    final double worldHandleRadius = handleRadius / viewport.currentScale;
+    final double worldSegmentTapTolerance =
+        _segmentTapTolerance / viewport.currentScale;
 
     if (isEditVerticesMode && selectedIndices.length == 1) {
       final int selectedShapeIndex = selectedIndices.first;
@@ -396,7 +325,7 @@ class CanvasController extends ChangeNotifier {
               this,
               selectedShapeIndex,
               i + 1,
-              _clampPoint(worldPosition),
+              viewport.clampPoint(worldPosition, canvasRect),
             ),
           );
           return;
@@ -448,9 +377,7 @@ class CanvasController extends ChangeNotifier {
   void handleScaleStart(ScaleStartDetails details) {
     final Offset localFocalPoint = details.localFocalPoint;
 
-    _previousScale = currentScale;
-    _previousOffset = currentOffset;
-    _previousFocalPoint = localFocalPoint;
+    viewport.prepareScaleStart(localFocalPoint);
 
     draggingShapeIndex = null;
     draggingPointIndex = null;
@@ -467,8 +394,8 @@ class CanvasController extends ChangeNotifier {
     if (isEditVerticesMode &&
         selectedIndices.length == 1 &&
         details.pointerCount == 1) {
-      final Offset worldPosition = _screenToWorld(localFocalPoint);
-      final double worldHandleRadius = handleRadius / currentScale;
+      final Offset worldPosition = viewport.screenToWorld(localFocalPoint);
+      final double worldHandleRadius = handleRadius / viewport.currentScale;
 
       final int shapeIndex = selectedIndices.first;
       final ShapeData shape = allShapes[shapeIndex];
@@ -489,7 +416,7 @@ class CanvasController extends ChangeNotifier {
     if (!isLinkMode &&
         details.pointerCount == 1 &&
         selectedIndices.isNotEmpty) {
-      final Offset worldPosition = _screenToWorld(localFocalPoint);
+      final Offset worldPosition = viewport.screenToWorld(localFocalPoint);
       for (final int index in selectedIndices.reversed) {
         if (GeometryUtils.isPointInPolygon(
           worldPosition,
@@ -517,7 +444,9 @@ class CanvasController extends ChangeNotifier {
         details.pointerCount == 1 &&
         _dragStartWorldPoint != null &&
         _draggedShapesInitialPoints != null) {
-      final Offset currentWorldFocalPoint = _screenToWorld(localFocalPoint);
+      final Offset currentWorldFocalPoint = viewport.screenToWorld(
+        localFocalPoint,
+      );
       final Offset deltaWorld = currentWorldFocalPoint - _dragStartWorldPoint!;
 
       final List<ShapeData> tempAllShapes = List<ShapeData>.from(allShapes);
@@ -526,7 +455,10 @@ class CanvasController extends ChangeNotifier {
             _draggedShapesInitialPoints![shapeIndex];
         if (initialPoints != null) {
           final List<Offset> updatedPoints = initialPoints
-              .map<Offset>((Offset point) => _clampPoint(point + deltaWorld))
+              .map<Offset>(
+                (Offset point) =>
+                    viewport.clampPoint(point + deltaWorld, canvasRect),
+              )
               .toList();
           tempAllShapes[shapeIndex] = tempAllShapes[shapeIndex].copyWith(
             points: updatedPoints,
@@ -538,26 +470,25 @@ class CanvasController extends ChangeNotifier {
         draggingPointIndex != null &&
         details.pointerCount == 1) {
       selectedVertexIndex = draggingPointIndex;
-      final Offset currentWorldFocalPoint = _screenToWorld(localFocalPoint);
+      final Offset currentWorldFocalPoint = viewport.screenToWorld(
+        localFocalPoint,
+      );
       final Offset deltaWorld = currentWorldFocalPoint - _dragStartWorldPoint!;
 
       final List<ShapeData> tempAllShapes = List<ShapeData>.from(allShapes);
       final List<Offset> updatedPoints = List<Offset>.from(
         tempAllShapes[draggingShapeIndex!].points,
       );
-      updatedPoints[draggingPointIndex!] = _clampPoint(
+      updatedPoints[draggingPointIndex!] = viewport.clampPoint(
         _draggedPointInitialPosition! + deltaWorld,
+        canvasRect,
       );
 
       tempAllShapes[draggingShapeIndex!] = tempAllShapes[draggingShapeIndex!]
           .copyWith(points: updatedPoints);
       allShapes = tempAllShapes;
     } else {
-      currentScale = (_previousScale * details.scale).clamp(0.3, 5.0);
-
-      final Offset focalPointAtStartWorld =
-          (_previousFocalPoint - _previousOffset) / _previousScale;
-      currentOffset = localFocalPoint - focalPointAtStartWorld * currentScale;
+      viewport.applyScaleUpdate(details);
     }
     notifyListeners();
   }
@@ -606,6 +537,8 @@ class CanvasController extends ChangeNotifier {
           finalPosition,
         ),
       );
+    } else {
+      viewport.finishScale();
     }
 
     draggingShapeIndex = null;
@@ -624,8 +557,6 @@ class CanvasController extends ChangeNotifier {
     _twoFingerGestureStartTime = null;
     _tapPointerCount = 0;
 
-    _previousScale = currentScale;
-    _previousOffset = currentOffset;
     notifyListeners();
   }
 
@@ -643,73 +574,23 @@ class CanvasController extends ChangeNotifier {
   }
 
   void updateZoomScale(double newScale, Size screenSize) {
-    currentScale = newScale.clamp(0.3, 5.0);
-    final Offset screenCenter = Offset(
-      screenSize.width / 2,
-      screenSize.height / 2,
-    );
-    final Offset centerWorldAtPrevScale =
-        (screenCenter - _previousOffset) / _previousScale;
-    currentOffset = screenCenter - centerWorldAtPrevScale * currentScale;
-    _previousScale = currentScale;
-    _previousOffset = currentOffset;
-    _previousFocalPoint = screenCenter;
-    notifyListeners();
+    viewport.updateZoomScale(newScale, screenSize);
   }
 
   void resetZoomScale() {
-    currentScale = 1.0;
-    currentOffset = Offset.zero;
-    _previousScale = 1.0;
-    _previousOffset = Offset.zero;
-    _previousFocalPoint = Offset.zero;
-    notifyListeners();
+    viewport.resetZoomScale();
   }
 
   void handlePointerSignal(PointerSignalEvent event) {
-    if (event is PointerScrollEvent) {
-      final double zoomDelta = event.scrollDelta.dy > 0 ? 0.9 : 1.1;
-      final double newScale = (currentScale * zoomDelta).clamp(0.3, 5.0);
-
-      if (newScale != currentScale) {
-        final Offset localFocalPoint = event.localPosition;
-        final Offset focalPointWorld =
-            (localFocalPoint - currentOffset) / currentScale;
-
-        currentScale = newScale;
-        currentOffset = localFocalPoint - focalPointWorld * currentScale;
-
-        _previousScale = currentScale;
-        _previousOffset = currentOffset;
-        _previousFocalPoint = localFocalPoint;
-
-        notifyListeners();
-      }
-    }
+    viewport.handlePointerSignal(event);
   }
 
   void fitToScreen(BuildContext context) {
-    double availableHeight =
-        MediaQuery.of(context).size.height - kToolbarHeight;
-    double availableWidth = MediaQuery.of(context).size.width;
-
-    final double scaleX = availableWidth / canvasRect.width;
-    final double scaleY = availableHeight / canvasRect.height;
-
-    currentScale = min(scaleX, scaleY).clamp(0.3, 5.0);
-
-    final double centeredX =
-        (availableWidth - canvasRect.width * currentScale) / 2 -
-        canvasRect.left * currentScale;
-    final double centeredY =
-        (availableHeight - canvasRect.height * currentScale) / 2 -
-        canvasRect.top * currentScale;
-
-    currentOffset = Offset(centeredX, centeredY);
-
-    _previousScale = currentScale;
-    _previousOffset = currentOffset;
-    notifyListeners();
+    final availableSize = Size(
+      MediaQuery.of(context).size.width,
+      MediaQuery.of(context).size.height,
+    );
+    viewport.fitToScreen(canvasRect, availableSize);
   }
 
   void deleteSelectedVertex() {
@@ -796,19 +677,16 @@ class CanvasController extends ChangeNotifier {
     int startV,
     int endV,
   ) {
-    var index = selectedIndices.first;
-
-    var oldConstraints = {
-      ...activeShapeColorConstraint.where((x) => x.sourceShapeIndex == index),
-    };
-    var newConstraints = {
-      ShapeColorConstraint(index, ColorComponent.hue, startH, endH),
-      ShapeColorConstraint(index, ColorComponent.saturation, startS, endS),
-      ShapeColorConstraint(index, ColorComponent.value, startV, endV),
-    };
-
-    executeCommand(
-      ApplyColorClampCommand(this, oldConstraints, newConstraints),
+    if (selectedIndices.isEmpty) return;
+    constraints.applyClamp(
+      shapeIndex: selectedIndices.first,
+      startH: startH,
+      endH: endH,
+      startS: startS,
+      endS: endS,
+      startV: startV,
+      endV: endV,
+      controller: this,
     );
   }
 }

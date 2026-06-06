@@ -16,14 +16,16 @@ class ApplyColorClampCommand implements CanvasCommand {
 
   @override
   void execute() {
-    controller.activeShapeColorConstraint.removeAll(oldConstraints);
-    controller.activeShapeColorConstraint.addAll(newConstraints);
+    controller.constraints.activeShapeColorConstraint.removeAll(oldConstraints);
+    controller.constraints.activeShapeColorConstraint.addAll(newConstraints);
+    controller.constraints.notify();
   }
 
   @override
   void undo() {
-    controller.activeShapeColorConstraint.removeAll(newConstraints);
-    controller.activeShapeColorConstraint.addAll(oldConstraints);
+    controller.constraints.activeShapeColorConstraint.removeAll(newConstraints);
+    controller.constraints.activeShapeColorConstraint.addAll(oldConstraints);
+    controller.constraints.notify();
   }
 }
 
@@ -43,33 +45,35 @@ class ApplyRelationshipCommand implements CanvasCommand {
   @override
   void execute() {
     // Add or update relationship only
-    final existingRelationshipIndex = controller.activeRelationships.indexWhere(
-      (r) => r.hasSameType(newRelationship),
-    );
+    final existingRelationshipIndex = controller.constraints.activeRelationships
+        .indexWhere((r) => r.hasSameType(newRelationship));
 
     if (existingRelationshipIndex != -1) {
-      controller.activeRelationships[existingRelationshipIndex] =
+      controller.constraints.activeRelationships[existingRelationshipIndex] =
           newRelationship;
     } else {
-      controller.activeRelationships.add(newRelationship);
+      controller.constraints.activeRelationships.add(newRelationship);
     }
+    controller.constraints.notify();
   }
 
   @override
   void undo() {
     // Restore relationship only
-    final existingRelationshipIndex = controller.activeRelationships.indexWhere(
-      (r) => r.hasSameType(newRelationship),
-    );
+    final existingRelationshipIndex = controller.constraints.activeRelationships
+        .indexWhere((r) => r.hasSameType(newRelationship));
 
     if (existingRelationshipIndex != -1) {
       if (previousRelationship != null) {
-        controller.activeRelationships[existingRelationshipIndex] =
+        controller.constraints.activeRelationships[existingRelationshipIndex] =
             previousRelationship!;
       } else {
-        controller.activeRelationships.removeAt(existingRelationshipIndex);
+        controller.constraints.activeRelationships.removeAt(
+          existingRelationshipIndex,
+        );
       }
     }
+    controller.constraints.notify();
   }
 }
 
@@ -89,7 +93,7 @@ class RemoveRelationshipsCommand implements CanvasCommand {
   void execute() {
     removedRelationships.clear();
     final List<ShapeRelationship> toKeep = [];
-    for (final r in controller.activeRelationships) {
+    for (final r in controller.constraints.activeRelationships) {
       if ((r.sourceShapeIndex == shapeIndex1 &&
               r.targetShapeIndex == shapeIndex2) ||
           (r.sourceShapeIndex == shapeIndex2 &&
@@ -99,11 +103,13 @@ class RemoveRelationshipsCommand implements CanvasCommand {
         toKeep.add(r);
       }
     }
-    controller.activeRelationships = toKeep;
+    controller.constraints.activeRelationships = toKeep;
+    controller.constraints.notify();
   }
 
   @override
   void undo() {
-    controller.activeRelationships.addAll(removedRelationships);
+    controller.constraints.activeRelationships.addAll(removedRelationships);
+    controller.constraints.notify();
   }
 }

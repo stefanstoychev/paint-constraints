@@ -54,7 +54,7 @@ class _ZoomControlsState extends State<ZoomControls> {
                 iconSize: 24,
                 icon: const Icon(Icons.remove, color: Colors.white),
                 onPressed: () => controller.updateZoomScale(
-                  controller.currentScale - 0.2,
+                  controller.viewport.currentScale - 0.2,
                   MediaQuery.of(context).size,
                 ),
                 tooltip: 'Zoom Out',
@@ -62,7 +62,7 @@ class _ZoomControlsState extends State<ZoomControls> {
               SizedBox(
                 width: 120,
                 child: Slider(
-                  value: controller.currentScale,
+                  value: controller.viewport.currentScale,
                   min: 0.3,
                   max: 5.0,
                   divisions: ((5.0 - 0.3) * 10).round(),
@@ -79,7 +79,7 @@ class _ZoomControlsState extends State<ZoomControls> {
                 iconSize: 24,
                 icon: const Icon(Icons.add, color: Colors.white),
                 onPressed: () => controller.updateZoomScale(
-                  controller.currentScale + 0.2,
+                  controller.viewport.currentScale + 0.2,
                   MediaQuery.of(context).size,
                 ),
                 tooltip: 'Zoom In',

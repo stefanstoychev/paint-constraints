@@ -12,14 +12,18 @@ class ClampColorPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final canvasController = context.read<CanvasController>();
     return ChangeNotifierProvider(
-      create: (context) => ColorRangeModel.fromCanvasController(canvasController),
+      create: (context) =>
+          ColorRangeModel.fromCanvasController(canvasController),
       child: Builder(
         builder: (context) {
-          final ColorRangeModel colorRangeModel = context.watch<ColorRangeModel>();
+          final ColorRangeModel colorRangeModel = context
+              .watch<ColorRangeModel>();
           return Card(
             elevation: 8,
             color: Colors.black.withValues(alpha: 0.9),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
             child: Padding(
               padding: const EdgeInsets.all(12.0),
               child: Column(
@@ -66,7 +70,10 @@ class ClampColorPanel extends StatelessWidget {
                             colorRangeModel.valueEnd.toString(),
                           ),
                           onChanged: (RangeValues values) {
-                            colorRangeModel.updateValue(values.start, values.end);
+                            colorRangeModel.updateValue(
+                              values.start,
+                              values.end,
+                            );
                           },
                         ),
                       ),
@@ -76,13 +83,13 @@ class ClampColorPanel extends StatelessWidget {
                     onPressed: () {
                       final colorRange = context.read<ColorRangeModel>();
                       context.read<CanvasController>().applyClamp(
-                            colorRange.hueStart.round(),
-                            colorRange.hueEnd.round(),
-                            colorRange.saturationStart.round(),
-                            colorRange.saturationEnd.round(),
-                            colorRange.valueStart.round(),
-                            colorRange.valueEnd.round(),
-                          );
+                        colorRange.hueStart.round(),
+                        colorRange.hueEnd.round(),
+                        colorRange.saturationStart.round(),
+                        colorRange.saturationEnd.round(),
+                        colorRange.valueStart.round(),
+                        colorRange.valueEnd.round(),
+                      );
                     },
                     child: const Text("apply"),
                   ),
