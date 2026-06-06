@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:frontend/models/color_constraint_models.dart';
 import 'package:http/http.dart' as http;
 
@@ -16,8 +16,17 @@ class SolverService extends ChangeNotifier {
   }
 
   String getUrl() {
+    if (_url != null) {
+      return _url!;
+    }
+    
+    // Check if a build-time API_URL is supplied via --dart-define
+    const envUrl = String.fromEnvironment('API_URL');
+    if (envUrl.isNotEmpty) {
+      return envUrl;
+    }
 
-    return _url ?? 'https://paint-constraints-api.devfriday.top';
+    return 'https://paint-constraints-api.devfriday.top';
   }
 
   Future<List<SolveResult>?> solve(
@@ -48,7 +57,7 @@ class SolverService extends ChangeNotifier {
       };
 
       final response = await http.post(
-        Uri.parse('$_url/solve'),
+        Uri.parse('${getUrl()}/solve'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(requestBody),
       );
