@@ -286,7 +286,7 @@ class CanvasController extends ChangeNotifier {
     notifyListeners();
   }
 
-  void toggleMode(Mode mode){
+  void toggleMode(Mode mode) {
     if (mode != this.mode) {
       this.mode = mode;
     } else {

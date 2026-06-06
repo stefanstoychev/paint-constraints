@@ -13,43 +13,43 @@ Future<void> main() async {
   final pwaUpdateNotifier = await initPwaUpdateService();
 
   runApp(
-      MultiProvider(
-        providers: [
-          ChangeNotifierProvider(create: (context) => ProjectManager()),
-          ChangeNotifierProvider(create: (context) => CanvasController()),
-          ChangeNotifierProvider(create: (_) => pwaUpdateNotifier),
-          ChangeNotifierProxyProvider<CanvasController, ColorRangeModel>(
-            create: (context) => ColorRangeModel(),
-            update: (context, controller, colorRangeModel) {
-              if(controller.selectedIndices.isEmpty) {
-                return colorRangeModel!;
-              }
-
-              var index = controller.selectedIndices.first;
-
-              controller.activeShapeColorConstraint
-                  .where((x) => x.sourceShapeIndex == index)
-                  .forEach((element) {
-                final minValue = element.min as double?;
-                final maxValue = element.max as double?;
-                
-                if (minValue == null || maxValue == null) return;
-                
-                colorRangeModel?.setRange(
-                  element.component,
-                  minValue,
-                  maxValue,
-                  notify: false,
-                );
-              });
-
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => ProjectManager()),
+        ChangeNotifierProvider(create: (context) => CanvasController()),
+        ChangeNotifierProvider(create: (_) => pwaUpdateNotifier),
+        ChangeNotifierProxyProvider<CanvasController, ColorRangeModel>(
+          create: (context) => ColorRangeModel(),
+          update: (context, controller, colorRangeModel) {
+            if (controller.selectedIndices.isEmpty) {
               return colorRangeModel!;
-            },
-          )
-        ],
-        child: const PaintConstraintsApp(),
-      ),
-    );
+            }
+
+            var index = controller.selectedIndices.first;
+
+            controller.activeShapeColorConstraint
+                .where((x) => x.sourceShapeIndex == index)
+                .forEach((element) {
+                  final minValue = element.min as double?;
+                  final maxValue = element.max as double?;
+
+                  if (minValue == null || maxValue == null) return;
+
+                  colorRangeModel?.setRange(
+                    element.component,
+                    minValue,
+                    maxValue,
+                    notify: false,
+                  );
+                });
+
+            return colorRangeModel!;
+          },
+        ),
+      ],
+      child: const PaintConstraintsApp(),
+    ),
+  );
 }
 
 class PaintConstraintsApp extends StatelessWidget {

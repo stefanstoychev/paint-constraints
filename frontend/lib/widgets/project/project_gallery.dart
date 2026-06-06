@@ -24,8 +24,8 @@ class ProjectGallery extends StatelessWidget {
         child: projectManager.isLoading
             ? const Center(child: CircularProgressIndicator())
             : projectManager.projects.isEmpty
-                ? _buildEmptyState(context, projectManager)
-                : _buildGrid(context, projectManager.projects),
+            ? _buildEmptyState(context, projectManager)
+            : _buildGrid(context, projectManager.projects),
       ),
     );
   }
@@ -71,7 +71,11 @@ class ProjectGallery extends StatelessWidget {
               builder: (context) => CanvasEditor(project: project),
             ),
           ),
-          onDelete: () => _showDeleteConfirm(context, projectManager: context.read<ProjectManager>(), project: project),
+          onDelete: () => _showDeleteConfirm(
+            context,
+            projectManager: context.read<ProjectManager>(),
+            project: project,
+          ),
         );
       },
     );
@@ -98,7 +102,10 @@ class ProjectGallery extends StatelessWidget {
                 autofocus: true,
               ),
               const SizedBox(height: 20),
-              const Text('Dimensions', style: TextStyle(fontWeight: FontWeight.bold)),
+              const Text(
+                'Dimensions',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: 10),
               RadioGroup<Size>(
                 groupValue: selectedSize,
@@ -133,7 +140,10 @@ class ProjectGallery extends StatelessWidget {
                 final name = nameController.text.trim();
                 if (name.isEmpty) return;
                 try {
-                  final project = await manager.createProject(name, selectedSize);
+                  final project = await manager.createProject(
+                    name,
+                    selectedSize,
+                  );
                   if (context.mounted) {
                     Navigator.pop(context);
                     Navigator.of(context).push(
@@ -144,9 +154,9 @@ class ProjectGallery extends StatelessWidget {
                   }
                 } catch (e) {
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(e.toString())),
-                    );
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text(e.toString())));
                   }
                 }
               },
@@ -158,10 +168,7 @@ class ProjectGallery extends StatelessWidget {
     );
   }
 
-  Widget _buildSizeOption({
-    required String label,
-    required Size size,
-  }) {
+  Widget _buildSizeOption({required String label, required Size size}) {
     return RadioListTile<Size>(
       title: Text(label),
       value: size,
@@ -169,7 +176,11 @@ class ProjectGallery extends StatelessWidget {
     );
   }
 
-  void _showDeleteConfirm(BuildContext context, {required ProjectManager projectManager, required CanvasProject project}) {
+  void _showDeleteConfirm(
+    BuildContext context, {
+    required ProjectManager projectManager,
+    required CanvasProject project,
+  }) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(

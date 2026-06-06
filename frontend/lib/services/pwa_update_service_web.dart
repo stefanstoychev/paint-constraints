@@ -11,7 +11,9 @@ Future<PwaUpdateNotifier> initPwaUpdateService() async {
   }
 
   try {
-    final registration = await serviceWorker.register('flutter_service_worker.js');
+    final registration = await serviceWorker.register(
+      'flutter_service_worker.js',
+    );
     _watchForWaitingWorker(registration, notifier);
     _reloadOnControllerChange();
     _scheduleUpdateChecks(registration);
@@ -22,9 +24,14 @@ Future<PwaUpdateNotifier> initPwaUpdateService() async {
   return notifier;
 }
 
-void _watchForWaitingWorker(ServiceWorkerRegistration registration, PwaUpdateNotifier notifier) {
+void _watchForWaitingWorker(
+  ServiceWorkerRegistration registration,
+  PwaUpdateNotifier notifier,
+) {
   void checkWaiting(ServiceWorker? worker) {
-    if (worker != null && worker.state == 'installed' && window.navigator.serviceWorker?.controller != null) {
+    if (worker != null &&
+        worker.state == 'installed' &&
+        window.navigator.serviceWorker?.controller != null) {
       notifier.markUpdateAvailable(() => _activateWaitingWorker(worker));
     }
   }
@@ -46,7 +53,9 @@ void _watchForWaitingWorker(ServiceWorkerRegistration registration, PwaUpdateNot
 bool _reloadScheduled = false;
 
 void _reloadOnControllerChange() {
-  window.navigator.serviceWorker?.addEventListener('controllerchange', (Event _) {
+  window.navigator.serviceWorker?.addEventListener('controllerchange', (
+    Event _,
+  ) {
     if (_reloadScheduled) {
       return;
     }
@@ -59,7 +68,9 @@ void _activateWaitingWorker(ServiceWorker worker) {
   try {
     worker.postMessage({'type': 'SKIP_WAITING'});
   } catch (_) {
-    window.console.warn('Unable to send SKIP_WAITING message to service worker.');
+    window.console.warn(
+      'Unable to send SKIP_WAITING message to service worker.',
+    );
   }
 }
 

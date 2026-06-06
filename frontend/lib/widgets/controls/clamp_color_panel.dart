@@ -25,7 +25,10 @@ class ClampColorPanel extends StatelessWidget {
                 Text("S", style: TextStyle(color: Colors.grey)),
                 Flexible(
                   child: RangeSlider(
-                    values: RangeValues(colorRangeModel.saturationStart, colorRangeModel.saturationEnd),
+                    values: RangeValues(
+                      colorRangeModel.saturationStart,
+                      colorRangeModel.saturationEnd,
+                    ),
                     max: 100,
                     divisions: 10,
                     labels: RangeLabels(
@@ -33,7 +36,10 @@ class ClampColorPanel extends StatelessWidget {
                       colorRangeModel.saturationEnd.toString(),
                     ),
                     onChanged: (RangeValues values) {
-                      colorRangeModel.updateSaturation(values.start, values.end);
+                      colorRangeModel.updateSaturation(
+                        values.start,
+                        values.end,
+                      );
                     },
                   ),
                 ),
@@ -44,7 +50,10 @@ class ClampColorPanel extends StatelessWidget {
                 Text("V", style: TextStyle(color: Colors.grey)),
                 Flexible(
                   child: RangeSlider(
-                    values: RangeValues(colorRangeModel.valueStart, colorRangeModel.valueEnd),
+                    values: RangeValues(
+                      colorRangeModel.valueStart,
+                      colorRangeModel.valueEnd,
+                    ),
                     max: 100,
                     divisions: 10,
                     labels: RangeLabels(
@@ -52,7 +61,7 @@ class ClampColorPanel extends StatelessWidget {
                       colorRangeModel.valueEnd.toString(),
                     ),
                     onChanged: (RangeValues values) {
-                        colorRangeModel.updateValue(values.start, values.end);
+                      colorRangeModel.updateValue(values.start, values.end);
                     },
                   ),
                 ),

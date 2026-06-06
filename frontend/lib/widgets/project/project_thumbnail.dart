@@ -34,7 +34,9 @@ class ProjectThumbnail extends StatelessWidget {
                   ),
                 ),
                 child: ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(12),
+                  ),
                   child: project.thumbnailBase64 != null
                       ? Padding(
                           padding: const EdgeInsets.all(8.0),
@@ -44,7 +46,12 @@ class ProjectThumbnail extends StatelessWidget {
                               fit: BoxFit.contain,
                               filterQuality: FilterQuality.medium,
                               errorBuilder: (context, error, stackTrace) =>
-                                  const Center(child: Icon(Icons.broken_image, color: Colors.white24)),
+                                  const Center(
+                                    child: Icon(
+                                      Icons.broken_image,
+                                      color: Colors.white24,
+                                    ),
+                                  ),
                             ),
                           ),
                         )

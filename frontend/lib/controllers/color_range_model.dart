@@ -16,7 +16,7 @@ class ColorRangeModel extends ChangeNotifier {
   double get saturationEnd => _saturationEnd;
 
   /// Sets the range for a color component with optional listener notification.
-  /// 
+  ///
   /// When [notify] is true (default), listeners are notified of the change.
   /// When false, the change is applied silently (useful for batch updates).
   void setRange(

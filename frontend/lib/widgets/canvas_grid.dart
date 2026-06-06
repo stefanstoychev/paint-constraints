@@ -15,7 +15,11 @@ class CanvasGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CustomPaint(
-      painter: _GridPainter(scale: scale, offset: offset, canvasRect: canvasRect),
+      painter: _GridPainter(
+        scale: scale,
+        offset: offset,
+        canvasRect: canvasRect,
+      ),
       size: Size.infinite,
     );
   }
@@ -71,4 +75,3 @@ class _GridPainter extends CustomPainter {
     return scale != oldDelegate.scale || offset != oldDelegate.offset;
   }
 }
-

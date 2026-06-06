@@ -12,9 +12,9 @@ class AddShapeCommand implements CanvasCommand {
   final int? previousSelectedVertexIndex;
 
   AddShapeCommand(this.controller, this.shape)
-      : index = controller.allShapes.length,
-        previousSelectedIndices = List.from(controller.selectedIndices),
-        previousSelectedVertexIndex = controller.selectedVertexIndex;
+    : index = controller.allShapes.length,
+      previousSelectedIndices = List.from(controller.selectedIndices),
+      previousSelectedVertexIndex = controller.selectedVertexIndex;
 
   @override
   void execute() {

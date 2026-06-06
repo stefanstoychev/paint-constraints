@@ -29,7 +29,6 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 
-
   @override
   Widget build(BuildContext context) {
     CanvasController controller = context.watch<CanvasController>();
@@ -40,7 +39,7 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
           Text(
             projectName,
             style: const TextStyle(fontSize: 14, color: Colors.black),
-          )
+          ),
         ],
       ),
       actions: <Widget>[
@@ -85,7 +84,9 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
               value: 'visibility',
               child: ListTile(
                 leading: Icon(
-                  controller.showRelationships ? Icons.visibility : Icons.visibility_off,
+                  controller.showRelationships
+                      ? Icons.visibility
+                      : Icons.visibility_off,
                 ),
                 title: Text(
                   controller.showRelationships

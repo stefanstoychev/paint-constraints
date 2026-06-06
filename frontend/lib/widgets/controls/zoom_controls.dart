@@ -4,10 +4,7 @@ import 'package:provider/provider.dart';
 import '../../controllers/canvas_controller.dart';
 
 class ZoomControls extends StatefulWidget {
-
-  const ZoomControls({
-    super.key,
-  });
+  const ZoomControls({super.key});
 
   @override
   State<ZoomControls> createState() => _ZoomControlsState();
@@ -18,15 +15,12 @@ class _ZoomControlsState extends State<ZoomControls> {
 
   @override
   Widget build(BuildContext context) {
-
     final CanvasController controller = context.watch<CanvasController>();
 
     return Card(
       elevation: 4,
       color: Colors.black87,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
         child: Row(
@@ -47,7 +41,9 @@ class _ZoomControlsState extends State<ZoomControls> {
                   _isExpanded = !_isExpanded;
                 });
               },
-              tooltip: _isExpanded ? 'Hide Zoom Controls' : 'Show Zoom Controls',
+              tooltip: _isExpanded
+                  ? 'Hide Zoom Controls'
+                  : 'Show Zoom Controls',
             ),
             if (_isExpanded) ...[
               const SizedBox(
@@ -57,7 +53,10 @@ class _ZoomControlsState extends State<ZoomControls> {
               IconButton(
                 iconSize: 24,
                 icon: const Icon(Icons.remove, color: Colors.white),
-                onPressed: () => controller.updateZoomScale(controller.currentScale - 0.2, MediaQuery.of(context).size),
+                onPressed: () => controller.updateZoomScale(
+                  controller.currentScale - 0.2,
+                  MediaQuery.of(context).size,
+                ),
                 tooltip: 'Zoom Out',
               ),
               SizedBox(
@@ -67,7 +66,11 @@ class _ZoomControlsState extends State<ZoomControls> {
                   min: 0.3,
                   max: 5.0,
                   divisions: ((5.0 - 0.3) * 10).round(),
-                  onChanged: (v) => () => controller.updateZoomScale(v, MediaQuery.of(context).size),
+                  onChanged: (v) =>
+                      () => controller.updateZoomScale(
+                        v,
+                        MediaQuery.of(context).size,
+                      ),
                   activeColor: Colors.blueAccent,
                   inactiveColor: Colors.white24,
                 ),
@@ -75,7 +78,10 @@ class _ZoomControlsState extends State<ZoomControls> {
               IconButton(
                 iconSize: 24,
                 icon: const Icon(Icons.add, color: Colors.white),
-                onPressed: () => controller.updateZoomScale(controller.currentScale + 0.2, MediaQuery.of(context).size),
+                onPressed: () => controller.updateZoomScale(
+                  controller.currentScale + 0.2,
+                  MediaQuery.of(context).size,
+                ),
                 tooltip: 'Zoom In',
               ),
               IconButton(

@@ -75,7 +75,9 @@ class OnscreenMenu extends StatelessWidget {
                 icon: Icons.delete_outline,
                 isActive: controller.hasSelected,
                 activeColor: Colors.redAccent,
-                onPressed: controller.hasSelected ? controller.deleteSelectedVertex : null,
+                onPressed: controller.hasSelected
+                    ? controller.deleteSelectedVertex
+                    : null,
                 tooltip: 'Delete Selected Vertex',
                 disabledColor: Colors.white24,
               ),
@@ -102,4 +104,3 @@ class OnscreenMenu extends StatelessWidget {
     );
   }
 }
-

@@ -5,7 +5,7 @@ class RelationshipPanel extends StatelessWidget {
   final colorConstraints = const [
     ColorRelationship(ColorComponent.hue, ComparisonOperator.lt),
     ColorRelationship(ColorComponent.hue, ComparisonOperator.e),
-    ColorRelationship(ColorComponent.saturation, ComparisonOperator.lt,),
+    ColorRelationship(ColorComponent.saturation, ComparisonOperator.lt),
     ColorRelationship(ColorComponent.saturation, ComparisonOperator.e),
     ColorRelationship(ColorComponent.value, ComparisonOperator.lt),
     ColorRelationship(ColorComponent.value, ComparisonOperator.e),

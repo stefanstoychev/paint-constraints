@@ -20,7 +20,7 @@ class StorageService {
   Future<List<CanvasProject>> loadAllProjects() async {
     final prefs = await SharedPreferences.getInstance();
     final List<String> projectIds = prefs.getStringList('project_ids') ?? [];
-    
+
     final List<CanvasProject> projects = [];
     for (final id in projectIds) {
       final projectJson = prefs.getString('project_$id');
@@ -34,7 +34,7 @@ class StorageService {
   Future<void> deleteProject(String id) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('project_$id');
-    
+
     final List<String> projectIds = prefs.getStringList('project_ids') ?? [];
     projectIds.remove(id);
     await prefs.setStringList('project_ids', projectIds);

@@ -65,7 +65,7 @@ class ShapeRelationship {
       'sourceShapeIndex': sourceShapeIndex,
       'targetShapeIndex': targetShapeIndex,
       'component': relationship.component.name,
-      'operator': relationship.operator.name
+      'operator': relationship.operator.name,
     };
   }
 
@@ -76,10 +76,7 @@ class ShapeRelationship {
     final operator = ComparisonOperator.values.firstWhere(
       (e) => e.name == json['operator'],
     );
-    final relationship = ColorRelationship(
-      component,
-      operator,
-    );
+    final relationship = ColorRelationship(component, operator);
     return ShapeRelationship(
       json['sourceShapeIndex'] as int,
       json['targetShapeIndex'] as int,
@@ -118,7 +115,7 @@ class ShapeColorConstraint {
       'sourceShapeIndex': sourceShapeIndex,
       'component': component.name,
       'max': max,
-      'min': min
+      'min': min,
     };
   }
 
