@@ -130,14 +130,6 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
             ),
             const PopupMenuDivider(),
             const PopupMenuItem<String>(
-              value: 'load',
-              child: ListTile(
-                leading: Icon(Icons.folder_open),
-                title: Text('Load Project'),
-              ),
-            ),
-            const PopupMenuDivider(),
-            const PopupMenuItem<String>(
               value: 'settings',
               child: ListTile(
                 leading: Icon(Icons.settings),
