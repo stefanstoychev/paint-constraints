@@ -23,11 +23,12 @@ class CanvasController extends ChangeNotifier {
 
   List<ShapeData> allShapes = <ShapeData>[];
   List<int> selectedIndices = <int>[];
-  Mode mode = Mode.SELECT_SHAPE;
 
-  bool get isLinkMode => mode == Mode.LINK_SHAPES_COLOR;
-  bool get isClampMode => mode == Mode.CLAMP_COLOR;
-  bool get isEditVerticesMode => mode == Mode.EDIT_SHAPE_VERTEXES;
+  EditMode editMode = EditMode.SELECT_SHAPE;
+
+  bool get isLinkMode => editMode == EditMode.LINK_SHAPES_COLOR;
+  bool get isClampMode => editMode == EditMode.CLAMP_COLOR;
+  bool get isEditVerticesMode => editMode == EditMode.EDIT_SHAPE_VERTEXES;
 
   bool isHueVisible = true;
   bool isSatVisible = true;
@@ -37,14 +38,7 @@ class CanvasController extends ChangeNotifier {
   bool showColorLabels = false;
 
   CanvasProject? currentProject;
-  final SolverService _solverService = SolverService();
-
-  String get solverUrl => _solverService.baseUrl;
-
-  set solverUrl(String value) {
-    _solverService.baseUrl = value;
-    notifyListeners();
-  }
+  late SolverService? _solverService;
 
   List<ShapeRelationship> activeRelationships = <ShapeRelationship>[];
   Set<ShapeColorConstraint> activeShapeColorConstraint =
@@ -81,6 +75,10 @@ class CanvasController extends ChangeNotifier {
 
   bool get canUndo => commandHistory.canUndo;
 
+  void setSolver(SolverService solver){
+    _solverService = solver;
+  }
+
   void executeCommand(CanvasCommand command) {
     commandHistory.execute(command);
     notifyListeners();
@@ -99,7 +97,7 @@ class CanvasController extends ChangeNotifier {
   Future<void> solveRelationships(BuildContext context) async {
     if (activeRelationships.isEmpty) return;
 
-    final results = await _solverService.solve(
+    final results = await _solverService?.solve(
       activeRelationships,
       activeShapeColorConstraint,
     );
@@ -280,29 +278,29 @@ class CanvasController extends ChangeNotifier {
   }
 
   void toggleClampMode() {
-    toggleMode(Mode.CLAMP_COLOR);
+    toggleMode(EditMode.CLAMP_COLOR);
     selectedIndices.clear();
     selectedVertexIndex = null;
     notifyListeners();
   }
 
-  void toggleMode(Mode mode) {
-    if (mode != this.mode) {
-      this.mode = mode;
+  void toggleMode(EditMode mode) {
+    if (mode != this.editMode) {
+      this.editMode = mode;
     } else {
-      this.mode = Mode.SELECT_SHAPE;
+      this.editMode = EditMode.SELECT_SHAPE;
     }
   }
 
   void toggleLinkMode() {
-    toggleMode(Mode.LINK_SHAPES_COLOR);
+    toggleMode(EditMode.LINK_SHAPES_COLOR);
     selectedIndices.clear();
     selectedVertexIndex = null;
     notifyListeners();
   }
 
   void toggleEditVerticesMode() {
-    toggleMode(Mode.EDIT_SHAPE_VERTEXES);
+    toggleMode(EditMode.EDIT_SHAPE_VERTEXES);
     selectedIndices.clear();
     selectedVertexIndex = null;
     notifyListeners();

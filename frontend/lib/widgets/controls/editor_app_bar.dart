@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/services/solver_service.dart';
 import 'package:provider/provider.dart';
 
 import '../../controllers/canvas_controller.dart';
@@ -6,13 +7,11 @@ import '../../controllers/canvas_controller.dart';
 class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
   final bool showColorLabels;
   final String projectName;
-  final String solverUrl;
 
   final VoidCallback onToggleShowRelationships;
   final VoidCallback onSave;
   final VoidCallback onLoad;
   final VoidCallback onSolve;
-  final ValueChanged<String> onUpdateSolverUrl;
 
   const EditorAppBar({
     super.key,
@@ -21,9 +20,7 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
     required this.onSave,
     required this.onLoad,
     required this.onSolve,
-    required this.onUpdateSolverUrl,
     required this.projectName,
-    required this.solverUrl,
   });
 
   @override
@@ -152,7 +149,7 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   void _showSettingsDialog(BuildContext context) {
     final TextEditingController controller = TextEditingController(
-      text: solverUrl,
+      text: context.read<SolverService>().getUrl(),
     );
     showDialog(
       context: context,
@@ -177,7 +174,7 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
           ),
           ElevatedButton(
             onPressed: () {
-              onUpdateSolverUrl(controller.text);
+              context.read<SolverService>().setUrl(controller.text);
               Navigator.pop(context);
             },
             child: const Text('Save'),

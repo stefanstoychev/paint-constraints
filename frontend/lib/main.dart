@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/services/solver_service.dart';
 import 'package:frontend/widgets/project/project_gallery.dart';
 import 'package:provider/provider.dart';
 import 'package:frontend/controllers/canvas_controller.dart';
@@ -11,12 +12,18 @@ import 'controllers/color_range_model.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final pwaUpdateNotifier = await initPwaUpdateService();
-
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (context) => ProjectManager()),
-        ChangeNotifierProvider(create: (context) => CanvasController()),
+        ChangeNotifierProvider(create: (context) => SolverService()),
+        ChangeNotifierProxyProvider<SolverService, CanvasController>(
+          create: (context) => CanvasController(),
+          update: (context, solver, canvasController) {
+            canvasController?.setSolver(solver);
+            return canvasController!;
+          }
+        ),
         ChangeNotifierProvider(create: (_) => pwaUpdateNotifier),
         ChangeNotifierProxyProvider<CanvasController, ColorRangeModel>(
           create: (context) => ColorRangeModel(),

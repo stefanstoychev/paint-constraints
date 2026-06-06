@@ -4,10 +4,21 @@ import 'package:flutter/material.dart';
 import 'package:frontend/models/color_constraint_models.dart';
 import 'package:http/http.dart' as http;
 
-class SolverService {
-  String baseUrl;
+class SolverService extends ChangeNotifier {
+  String? _url;
 
-  SolverService({this.baseUrl = 'https://paint-constraints-api.devfriday.top'});
+  void setUrl(String url) {
+    if (url == _url) {
+      return;
+    }
+    _url = url;
+    notifyListeners();
+  }
+
+  String getUrl() {
+
+    return _url ?? 'https://paint-constraints-api.devfriday.top';
+  }
 
   Future<List<SolveResult>?> solve(
     List<ShapeRelationship> relationships,
@@ -37,7 +48,7 @@ class SolverService {
       };
 
       final response = await http.post(
-        Uri.parse('$baseUrl/solve'),
+        Uri.parse('$_url/solve'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(requestBody),
       );

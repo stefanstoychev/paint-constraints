@@ -50,9 +50,7 @@ class _CanvasEditorState extends State<CanvasEditor> {
         onSave: () => controller.saveCurrentProject(context, projectManager),
         onLoad: () => controller.loadProject(widget.project),
         onSolve: () => controller.solveRelationships(context),
-        onUpdateSolverUrl: (url) => controller.solverUrl = url,
         projectName: widget.project.name,
-        solverUrl: controller.solverUrl,
       ),
       body: Stack(
         clipBehavior: Clip.none,
