@@ -112,7 +112,7 @@ class CanvasController extends ChangeNotifier {
 
     // Reset view
     viewport.resetZoomScale();
-    selectedIndices.clear();
+    selectedIndices = <int>[];
     selectedVertexIndex = null;
 
     notifyListeners();
@@ -242,7 +242,7 @@ class CanvasController extends ChangeNotifier {
 
   void toggleClampMode() {
     toggleMode(EditMode.CLAMP_COLOR);
-    selectedIndices.clear();
+    selectedIndices = <int>[];
     selectedVertexIndex = null;
     notifyListeners();
   }
@@ -257,14 +257,14 @@ class CanvasController extends ChangeNotifier {
 
   void toggleLinkMode() {
     toggleMode(EditMode.LINK_SHAPES_COLOR);
-    selectedIndices.clear();
+    selectedIndices = <int>[];
     selectedVertexIndex = null;
     notifyListeners();
   }
 
   void toggleEditVerticesMode() {
     toggleMode(EditMode.EDIT_SHAPE_VERTEXES);
-    selectedIndices.clear();
+    selectedIndices = <int>[];
     selectedVertexIndex = null;
     notifyListeners();
   }
@@ -353,23 +353,21 @@ class CanvasController extends ChangeNotifier {
         selectedIndices = <int>[tappedShapeIndex];
       } else if (isLinkMode) {
         if (selectedIndices.contains(tappedShapeIndex)) {
-          selectedIndices.remove(tappedShapeIndex);
+          selectedIndices = List<int>.from(selectedIndices)
+            ..remove(tappedShapeIndex);
         } else {
           if (selectedIndices.length < 2) {
-            selectedIndices.add(tappedShapeIndex);
+            selectedIndices = List<int>.from(selectedIndices)
+              ..add(tappedShapeIndex);
           } else {
-            selectedIndices.removeAt(0);
-            selectedIndices.add(tappedShapeIndex);
+            selectedIndices = [...selectedIndices.skip(1), tappedShapeIndex];
           }
         }
       } else {
-        selectedIndices.clear();
-        if (!selectedIndices.contains(tappedShapeIndex)) {
-          selectedIndices.add(tappedShapeIndex);
-        }
+        selectedIndices = <int>[tappedShapeIndex];
       }
     } else {
-      selectedIndices.clear();
+      selectedIndices = <int>[];
     }
     notifyListeners();
   }
