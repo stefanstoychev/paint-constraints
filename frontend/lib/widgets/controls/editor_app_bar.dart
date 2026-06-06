@@ -114,7 +114,7 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
             const PopupMenuDivider(),
             PopupMenuItem<String>(
               value: 'front',
-              enabled: controller.hasSelected,
+              enabled: controller.selectedIndices.isNotEmpty,
               child: const ListTile(
                 leading: Icon(Icons.vertical_align_top),
                 title: Text('Send to Front'),
@@ -122,7 +122,7 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
             ),
             PopupMenuItem<String>(
               value: 'back',
-              enabled: controller.hasSelected,
+              enabled: controller.selectedIndices.isNotEmpty,
               child: const ListTile(
                 leading: Icon(Icons.vertical_align_bottom),
                 title: Text('Push to Back'),
