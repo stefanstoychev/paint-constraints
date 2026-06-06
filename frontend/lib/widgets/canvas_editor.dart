@@ -120,7 +120,9 @@ class _CanvasEditorState extends State<CanvasEditor> {
               child: SizedBox(
                 width: 300,
                 height: 400,
-                child: ClampColorPanel(),
+                child: ClampColorPanel(
+                  key: ValueKey(controller.selectedIndices.first),
+                ),
               ),
             ),
           Positioned(bottom: 20, left: 20, child: ZoomControls()),

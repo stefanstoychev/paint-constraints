@@ -1,7 +1,26 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/controllers/canvas_controller.dart';
 import 'package:frontend/models/color_constraint_models.dart';
 
 class ColorRangeModel extends ChangeNotifier {
+  ColorRangeModel();
+
+  factory ColorRangeModel.fromCanvasController(CanvasController controller) {
+    final model = ColorRangeModel();
+    if (controller.selectedIndices.isNotEmpty) {
+      final index = controller.selectedIndices.first;
+      for (final element in controller.activeShapeColorConstraint) {
+        if (element.sourceShapeIndex == index) {
+          final minValue = element.min as double?;
+          final maxValue = element.max as double?;
+          if (minValue != null && maxValue != null) {
+            model.setRange(element.component, minValue, maxValue, notify: false);
+          }
+        }
+      }
+    }
+    return model;
+  }
   double _hueStart = 0, _hueEnd = 360;
   double _valueStart = 0, _valueEnd = 60;
   double _saturationStart = 0, _saturationEnd = 60;
