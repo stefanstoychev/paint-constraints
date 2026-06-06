@@ -100,7 +100,7 @@ class CanvasController extends ChangeNotifier {
     );
   }
 
-  void loadProject(CanvasProject project) {
+  void loadProject(CanvasProject project, {BuildContext? context}) {
     currentProject = project;
     allShapes = List.from(project.data.shapes);
     constraints.loadConstraints(
@@ -114,6 +114,10 @@ class CanvasController extends ChangeNotifier {
     viewport.resetZoomScale();
     selectedIndices = <int>[];
     selectedVertexIndex = null;
+
+    if (context != null) {
+      fitToScreen(context);
+    }
 
     notifyListeners();
   }

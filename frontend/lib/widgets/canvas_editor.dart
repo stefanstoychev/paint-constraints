@@ -31,7 +31,10 @@ class _CanvasEditorState extends State<CanvasEditor> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<CanvasController>().loadProject(widget.project);
+      context.read<CanvasController>().loadProject(
+            widget.project,
+            context: context,
+          );
     });
   }
 
@@ -48,7 +51,7 @@ class _CanvasEditorState extends State<CanvasEditor> {
         onToggleShowRelationships: controller.toggleShowRelationships,
         showColorLabels: controller.showColorLabels,
         onSave: () => controller.saveCurrentProject(context, projectManager),
-        onLoad: () => controller.loadProject(widget.project),
+        onLoad: () => controller.loadProject(widget.project, context: context),
         onSolve: () => controller.solveRelationships(context),
         projectName: widget.project.name,
       ),
