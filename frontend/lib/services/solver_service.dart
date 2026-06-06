@@ -19,7 +19,7 @@ class SolverService extends ChangeNotifier {
     if (_url != null) {
       return _url!;
     }
-    
+
     // Check if a build-time API_URL is supplied via --dart-define
     const envUrl = String.fromEnvironment('API_URL');
     if (envUrl.isNotEmpty) {

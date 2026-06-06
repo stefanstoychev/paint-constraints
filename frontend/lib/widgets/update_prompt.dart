@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:frontend/services/pwa_update_notifier.dart';
+import 'package:provider/provider.dart';
 
 class UpdatePrompt extends StatefulWidget {
   final Widget child;
