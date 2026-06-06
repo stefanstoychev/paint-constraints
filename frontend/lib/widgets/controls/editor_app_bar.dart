@@ -30,12 +30,22 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     CanvasController controller = context.watch<CanvasController>();
     return AppBar(
-      title: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      titleSpacing: 0,
+      title: Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Text(
-            projectName,
-            style: const TextStyle(fontSize: 14, color: Colors.black),
+          Flexible(
+            child: Text(
+              projectName,
+              style: const TextStyle(fontSize: 14, color: Colors.black),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.save),
+            onPressed: onSave,
+            tooltip: 'Save Project',
           ),
         ],
       ),
@@ -119,13 +129,6 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
               ),
             ),
             const PopupMenuDivider(),
-            const PopupMenuItem<String>(
-              value: 'save',
-              child: ListTile(
-                leading: Icon(Icons.save),
-                title: Text('Save Project'),
-              ),
-            ),
             const PopupMenuItem<String>(
               value: 'load',
               child: ListTile(
