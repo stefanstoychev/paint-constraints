@@ -12,6 +12,7 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
   final VoidCallback onSave;
   final VoidCallback onLoad;
   final VoidCallback onSolve;
+  final VoidCallback onExportPng;
 
   const EditorAppBar({
     super.key,
@@ -20,6 +21,7 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
     required this.onSave,
     required this.onLoad,
     required this.onSolve,
+    required this.onExportPng,
     required this.projectName,
   });
 
@@ -81,6 +83,9 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
               case 'load':
                 onLoad();
                 break;
+              case 'exportPng':
+                onExportPng();
+                break;
               case 'settings':
                 _showSettingsDialog(context);
                 break;
@@ -126,6 +131,14 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
               child: const ListTile(
                 leading: Icon(Icons.vertical_align_bottom),
                 title: Text('Push to Back'),
+              ),
+            ),
+            const PopupMenuDivider(),
+            PopupMenuItem<String>(
+              value: 'exportPng',
+              child: const ListTile(
+                leading: Icon(Icons.image),
+                title: Text('Export as PNG'),
               ),
             ),
             const PopupMenuDivider(),

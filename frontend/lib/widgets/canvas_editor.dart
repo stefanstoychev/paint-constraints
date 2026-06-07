@@ -7,6 +7,7 @@ import 'package:frontend/controllers/project_manager.dart';
 import 'package:frontend/models/canvas_project.dart';
 import 'package:frontend/models/color_constraint_models.dart';
 import 'package:frontend/models/shape_data.dart';
+import 'package:frontend/services/image_export_service.dart';
 import 'package:frontend/widgets/canvas_grid.dart';
 import 'package:frontend/widgets/controls/clamp_color_panel.dart';
 import 'package:frontend/widgets/controls/editor_app_bar.dart';
@@ -53,6 +54,7 @@ class _CanvasEditorState extends State<CanvasEditor> {
         onSave: () => controller.saveCurrentProject(context, projectManager),
         onLoad: () => controller.loadProject(widget.project, context: context),
         onSolve: () => controller.solveRelationships(context),
+        onExportPng: () => _handleExportPng(context, controller),
         projectName: widget.project.name,
       ),
       body: Stack(
@@ -134,6 +136,95 @@ class _CanvasEditorState extends State<CanvasEditor> {
         ],
       ),
     );
+  }
+
+  Future<void> _handleExportPng(
+    BuildContext context,
+    CanvasController controller,
+  ) async {
+    try {
+      if (controller.currentProject == null) return;
+
+      final fileName = controller.currentProject!.name;
+
+      // Show export dialog
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Export Canvas as PNG'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Exporting canvas to high-resolution PNG...',
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  Column(
+                    children: [
+                      const Text('1920x1280'),
+                      const Text(
+                        '(High Resolution)',
+                        style: TextStyle(fontSize: 12, color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            if (kIsWeb)
+              ElevatedButton(
+                onPressed: () async {
+                  try {
+                    await ImageExportService.downloadCanvasAsPng(
+                      shapes: controller.allShapes,
+                      canvasRect: controller.canvasRect,
+                      filename: fileName,
+                      targetWidth: 1920.0,
+                    );
+                    if (context.mounted) {
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Canvas exported as PNG'),
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Error exporting PNG: $e'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  }
+                },
+                child: const Text('Download PNG'),
+              ),
+          ],
+        ),
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 }
 
