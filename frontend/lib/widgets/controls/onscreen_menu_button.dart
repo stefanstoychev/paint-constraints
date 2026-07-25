@@ -8,7 +8,7 @@ class OnScreenMenuButton extends StatelessWidget {
   final String tooltip;
   final Color? disabledColor;
 
-  const OnScreenMenuButton({
+  const OnScreenMenuButton({super.key, 
     required this.icon,
     required this.isActive,
     required this.activeColor,

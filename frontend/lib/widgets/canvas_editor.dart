@@ -532,7 +532,7 @@ class CanvasPainter extends CustomPainter {
       ..color = Colors.blue
       ..style = PaintingStyle.fill;
 
-    var paintedArrows = Set();
+    var paintedArrows = <dynamic>{};
     for (final ShapeRelationship relationship in activeRelationships) {
       switch (relationship.relationship.component) {
         case ColorComponent.hue:

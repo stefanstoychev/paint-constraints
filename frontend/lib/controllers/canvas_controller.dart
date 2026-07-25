@@ -252,10 +252,10 @@ class CanvasController extends ChangeNotifier {
   }
 
   void toggleMode(EditMode mode) {
-    if (mode != this.editMode) {
-      this.editMode = mode;
+    if (mode != editMode) {
+      editMode = mode;
     } else {
-      this.editMode = EditMode.SELECT_SHAPE;
+      editMode = EditMode.SELECT_SHAPE;
     }
   }
 

@@ -8,7 +8,7 @@ class OnscreenMenuButtonLetter extends StatelessWidget {
   final String tooltip;
   final Color? disabledColor;
 
-  const OnscreenMenuButtonLetter({
+  const OnscreenMenuButtonLetter({super.key, 
     required this.letter,
     required this.isActive,
     required this.activeColor,
