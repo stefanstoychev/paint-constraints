@@ -38,8 +38,8 @@ class SolverService extends ChangeNotifier {
         'relationships': relationships
             .map(
               (r) => {
-                'color': _mapComponent(r.relationship.component),
-                'operation': _mapOperator(r.relationship.operator),
+                'color': r.relationship.component.toApiString(), // Refactored usage
+                'operation': r.relationship.operator.toApiString(), // Refactored usage
                 'indexes': [r.sourceShapeIndex, r.targetShapeIndex],
               },
             )
@@ -47,7 +47,7 @@ class SolverService extends ChangeNotifier {
         'constraints': activeShapeColorConstraint
             .map(
               (r) => {
-                'component': _mapComponent(r.component),
+                'component': r.component.toApiString(), // Refactored usage
                 'index': r.sourceShapeIndex,
                 'min': r.min,
                 'max': r.max,
@@ -75,19 +75,25 @@ class SolverService extends ChangeNotifier {
     }
   }
 
-  String _mapComponent(ColorComponent component) {
-    switch (component) {
+  // Private methods are removed and replaced by extensions below.
+}
+
+extension ColorComponentMapping on ColorComponent {
+  String toApiString() {
+    switch (this) {
       case ColorComponent.hue:
         return 'H';
       case ColorComponent.saturation:
         return 'S';
       case ColorComponent.value:
-        return 'V';
+          return 'V';
     }
   }
+}
 
-  String _mapOperator(ComparisonOperator operator) {
-    switch (operator) {
+extension ComparisonOperatorMapping on ComparisonOperator {
+  String toApiString() {
+    switch (this) {
       case ComparisonOperator.lt:
         return 'LT';
       case ComparisonOperator.e:
