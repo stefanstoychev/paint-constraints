@@ -16,7 +16,7 @@ import 'package:provider/provider.dart';
 
 // NOTE: The original file used '../utils/geometry_utils.dart'. 
 // We are defining the utility logic here as per the snippet replacement/extension structure.
-import '../utils/geometry_utils.dart'; // Keep original import if dependencies rely on it, but use new classes defined below.
+// Keep original import if dependencies rely on it, but use new classes defined below.
 import 'controls/onscreen_menu.dart';
 import 'controls/zoom_controls.dart';
 
