@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../controllers/canvas_controller.dart';
+import '../../utils/constants.dart';
 
 class ZoomControls extends StatefulWidget {
   const ZoomControls({super.key});
@@ -54,7 +55,7 @@ class _ZoomControlsState extends State<ZoomControls> {
                 iconSize: 24,
                 icon: const Icon(Icons.remove, color: Colors.white),
                 onPressed: () => controller.updateZoomScale(
-                  controller.viewport.currentScale - 0.2,
+                  controller.viewport.currentScale - kZoomStep,
                   MediaQuery.of(context).size,
                 ),
                 tooltip: 'Zoom Out',
@@ -63,9 +64,9 @@ class _ZoomControlsState extends State<ZoomControls> {
                 width: 120,
                 child: Slider(
                   value: controller.viewport.currentScale,
-                  min: 0.3,
-                  max: 5.0,
-                  divisions: ((5.0 - 0.3) * 10).round(),
+                  min: kMinZoom,
+                  max: kMaxZoom,
+                  divisions: ((kMaxZoom - kMinZoom) * 10).round(),
                   onChanged: (v) =>
                       () => controller.updateZoomScale(
                         v,
@@ -79,7 +80,7 @@ class _ZoomControlsState extends State<ZoomControls> {
                 iconSize: 24,
                 icon: const Icon(Icons.add, color: Colors.white),
                 onPressed: () => controller.updateZoomScale(
-                  controller.viewport.currentScale + 0.2,
+                  controller.viewport.currentScale + kZoomStep,
                   MediaQuery.of(context).size,
                 ),
                 tooltip: 'Zoom In',

@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:frontend/utils/constants.dart';
 
 class ViewportController extends ChangeNotifier {
   double currentScale = 1.0;
@@ -23,7 +24,7 @@ class ViewportController extends ChangeNotifier {
   }
 
   void updateZoomScale(double newScale, Size screenSize) {
-    currentScale = newScale.clamp(0.3, 5.0);
+    currentScale = newScale.clamp(kMinZoom, kMaxZoom);
     final Offset screenCenter = Offset(
       screenSize.width / 2,
       screenSize.height / 2,
@@ -49,7 +50,7 @@ class ViewportController extends ChangeNotifier {
   void handlePointerSignal(PointerSignalEvent event) {
     if (event is PointerScrollEvent) {
       final double zoomDelta = event.scrollDelta.dy > 0 ? 0.9 : 1.1;
-      final double newScale = (currentScale * zoomDelta).clamp(0.3, 5.0);
+      final double newScale = (currentScale * zoomDelta).clamp(kMinZoom, kMaxZoom);
 
       if (newScale != currentScale) {
         final Offset localFocalPoint = event.localPosition;
@@ -76,7 +77,7 @@ class ViewportController extends ChangeNotifier {
     final double scaleX = availableWidth / canvasRect.width;
     final double scaleY = availableHeight / canvasRect.height;
 
-    currentScale = math.min(scaleX, scaleY).clamp(0.3, 5.0);
+    currentScale = math.min(scaleX, scaleY).clamp(kMinZoom, kMaxZoom);
 
     final double centeredX =
         (availableWidth - canvasRect.width * currentScale) / 2 -
@@ -101,7 +102,7 @@ class ViewportController extends ChangeNotifier {
 
   void applyScaleUpdate(ScaleUpdateDetails details) {
     final Offset localFocalPoint = details.localFocalPoint;
-    currentScale = (_previousScale * details.scale).clamp(0.3, 5.0);
+    currentScale = (_previousScale * details.scale).clamp(kMinZoom, kMaxZoom);
 
     final Offset focalPointAtStartWorld =
         (_previousFocalPoint - _previousOffset) / _previousScale;

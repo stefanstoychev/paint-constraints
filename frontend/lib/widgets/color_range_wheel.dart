@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../controllers/color_range_model.dart';
+import '../utils/constants.dart';
 
 class HueWheel extends StatefulWidget {
   const HueWheel({super.key});
@@ -35,9 +36,9 @@ class _HueWheelState extends State<HueWheel> {
         final distToStart = (touch - startPos).distance;
         final distToEnd = (touch - endPos).distance;
 
-        if (distToStart < 40) {
+        if (distToStart < kHueWheelHandleHitRadius) {
           _draggingHandle = 0;
-        } else if (distToEnd < 40) {
+        } else if (distToEnd < kHueWheelHandleHitRadius) {
           _draggingHandle = 1;
         }
       },
@@ -132,8 +133,8 @@ class _HueWheelPainter extends CustomPainter {
       center.dx + math.cos(rad) * radius,
       center.dy + math.sin(rad) * radius,
     );
-    canvas.drawCircle(pos, 14, fill);
-    canvas.drawCircle(pos, 14, stroke);
+    canvas.drawCircle(pos, kHueWheelHandleDrawRadius, fill);
+    canvas.drawCircle(pos, kHueWheelHandleDrawRadius, stroke);
   }
 
   @override

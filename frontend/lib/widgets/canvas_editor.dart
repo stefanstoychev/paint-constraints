@@ -17,6 +17,7 @@ import 'package:provider/provider.dart';
 // NOTE: The original file used '../utils/geometry_utils.dart'. 
 // We are defining the utility logic here as per the snippet replacement/extension structure.
 // Keep original import if dependencies rely on it, but use new classes defined below.
+import '../utils/constants.dart';
 import 'controls/onscreen_menu.dart';
 import 'controls/zoom_controls.dart';
 
@@ -302,10 +303,10 @@ class _CanvasEditorState extends State<CanvasEditor> {
 }
 
 class CanvasPainter extends CustomPainter {
-  static const double _relationshipLabelFontSize = 16.0;
-  static const double _relationshipLabelSpacing = 16.0;
-  static const double _shapeLabelFontSize = 16.0;
-  static const double _arrowSize = 8.0;
+  static const double _relationshipLabelFontSize = kRelationshipLabelFontSize;
+  static const double _relationshipLabelSpacing = kRelationshipLabelSpacing;
+  static const double _shapeLabelFontSize = kShapeLabelFontSize;
+  static const double _arrowSize = kArrowSize;
 
   CanvasPainter({
     required this.shapes,

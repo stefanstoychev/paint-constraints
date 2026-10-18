@@ -12,6 +12,7 @@ import 'package:frontend/models/canvas_project.dart';
 import 'package:frontend/models/color_constraint_models.dart';
 import 'package:frontend/models/shape_data.dart';
 import 'package:frontend/services/solver_service.dart';
+import 'package:frontend/utils/constants.dart';
 import 'package:frontend/utils/geometry_utils.dart';
 
 import '../commands/shape_commands.dart';
@@ -60,8 +61,8 @@ class CanvasController extends ChangeNotifier {
   int _tapPointerCount = 0;
   DateTime? _lastTwoFingerTapTime;
 
-  static const double handleRadius = 25.0;
-  static const double _segmentTapTolerance = 10.0;
+  static const double handleRadius = kHandleRadius;
+  static const double _segmentTapTolerance = kSegmentTapTolerance;
 
   Rect get canvasRect =>
       currentProject?.canvasRect ?? const Rect.fromLTWH(20, 20, 460, 320);
@@ -552,7 +553,7 @@ class CanvasController extends ChangeNotifier {
 
     if (_tapPointerCount == 2 && _twoFingerGestureStartTime != null) {
       final duration = DateTime.now().difference(_twoFingerGestureStartTime!);
-      if (duration.inMilliseconds < 300) {
+      if (duration.inMilliseconds < kTwoFingerGestureMaxMs) {
         _handleTwoFingerTap();
       }
     }
@@ -565,7 +566,7 @@ class CanvasController extends ChangeNotifier {
   void _handleTwoFingerTap() {
     final now = DateTime.now();
     if (_lastTwoFingerTapTime != null &&
-        now.difference(_lastTwoFingerTapTime!).inMilliseconds < 500) {
+        now.difference(_lastTwoFingerTapTime!).inMilliseconds < kDoubleTwoFingerTapWindowMs) {
       if (commandHistory.canUndo) {
         undo();
       }
