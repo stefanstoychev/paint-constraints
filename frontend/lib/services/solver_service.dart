@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
@@ -56,19 +57,31 @@ class SolverService extends ChangeNotifier {
             .toList(),
       };
 
-      final response = await http.post(
-        Uri.parse('${getUrl()}/solve'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(requestBody),
-      );
+      final response = await http
+          .post(
+            Uri.parse('${getUrl()}/solve'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode(requestBody),
+          )
+          .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
-        final List<dynamic> data = jsonDecode(response.body);
-        return data.map((item) => SolveResult.fromJson(item)).toList();
+        try {
+          final List<dynamic> data = jsonDecode(response.body) as List<dynamic>;
+          return data
+              .map((item) => SolveResult.fromJson(item as Map<String, dynamic>))
+              .toList();
+        } catch (e) {
+          debugPrint('Solver parse error: $e');
+          return null;
+        }
       } else {
         debugPrint('Solver error: ${response.statusCode} ${response.body}');
         return null;
       }
+    } on TimeoutException {
+      debugPrint('Solver request timed out');
+      return null;
     } catch (e) {
       debugPrint('Solver exception: $e');
       return null;
