@@ -7,7 +7,9 @@ import '../controllers/color_range_model.dart';
 import '../utils/constants.dart';
 
 class HueWheel extends StatefulWidget {
-  const HueWheel({super.key});
+  const HueWheel({super.key, this.onChangeEnd});
+
+  final VoidCallback? onChangeEnd;
 
   @override
   State<HueWheel> createState() => _HueWheelState();
@@ -55,7 +57,10 @@ class _HueWheelState extends State<HueWheel> {
           model.updateHue(model.hueStart, angle);
         }
       },
-      onPanEnd: (_) => _draggingHandle = null,
+      onPanEnd: (_) {
+        _draggingHandle = null;
+        widget.onChangeEnd?.call();
+      },
       child: CustomPaint(
         size: const Size(size, size),
         painter: _HueWheelPainter(model.hueStart, model.hueEnd),
