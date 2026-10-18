@@ -70,4 +70,8 @@ class GeometryUtils {
 
     return Offset(centroidX / (6 * area), centroidY / (6 * area));
   }
+
+  static Offset perpendicularVector(Offset v, {bool leftHand = true}) {
+    return leftHand ? Offset(v.dy, -v.dx) : Offset(-v.dy, v.dx);
+  }
 }

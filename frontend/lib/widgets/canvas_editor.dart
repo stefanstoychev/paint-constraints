@@ -14,83 +14,10 @@ import 'package:frontend/widgets/controls/editor_app_bar.dart';
 import 'package:frontend/widgets/controls/relationship_panel.dart';
 import 'package:provider/provider.dart';
 
-// NOTE: The original file used '../utils/geometry_utils.dart'. 
-// We are defining the utility logic here as per the snippet replacement/extension structure.
-// Keep original import if dependencies rely on it, but use new classes defined below.
 import '../utils/constants.dart';
+import '../utils/geometry_utils.dart';
 import 'controls/onscreen_menu.dart';
 import 'controls/zoom_controls.dart';
-
-/// Data structure to hold all calculated relationship geometry results.
-class RelationshipGeometryData {
-  final Offset sourcePoint;
-  final Offset targetPoint;
-
-  RelationshipGeometryData({required this.sourcePoint, required this.targetPoint});
-}
-
-
-/// A utility class holding all geometric calculations for the editor.
-/// All methods in this class should be static and pure functions.
-class CanvasGeometryUtils {
-  // ----------------------------------------
-  // 1. Basic Point Calculations
-  // ----------------------------------------
-
-  /// Calculates the centroid of a polygon defined by a list of points.
-  static Offset getPolygonCentroid(List<Offset> points) {
-    // Implementation (Placeholder logic): Requires actual geometric calculation implementation
-    // ...
-    double sumX = 0;
-    double sumY = 0;
-    for (var p in points) {
-      sumX += p.dx;
-      sumY += p.dy;
-    }
-    return Offset(sumX / points.length, sumY / points.length); // Simple average centroid approximation for placeholders
-  }
-
-  /// Calculates the perpendicular vector to a given vector 'v'.
-  static Offset perpendicularVector(Offset v, {bool leftHand = true}) {
-    // Left-hand: (y, -x), Right-hand: (-y, x)
-    return leftHand ? Offset(v.dy, -v.dx) : Offset(-v.dy, v.dx);
-  }
-
-  // ----------------------------------------
-  // 2. Relationship Line Calculation
-  // ----------------------------------------
-
-  /// Calculates all necessary points and labels for a given relationship connection.
-  static RelationshipGeometryData getRelationshipData(
-    ShapeData source, ShapeData target, {required BuildContext context}
-  ) {
-    // Implementation (Placeholder logic): This method will use geometry utilities to find:
-    // 1. Source Center Position
-    // 2. Target Center Position
-    // 3. Direction Vector and Perpendicular Offset for label placement.
-    return RelationshipGeometryData(sourcePoint: Offset(0, 0), targetPoint: Offset(0, 0)); // Placeholder return
-  }
-
-  // ----------------------------------------
-  // 3. Drawing Path Helpers
-  // ----------------------------------------
-
-  /// Builds a dashed path between two points for indicator drawing.
-  static Path buildDashedPath(Offset p1, Offset p2) {
-    // ... implementation using trigonometry and loops ...
-    final Path path = Path();
-    for (double start = 0.0; start < 1.0; start += 0.05) {
-      final double end = start + 0.03;
-      if (end > 1.0) break;
-      path.moveTo(
-        p1.dx + (p2.dx - p1.dx) * start,
-        p1.dy + (p2.dy - p1.dy) * start,
-      );
-      path.lineTo(p1.dx + (p2.dx - p1.dx) * end, p1.dy + (p2.dy - p1.dy) * end);
-    }
-    return path;
-  }
-}
 
 class CanvasEditor extends StatefulWidget {
   final CanvasProject project;
@@ -541,7 +468,7 @@ class CanvasPainter extends CustomPainter {
     List<Offset> points,
     TextPainter textPainter,
   ) {
-    final Offset center = CanvasGeometryUtils.getPolygonCentroid(points);
+    final Offset center = GeometryUtils.getPolygonCentroid(points);
     textPainter.text = TextSpan(
       text: labelText,
       style: TextStyle(
@@ -567,7 +494,7 @@ class CanvasPainter extends CustomPainter {
     ShapeData shape,
     TextPainter textPainter,
   ) {
-    final Offset center = CanvasGeometryUtils.getPolygonCentroid(shape.points);
+    final Offset center = GeometryUtils.getPolygonCentroid(shape.points);
     final String labelText =
         'H:${shape.hsv.hue.toInt()} S:${(shape.hsv.saturation * 100).toInt()} V:${(shape.hsv.value * 100).toInt()}';
 
@@ -627,10 +554,10 @@ class CanvasPainter extends CustomPainter {
       final ShapeData sourceShape = shapes[relationship.sourceShapeIndex];
       final ShapeData targetShape = shapes[relationship.targetShapeIndex];
 
-      Offset sourceCenter = CanvasGeometryUtils.getPolygonCentroid(
+      Offset sourceCenter = GeometryUtils.getPolygonCentroid(
         sourceShape.points,
       );
-      Offset targetCenter = CanvasGeometryUtils.getPolygonCentroid(
+      Offset targetCenter = GeometryUtils.getPolygonCentroid(
         targetShape.points,
       );
 
@@ -641,7 +568,7 @@ class CanvasPainter extends CustomPainter {
           ? const Offset(0, 0)
           : direction / distance;
 
-      final Offset perpendicular = CanvasGeometryUtils.perpendicularVector(normalizedDirection);
+      final Offset perpendicular = GeometryUtils.perpendicularVector(normalizedDirection);
 
       sourceCenter = Offset(
         sourceCenter.dx + perpendicular.dx,
@@ -681,11 +608,6 @@ class CanvasPainter extends CustomPainter {
     }
   }
 
-  Offset perpendicularVector(Offset v, {bool leftHand = true}) {
-    // Left-hand: (y, -x), Right-hand: (-y, x)
-    return leftHand ? Offset(v.dy, -v.dx) : Offset(-v.dy, v.dx);
-  }
-
   double _getRelationshipLabelOffset(ColorComponent component) {
     switch (component) {
       case ColorComponent.hue:
@@ -705,7 +627,7 @@ class CanvasPainter extends CustomPainter {
 
     final Offset normalizedDirection = direction / length;
     final Offset perpendicular =
-        CanvasGeometryUtils.perpendicularVector(normalizedDirection) *
+        GeometryUtils.perpendicularVector(normalizedDirection) *
         arrowSize *
         0.5;
 
