@@ -2,10 +2,10 @@ import 'package:frontend/models/color_constraint_models.dart';
 import 'package:frontend/models/shape_data.dart';
 
 enum EditMode {
-  LINK_SHAPES_COLOR,
-  EDIT_SHAPE_VERTEXES,
-  CLAMP_COLOR,
-  SELECT_SHAPE,
+  linkShapesColor,
+  editShapeVertexes,
+  clampColor,
+  selectShape,
 }
 
 class CanvasData {

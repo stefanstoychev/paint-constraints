@@ -233,7 +233,6 @@ class _CanvasEditorState extends State<CanvasEditor> {
 
 class CanvasPainter extends CustomPainter {
   static const double _relationshipLabelFontSize = kRelationshipLabelFontSize;
-  static const double _relationshipLabelSpacing = kRelationshipLabelSpacing;
   static const double _shapeLabelFontSize = kShapeLabelFontSize;
   static const double _arrowSize = kArrowSize;
 

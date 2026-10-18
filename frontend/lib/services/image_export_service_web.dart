@@ -1,25 +1,24 @@
-import 'dart:html' as html;
-import 'dart:typed_data';
+import 'dart:js_interop';
+
+import 'package:flutter/foundation.dart';
+import 'package:web/web.dart' as web;
 
 class WebImageExportService {
-  /// Download PNG file on web
-  static void downloadCanvasAsPngWeb(
-    String filename,
-    Uint8List pngBytes,
-  ) {
+  static void downloadCanvasAsPngWeb(String filename, Uint8List pngBytes) {
     try {
-      final blob = html.Blob([pngBytes], 'image/png');
-      final url = html.Url.createObjectUrlFromBlob(blob);
-
-      html.AnchorElement()
-        ..href = url
-        ..target = 'blank'
-        ..download = filename
-        ..click();
-
-      html.Url.revokeObjectUrl(url);
+      final blob = web.Blob(
+        [pngBytes.buffer.toJS].toJS,
+        web.BlobPropertyBag(type: 'image/png'),
+      );
+      final url = web.URL.createObjectURL(blob);
+      final anchor =
+          web.document.createElement('a') as web.HTMLAnchorElement;
+      anchor.href = url;
+      anchor.download = filename;
+      anchor.click();
+      web.URL.revokeObjectURL(url);
     } catch (e) {
-      print('Error downloading PNG: $e');
+      debugPrint('Error downloading PNG: $e');
       rethrow;
     }
   }

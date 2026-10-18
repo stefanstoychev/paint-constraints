@@ -32,11 +32,11 @@ class CanvasController extends ChangeNotifier {
   List<ShapeData> allShapes = <ShapeData>[];
   List<int> selectedIndices = <int>[];
 
-  EditMode editMode = EditMode.SELECT_SHAPE;
+  EditMode editMode = EditMode.selectShape;
 
-  bool get isLinkMode => editMode == EditMode.LINK_SHAPES_COLOR;
-  bool get isClampMode => editMode == EditMode.CLAMP_COLOR;
-  bool get isEditVerticesMode => editMode == EditMode.EDIT_SHAPE_VERTEXES;
+  bool get isLinkMode => editMode == EditMode.linkShapesColor;
+  bool get isClampMode => editMode == EditMode.clampColor;
+  bool get isEditVerticesMode => editMode == EditMode.editShapeVertexes;
 
   bool isHueVisible = true;
   bool isSatVisible = true;
@@ -246,7 +246,7 @@ class CanvasController extends ChangeNotifier {
   }
 
   void toggleClampMode() {
-    toggleMode(EditMode.CLAMP_COLOR);
+    toggleMode(EditMode.clampColor);
     selectedIndices = <int>[];
     selectedVertexIndex = null;
     notifyListeners();
@@ -256,19 +256,19 @@ class CanvasController extends ChangeNotifier {
     if (mode != editMode) {
       editMode = mode;
     } else {
-      editMode = EditMode.SELECT_SHAPE;
+      editMode = EditMode.selectShape;
     }
   }
 
   void toggleLinkMode() {
-    toggleMode(EditMode.LINK_SHAPES_COLOR);
+    toggleMode(EditMode.linkShapesColor);
     selectedIndices = <int>[];
     selectedVertexIndex = null;
     notifyListeners();
   }
 
   void toggleEditVerticesMode() {
-    toggleMode(EditMode.EDIT_SHAPE_VERTEXES);
+    toggleMode(EditMode.editShapeVertexes);
     selectedIndices = <int>[];
     selectedVertexIndex = null;
     notifyListeners();

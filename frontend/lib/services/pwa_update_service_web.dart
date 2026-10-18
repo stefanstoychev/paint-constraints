@@ -1,37 +1,37 @@
 import 'dart:async';
-import 'dart:html';
+import 'dart:js_interop';
+import 'dart:js_interop_unsafe';
+
+import 'package:web/web.dart' as web;
 
 import 'pwa_update_notifier.dart';
 
 Future<PwaUpdateNotifier> initPwaUpdateService() async {
   final notifier = PwaUpdateNotifier();
-  final serviceWorker = window.navigator.serviceWorker;
-  if (serviceWorker == null) {
-    return notifier;
-  }
+  final serviceWorker = web.window.navigator.serviceWorker;
 
   try {
-    final registration = await serviceWorker.register(
-      'flutter_service_worker.js',
-    );
+    final registration = await serviceWorker
+        .register('flutter_service_worker.js'.toJS)
+        .toDart;
     _watchForWaitingWorker(registration, notifier);
     _reloadOnControllerChange();
     _scheduleUpdateChecks(registration);
   } catch (error) {
-    window.console.warn('PWA update registration failed: $error');
+    web.console.warn('PWA update registration failed: $error'.toJS);
   }
 
   return notifier;
 }
 
 void _watchForWaitingWorker(
-  ServiceWorkerRegistration registration,
+  web.ServiceWorkerRegistration registration,
   PwaUpdateNotifier notifier,
 ) {
-  void checkWaiting(ServiceWorker? worker) {
+  void checkWaiting(web.ServiceWorker? worker) {
     if (worker != null &&
         worker.state == 'installed' &&
-        window.navigator.serviceWorker?.controller != null) {
+        web.window.navigator.serviceWorker.controller != null) {
       notifier.markUpdateAvailable(() => _activateWaitingWorker(worker));
     }
   }
@@ -40,48 +40,53 @@ void _watchForWaitingWorker(
     checkWaiting(registration.waiting);
   }
 
-  registration.addEventListener('updatefound', (Event _) {
-    final installingWorker = registration.installing;
-    if (installingWorker == null) return;
-
-    installingWorker.addEventListener('statechange', (Event _) {
-      checkWaiting(installingWorker);
-    });
-  });
+  registration.addEventListener(
+    'updatefound',
+    ((web.Event _) {
+      final installingWorker = registration.installing;
+      if (installingWorker == null) return;
+      installingWorker.addEventListener(
+        'statechange',
+        ((web.Event _) => checkWaiting(installingWorker)).toJS,
+      );
+    }).toJS,
+  );
 }
 
 bool _reloadScheduled = false;
 
 void _reloadOnControllerChange() {
-  window.navigator.serviceWorker?.addEventListener('controllerchange', (
-    Event _,
-  ) {
-    if (_reloadScheduled) {
-      return;
-    }
-    _reloadScheduled = true;
-    window.location.reload();
-  });
+  web.window.navigator.serviceWorker.addEventListener(
+    'controllerchange',
+    ((web.Event _) {
+      if (_reloadScheduled) return;
+      _reloadScheduled = true;
+      web.window.location.reload();
+    }).toJS,
+  );
 }
 
-void _activateWaitingWorker(ServiceWorker worker) {
+void _activateWaitingWorker(web.ServiceWorker worker) {
   try {
-    worker.postMessage({'type': 'SKIP_WAITING'});
+    final message = JSObject();
+    message['type'] = 'SKIP_WAITING'.toJS;
+    worker.postMessage(message);
   } catch (_) {
-    window.console.warn(
-      'Unable to send SKIP_WAITING message to service worker.',
+    web.console.warn(
+      'Unable to send SKIP_WAITING message to service worker.'.toJS,
     );
   }
 }
 
-void _scheduleUpdateChecks(ServiceWorkerRegistration registration) {
+void _scheduleUpdateChecks(web.ServiceWorkerRegistration registration) {
   registration.update();
 
   Timer.periodic(const Duration(hours: 4), (_) {
     registration.update();
   });
 
-  window.onFocus.listen((_) {
-    registration.update();
-  });
+  web.window.addEventListener(
+    'focus',
+    ((web.Event _) => registration.update()).toJS,
+  );
 }
