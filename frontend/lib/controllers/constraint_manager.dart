@@ -117,6 +117,22 @@ class ConstraintManager extends ChangeNotifier {
     );
   }
 
+  void clearComponentRelationship({
+    required int shapeIndex1,
+    required int shapeIndex2,
+    required ColorComponent component,
+    required CanvasController controller,
+  }) {
+    controller.executeCommand(
+      RemoveComponentRelationshipCommand(
+        controller: controller,
+        shapeIndex1: shapeIndex1,
+        shapeIndex2: shapeIndex2,
+        component: component,
+      ),
+    );
+  }
+
   void clearSelectedRelationships({
     required int shapeIndex1,
     required int shapeIndex2,

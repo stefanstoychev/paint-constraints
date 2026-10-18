@@ -15,11 +15,13 @@ class RelationshipPanel extends StatelessWidget {
     super.key,
     required this.onRelationshipApplied,
     required this.onClearRelationships,
+    required this.onClearComponentRelationship,
     this.activeRelationships = const [],
   });
 
   final ValueChanged<ColorRelationship> onRelationshipApplied;
   final VoidCallback onClearRelationships;
+  final ValueChanged<ColorComponent> onClearComponentRelationship;
   final List<ColorRelationship> activeRelationships;
 
   @override
@@ -160,8 +162,7 @@ class RelationshipPanel extends StatelessWidget {
               if (newSelection.isNotEmpty) {
                 final chosen = newSelection.first;
                 if (chosen == null) {
-                  // Clear relationships for this component.
-                  onClearRelationships();
+                  onClearComponentRelationship(relationships.first.component);
                 } else {
                   onRelationshipApplied(chosen);
                 }

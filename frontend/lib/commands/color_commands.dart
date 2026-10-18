@@ -77,6 +77,47 @@ class ApplyRelationshipCommand implements CanvasCommand {
   }
 }
 
+class RemoveComponentRelationshipCommand implements CanvasCommand {
+  final CanvasController controller;
+  final int shapeIndex1;
+  final int shapeIndex2;
+  final ColorComponent component;
+  ShapeRelationship? _removed;
+
+  RemoveComponentRelationshipCommand({
+    required this.controller,
+    required this.shapeIndex1,
+    required this.shapeIndex2,
+    required this.component,
+  });
+
+  @override
+  void execute() {
+    _removed = null;
+    final idx = controller.constraints.activeRelationships.indexWhere(
+      (r) =>
+          ((r.sourceShapeIndex == shapeIndex1 &&
+                  r.targetShapeIndex == shapeIndex2) ||
+              (r.sourceShapeIndex == shapeIndex2 &&
+                  r.targetShapeIndex == shapeIndex1)) &&
+          r.relationship.component == component,
+    );
+    if (idx != -1) {
+      _removed = controller.constraints.activeRelationships[idx];
+      controller.constraints.activeRelationships.removeAt(idx);
+    }
+    controller.constraints.notify();
+  }
+
+  @override
+  void undo() {
+    if (_removed != null) {
+      controller.constraints.activeRelationships.add(_removed!);
+      controller.constraints.notify();
+    }
+  }
+}
+
 class RemoveRelationshipsCommand implements CanvasCommand {
   final CanvasController controller;
   final int shapeIndex1;

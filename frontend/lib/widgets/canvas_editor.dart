@@ -110,6 +110,8 @@ class _CanvasEditorState extends State<CanvasEditor> {
               onRelationshipApplied: (relationship) =>
                   controller.applyRelationship(relationship, context),
               onClearRelationships: controller.clearSelectedRelationships,
+              onClearComponentRelationship:
+                  controller.clearSelectedComponentRelationship,
               activeRelationships: controller.constraints.activeRelationships
                   .where(
                     (r) =>

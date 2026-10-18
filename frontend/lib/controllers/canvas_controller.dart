@@ -290,6 +290,16 @@ class CanvasController extends ChangeNotifier {
     );
   }
 
+  void clearSelectedComponentRelationship(ColorComponent component) {
+    if (selectedIndices.length != 2) return;
+    constraints.clearComponentRelationship(
+      shapeIndex1: selectedIndices.first,
+      shapeIndex2: selectedIndices.last,
+      component: component,
+      controller: this,
+    );
+  }
+
   void clearSelectedRelationships() {
     if (selectedIndices.length != 2) return;
     constraints.clearSelectedRelationships(
