@@ -6,6 +6,7 @@ import 'package:frontend/controllers/canvas_controller.dart';
 import 'package:frontend/controllers/project_manager.dart';
 import 'package:frontend/models/canvas_project.dart';
 import 'package:frontend/models/color_constraint_models.dart';
+import 'package:frontend/models/point_constraint_models.dart';
 import 'package:frontend/models/shape_data.dart';
 import 'package:frontend/services/image_export_service.dart';
 import 'package:frontend/widgets/canvas_grid.dart';
@@ -93,6 +94,11 @@ class _CanvasEditorState extends State<CanvasEditor> {
                         isSatVisible: controller.isSatVisible,
                         isValueVisible: controller.isValueVisible,
                         isEditVerticesMode: controller.isEditVerticesMode,
+                        isLinkVertexesMode: controller.isLinkVertexesMode,
+                        vertexLinks: List.of(
+                          controller.constraints.activeVertexLinks,
+                        ),
+                        pendingLinkVertex: controller.pendingLinkVertex,
                         showAddPointIndicators: showAddPointIndicators,
                         showRelationships: controller.showRelationships,
                         showColorLabels: controller.showColorLabels,
@@ -249,6 +255,9 @@ class CanvasPainter extends CustomPainter {
     required this.isSatVisible,
     required this.isValueVisible,
     required this.isEditVerticesMode,
+    this.isLinkVertexesMode = false,
+    this.vertexLinks = const [],
+    this.pendingLinkVertex,
     required this.showAddPointIndicators,
     required this.showRelationships,
     required this.showColorLabels,
@@ -268,6 +277,9 @@ class CanvasPainter extends CustomPainter {
   final bool isSatVisible;
   final bool isValueVisible;
   final bool isEditVerticesMode;
+  final bool isLinkVertexesMode;
+  final List<VertexLink> vertexLinks;
+  final VertexRef? pendingLinkVertex;
   final bool showAddPointIndicators;
   final bool showRelationships;
   final bool showColorLabels;
@@ -303,7 +315,9 @@ class CanvasPainter extends CustomPainter {
 
       _paintShape(canvas, shape, isSelected);
 
-      if (isSelected && isEditVerticesMode) {
+      if (isLinkVertexesMode) {
+        _paintVertexHandles(canvas, shape, i);
+      } else if (isSelected && isEditVerticesMode) {
         _paintVertexHandles(canvas, shape, i);
         if (showAddPointIndicators) {
           _paintAddPointIndicators(
@@ -329,6 +343,8 @@ class CanvasPainter extends CustomPainter {
     if (showRelationships || isLinkMode) {
       _paintRelationships(canvas, textPainter);
     }
+
+    _paintVertexLinkMarkers(canvas);
 
     canvas.restore();
   }
@@ -420,6 +436,44 @@ class CanvasPainter extends CustomPainter {
         );
       }
     }
+  }
+
+  void _paintVertexLinkMarkers(Canvas canvas) {
+    final Paint linkPaint = Paint()
+      ..color = Colors.tealAccent
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0 / scale;
+    final Paint pendingPaint = Paint()
+      ..color = Colors.yellow
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.5 / scale;
+
+    for (final VertexLink link in vertexLinks) {
+      for (final VertexRef v in [link.a, link.b]) {
+        final Offset? point = _vertexPosition(v);
+        if (point != null) {
+          canvas.drawCircle(point, handleRadius / 2 / scale, linkPaint);
+        }
+      }
+    }
+
+    final Offset? pending = pendingLinkVertex == null
+        ? null
+        : _vertexPosition(pendingLinkVertex!);
+    if (pending != null) {
+      canvas.drawCircle(
+        pending,
+        handleRadius / scale + 3.0 / scale,
+        pendingPaint,
+      );
+    }
+  }
+
+  Offset? _vertexPosition(VertexRef v) {
+    if (v.shapeIndex >= shapes.length) return null;
+    final List<Offset> points = shapes[v.shapeIndex].points;
+    if (v.vertexIndex >= points.length) return null;
+    return points[v.vertexIndex];
   }
 
   void _paintAddPointIndicators(
@@ -703,6 +757,9 @@ class CanvasPainter extends CustomPainter {
     if (draggingPointIndex != oldDelegate.draggingPointIndex) return true;
     if (isLinkMode != oldDelegate.isLinkMode) return true;
     if (isEditVerticesMode != oldDelegate.isEditVerticesMode) return true;
+    if (isLinkVertexesMode != oldDelegate.isLinkVertexesMode) return true;
+    if (pendingLinkVertex != oldDelegate.pendingLinkVertex) return true;
+    if (!listEquals(vertexLinks, oldDelegate.vertexLinks)) return true;
     if (handleRadius != oldDelegate.handleRadius) return true;
     if (showAddPointIndicators != oldDelegate.showAddPointIndicators) {
       return true;

@@ -21,11 +21,11 @@ class OnscreenMenu extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             OnScreenMenuButton(
-              icon: Icons.link,
+              icon: Icons.compare_arrows,
               isActive: controller.isLinkMode,
               activeColor: Colors.greenAccent,
               onPressed: controller.toggleLinkMode,
-              tooltip: 'Link Mode',
+              tooltip: 'Relate Colors',
             ),
             if (controller.isLinkMode) ...[
               const Divider(color: Colors.white24, height: 16),
@@ -54,16 +54,17 @@ class OnscreenMenu extends StatelessWidget {
                 disabledColor: Colors.white24,
               ),
             ],
+            const SizedBox(height: 8),
             OnScreenMenuButton(
-              icon: Icons.ten_k,
+              icon: Icons.tune,
               isActive: controller.isClampMode,
               activeColor: Colors.deepPurple,
               onPressed: controller.toggleClampMode,
-              tooltip: 'Clamp Mode',
+              tooltip: 'Limit Color Range',
             ),
             const SizedBox(height: 8),
             OnScreenMenuButton(
-              icon: Icons.scatter_plot,
+              icon: Icons.polyline,
               isActive: controller.isEditVerticesMode,
               activeColor: Colors.blueAccent,
               onPressed: controller.toggleEditVerticesMode,
@@ -72,7 +73,7 @@ class OnscreenMenu extends StatelessWidget {
             if (controller.isEditVerticesMode) ...[
               const Divider(color: Colors.white24, height: 16),
               OnScreenMenuButton(
-                icon: Icons.delete_outline,
+                icon: Icons.remove_circle_outline,
                 isActive: controller.hasSelected,
                 activeColor: Colors.redAccent,
                 onPressed: controller.hasSelected
@@ -82,20 +83,42 @@ class OnscreenMenu extends StatelessWidget {
                 disabledColor: Colors.white24,
               ),
             ],
+            const SizedBox(height: 8),
             OnScreenMenuButton(
-              icon: Icons.redo,
-              isActive: controller.canRedo,
-              activeColor: Colors.blueGrey,
-              onPressed: controller.canRedo ? controller.redo : null,
-              tooltip: 'Redo',
-              disabledColor: Colors.white24,
+              icon: Icons.merge,
+              isActive: controller.isLinkVertexesMode,
+              activeColor: Colors.tealAccent,
+              onPressed: controller.toggleLinkVertexesMode,
+              tooltip: 'Snap Vertices Together',
             ),
+            if (controller.isLinkVertexesMode) ...[
+              const Divider(color: Colors.white24, height: 16),
+              OnScreenMenuButton(
+                icon: Icons.call_split,
+                isActive: controller.canUnlinkPendingVertex,
+                activeColor: Colors.redAccent,
+                onPressed: controller.canUnlinkPendingVertex
+                    ? controller.unlinkPendingVertex
+                    : null,
+                tooltip: 'Separate Vertices',
+                disabledColor: Colors.white24,
+              ),
+            ],
+            const Divider(color: Colors.white24, height: 16),
             OnScreenMenuButton(
               icon: Icons.undo,
               isActive: controller.canUndo,
               activeColor: Colors.grey,
               onPressed: controller.canUndo ? controller.undo : null,
               tooltip: 'Undo',
+              disabledColor: Colors.white24,
+            ),
+            OnScreenMenuButton(
+              icon: Icons.redo,
+              isActive: controller.canRedo,
+              activeColor: Colors.blueGrey,
+              onPressed: controller.canRedo ? controller.redo : null,
+              tooltip: 'Redo',
               disabledColor: Colors.white24,
             ),
           ],

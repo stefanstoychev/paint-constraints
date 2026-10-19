@@ -49,6 +49,7 @@ class CanvasProject {
         'shapes': data.shapes.map((s) => s.toJson()).toList(),
         'relationships': data.relationships.map((r) => r.toJson()).toList(),
         'constraints': data.constraints.map((r) => r.toJson()).toList(),
+        'vertexLinks': data.vertexLinks.map((l) => l.toJson()).toList(),
       },
       'lastModified': lastModified.toIso8601String(),
       'thumbnailBase64': thumbnailBase64,

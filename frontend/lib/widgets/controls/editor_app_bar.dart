@@ -53,12 +53,12 @@ class EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
       ),
       actions: <Widget>[
         IconButton(
-          icon: const Icon(Icons.add),
+          icon: const Icon(Icons.add_box_outlined),
           onPressed: controller.addShape,
           tooltip: 'Add New Shape',
         ),
         IconButton(
-          icon: const Icon(Icons.calculate),
+          icon: const Icon(Icons.auto_fix_high),
           onPressed: onSolve,
           tooltip: 'Solve Constraints',
         ),

@@ -3,6 +3,7 @@ import 'package:frontend/commands/color_commands.dart';
 import 'package:frontend/commands/shape_commands.dart';
 import 'package:frontend/controllers/canvas_controller.dart';
 import 'package:frontend/models/color_constraint_models.dart';
+import 'package:frontend/models/point_constraint_models.dart';
 import 'package:frontend/models/shape_data.dart';
 import 'package:frontend/services/solver_service.dart';
 
@@ -13,19 +14,101 @@ class ConstraintManager extends ChangeNotifier {
   Set<ShapeColorConstraint> activeShapeColorConstraint =
       <ShapeColorConstraint>{};
 
+  List<VertexLink> activeVertexLinks = <VertexLink>[];
+
   void loadConstraints(
     List<ShapeRelationship> relationships,
-    Set<ShapeColorConstraint> constraints,
-  ) {
+    Set<ShapeColorConstraint> constraints, [
+    List<VertexLink> vertexLinks = const [],
+  ]) {
     activeRelationships = List.from(relationships);
     activeShapeColorConstraint = Set.from(constraints);
+    activeVertexLinks = List.from(vertexLinks);
     notifyListeners();
   }
 
   void clear() {
     activeRelationships.clear();
     activeShapeColorConstraint.clear();
+    activeVertexLinks.clear();
     notifyListeners();
+  }
+
+  bool isLinked(VertexRef v) => activeVertexLinks.any((l) => l.contains(v));
+
+  /// All vertices transitively linked to [v], including [v] itself.
+  Set<VertexRef> linkedGroup(VertexRef v) {
+    final Set<VertexRef> group = {v};
+    final List<VertexRef> queue = [v];
+    while (queue.isNotEmpty) {
+      final VertexRef current = queue.removeLast();
+      for (final VertexLink link in activeVertexLinks) {
+        if (link.contains(current)) {
+          final VertexRef next = link.other(current);
+          if (group.add(next)) queue.add(next);
+        }
+      }
+    }
+    return group;
+  }
+
+  /// Keeps links pointing at the right vertices after a vertex is inserted
+  /// at [vertexIndex] of [shapeIndex].
+  void shiftLinksOnInsert(int shapeIndex, int vertexIndex) {
+    activeVertexLinks = activeVertexLinks
+        .map(
+          (l) => VertexLink(
+            _shift(l.a, shapeIndex, vertexIndex, 1),
+            _shift(l.b, shapeIndex, vertexIndex, 1),
+          ),
+        )
+        .toList();
+  }
+
+  /// Reverse of [shiftLinksOnInsert].
+  void unshiftLinksOnInsert(int shapeIndex, int vertexIndex) {
+    activeVertexLinks = activeVertexLinks
+        .map(
+          (l) => VertexLink(
+            _shift(l.a, shapeIndex, vertexIndex + 1, -1),
+            _shift(l.b, shapeIndex, vertexIndex + 1, -1),
+          ),
+        )
+        .toList();
+  }
+
+  /// Drops links of the deleted vertex and shifts higher indices down.
+  /// Returns the removed links so the deletion can be undone.
+  List<VertexLink> removeLinksOnDelete(int shapeIndex, int vertexIndex) {
+    final VertexRef deleted = VertexRef(shapeIndex, vertexIndex);
+    final List<VertexLink> removed = activeVertexLinks
+        .where((l) => l.contains(deleted))
+        .toList();
+    activeVertexLinks = activeVertexLinks
+        .where((l) => !l.contains(deleted))
+        .map(
+          (l) => VertexLink(
+            _shift(l.a, shapeIndex, vertexIndex + 1, -1),
+            _shift(l.b, shapeIndex, vertexIndex + 1, -1),
+          ),
+        )
+        .toList();
+    return removed;
+  }
+
+  /// Reverse of [removeLinksOnDelete].
+  void restoreLinksOnDelete(
+    int shapeIndex,
+    int vertexIndex,
+    List<VertexLink> removed,
+  ) {
+    shiftLinksOnInsert(shapeIndex, vertexIndex);
+    activeVertexLinks = [...activeVertexLinks, ...removed];
+  }
+
+  VertexRef _shift(VertexRef v, int shapeIndex, int fromIndex, int delta) {
+    if (v.shapeIndex != shapeIndex || v.vertexIndex < fromIndex) return v;
+    return v.withVertexIndex(v.vertexIndex + delta);
   }
 
   Future<void> solveRelationships(

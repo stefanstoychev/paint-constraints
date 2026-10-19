@@ -10,6 +10,7 @@ import 'package:frontend/controllers/project_manager.dart';
 import 'package:frontend/models/canvas_data.dart';
 import 'package:frontend/models/canvas_project.dart';
 import 'package:frontend/models/color_constraint_models.dart';
+import 'package:frontend/models/point_constraint_models.dart';
 import 'package:frontend/models/shape_data.dart';
 import 'package:frontend/services/solver_service.dart';
 import 'package:frontend/utils/constants.dart';
@@ -17,6 +18,7 @@ import 'package:frontend/utils/geometry_utils.dart';
 
 import '../commands/shape_commands.dart';
 import '../commands/vertex_commands.dart';
+import '../commands/vertex_link_commands.dart';
 import 'constraint_manager.dart';
 import 'viewport_controller.dart';
 
@@ -37,6 +39,7 @@ class CanvasController extends ChangeNotifier {
   bool get isLinkMode => editMode == EditMode.linkShapesColor;
   bool get isClampMode => editMode == EditMode.clampColor;
   bool get isEditVerticesMode => editMode == EditMode.editShapeVertexes;
+  bool get isLinkVertexesMode => editMode == EditMode.linkVertexes;
 
   bool isHueVisible = true;
   bool isSatVisible = true;
@@ -55,6 +58,10 @@ class CanvasController extends ChangeNotifier {
   Offset? _draggedPointInitialPosition;
   Offset? _dragStartWorldPoint;
   Map<int, List<Offset>>? _draggedShapesInitialPoints;
+  // Vertices moved along with a drag because they are linked to it.
+  Set<VertexRef> _draggedLinkedVertices = <VertexRef>{};
+
+  VertexRef? pendingLinkVertex;
 
   // Gesture tracking
   DateTime? _twoFingerGestureStartTime;
@@ -107,6 +114,7 @@ class CanvasController extends ChangeNotifier {
     constraints.loadConstraints(
       project.data.relationships,
       project.data.constraints,
+      project.data.vertexLinks,
     );
 
     commandHistory.clear();
@@ -115,6 +123,7 @@ class CanvasController extends ChangeNotifier {
     viewport.resetZoomScale();
     selectedIndices = <int>[];
     selectedVertexIndex = null;
+    pendingLinkVertex = null;
 
     if (context != null) {
       fitToScreen(context);
@@ -136,6 +145,7 @@ class CanvasController extends ChangeNotifier {
         shapes: allShapes,
         relationships: constraints.activeRelationships,
         constraints: constraints.activeShapeColorConstraint,
+        vertexLinks: List.of(constraints.activeVertexLinks),
       ),
       thumbnailBase64: thumbnail,
     );
@@ -274,6 +284,75 @@ class CanvasController extends ChangeNotifier {
     notifyListeners();
   }
 
+  void toggleLinkVertexesMode() {
+    toggleMode(EditMode.linkVertexes);
+    selectedIndices = <int>[];
+    selectedVertexIndex = null;
+    pendingLinkVertex = null;
+    notifyListeners();
+  }
+
+  bool get canUnlinkPendingVertex =>
+      pendingLinkVertex != null && constraints.isLinked(pendingLinkVertex!);
+
+  /// Removes every link in the group of the pending vertex.
+  void unlinkPendingVertex() {
+    if (!canUnlinkPendingVertex) return;
+    final Set<VertexRef> group = constraints.linkedGroup(pendingLinkVertex!);
+    final List<VertexLink> links = constraints.activeVertexLinks
+        .where((l) => group.contains(l.a))
+        .toList();
+    pendingLinkVertex = null;
+    executeCommand(RemoveVertexLinksCommand(this, links));
+  }
+
+  /// Vertices of any shape under [worldPosition], topmost shape first.
+  List<VertexRef> _verticesAt(Offset worldPosition) {
+    final double worldHandleRadius = handleRadius / viewport.currentScale;
+    final List<int> order = List<int>.generate(allShapes.length, (i) => i)
+      ..sort((a, b) {
+        final int zCompare = allShapes[b].zIndex.compareTo(allShapes[a].zIndex);
+        return zCompare != 0 ? zCompare : b.compareTo(a);
+      });
+    final List<VertexRef> hits = <VertexRef>[];
+    for (final int shapeIndex in order) {
+      final List<Offset> points = allShapes[shapeIndex].points;
+      for (int i = 0; i < points.length; i++) {
+        if ((points[i] - worldPosition).distance < worldHandleRadius) {
+          hits.add(VertexRef(shapeIndex, i));
+        }
+      }
+    }
+    return hits;
+  }
+
+  void _handleLinkVertexesTap(Offset worldPosition) {
+    final List<VertexRef> hits = _verticesAt(worldPosition);
+    final VertexRef? pending = pendingLinkVertex;
+
+    if (hits.isEmpty) {
+      pendingLinkVertex = null;
+    } else if (pending == null) {
+      pendingLinkVertex = hits.first;
+    } else {
+      // Prefer a vertex that can actually be linked to the pending one, since
+      // already-linked vertices sit on top of each other.
+      final Set<VertexRef> pendingGroup = constraints.linkedGroup(pending);
+      final VertexRef target = hits.firstWhere(
+        (v) => v.shapeIndex != pending.shapeIndex && !pendingGroup.contains(v),
+        orElse: () => hits.first,
+      );
+      if (target.shapeIndex == pending.shapeIndex ||
+          pendingGroup.contains(target)) {
+        pendingLinkVertex = target;
+      } else {
+        executeCommand(AddVertexLinkCommand(this, pending, target));
+        pendingLinkVertex = null;
+      }
+    }
+    notifyListeners();
+  }
+
   void toggleShowRelationships() {
     showRelationships = !showRelationships;
     notifyListeners();
@@ -316,6 +395,11 @@ class CanvasController extends ChangeNotifier {
     final double worldHandleRadius = handleRadius / viewport.currentScale;
     final double worldSegmentTapTolerance =
         _segmentTapTolerance / viewport.currentScale;
+
+    if (isLinkVertexesMode) {
+      _handleLinkVertexesTap(worldPosition);
+      return;
+    }
 
     if (isEditVerticesMode && selectedIndices.length == 1) {
       final int selectedShapeIndex = selectedIndices.first;
@@ -398,6 +482,7 @@ class CanvasController extends ChangeNotifier {
     _draggedPointInitialPosition = null;
     _dragStartWorldPoint = null;
     _draggedShapesInitialPoints = null;
+    _draggedLinkedVertices = <VertexRef>{};
 
     _tapPointerCount = details.pointerCount;
     if (_tapPointerCount == 2) {
@@ -420,6 +505,14 @@ class CanvasController extends ChangeNotifier {
           selectedVertexIndex = i;
           _draggedPointInitialPosition = point;
           _dragStartWorldPoint = worldPosition;
+          _draggedLinkedVertices = constraints.linkedGroup(
+            VertexRef(shapeIndex, i),
+          )..remove(VertexRef(shapeIndex, i));
+          _draggedShapesInitialPoints = <int, List<Offset>>{
+            shapeIndex: List<Offset>.from(shape.points),
+            for (final VertexRef v in _draggedLinkedVertices)
+              v.shapeIndex: List<Offset>.from(allShapes[v.shapeIndex].points),
+          };
           notifyListeners();
           return;
         }
@@ -443,6 +536,13 @@ class CanvasController extends ChangeNotifier {
               allShapes[shapeIndex].points,
             );
           }
+          _draggedLinkedVertices = _verticesLinkedToShapes(selectedIndices);
+          for (final VertexRef v in _draggedLinkedVertices) {
+            _draggedShapesInitialPoints!.putIfAbsent(
+              v.shapeIndex,
+              () => List<Offset>.from(allShapes[v.shapeIndex].points),
+            );
+          }
           notifyListeners();
           return;
         }
@@ -463,20 +563,20 @@ class CanvasController extends ChangeNotifier {
       final Offset deltaWorld = currentWorldFocalPoint - _dragStartWorldPoint!;
 
       final List<ShapeData> tempAllShapes = List<ShapeData>.from(allShapes);
-      for (final int shapeIndex in selectedIndices) {
-        final List<Offset>? initialPoints =
-            _draggedShapesInitialPoints![shapeIndex];
-        if (initialPoints != null) {
-          final List<Offset> updatedPoints = initialPoints
-              .map<Offset>(
-                (Offset point) =>
-                    viewport.clampPoint(point + deltaWorld, canvasRect),
-              )
-              .toList();
-          tempAllShapes[shapeIndex] = tempAllShapes[shapeIndex].copyWith(
-            points: updatedPoints,
-          );
-        }
+      for (final MapEntry<int, List<Offset>> entry
+          in _draggedShapesInitialPoints!.entries) {
+        final int shapeIndex = entry.key;
+        final bool isSelected = selectedIndices.contains(shapeIndex);
+        final List<Offset> updatedPoints = <Offset>[
+          for (int i = 0; i < entry.value.length; i++)
+            isSelected ||
+                    _draggedLinkedVertices.contains(VertexRef(shapeIndex, i))
+                ? viewport.clampPoint(entry.value[i] + deltaWorld, canvasRect)
+                : entry.value[i],
+        ];
+        tempAllShapes[shapeIndex] = tempAllShapes[shapeIndex].copyWith(
+          points: updatedPoints,
+        );
       }
       allShapes = tempAllShapes;
     } else if (draggingShapeIndex != null &&
@@ -488,17 +588,24 @@ class CanvasController extends ChangeNotifier {
       );
       final Offset deltaWorld = currentWorldFocalPoint - _dragStartWorldPoint!;
 
-      final List<ShapeData> tempAllShapes = List<ShapeData>.from(allShapes);
-      final List<Offset> updatedPoints = List<Offset>.from(
-        tempAllShapes[draggingShapeIndex!].points,
-      );
-      updatedPoints[draggingPointIndex!] = viewport.clampPoint(
+      final Offset newPosition = viewport.clampPoint(
         _draggedPointInitialPosition! + deltaWorld,
         canvasRect,
       );
 
-      tempAllShapes[draggingShapeIndex!] = tempAllShapes[draggingShapeIndex!]
-          .copyWith(points: updatedPoints);
+      final List<ShapeData> tempAllShapes = List<ShapeData>.from(allShapes);
+      for (final VertexRef v in <VertexRef>[
+        VertexRef(draggingShapeIndex!, draggingPointIndex!),
+        ..._draggedLinkedVertices,
+      ]) {
+        final List<Offset> updatedPoints = List<Offset>.from(
+          tempAllShapes[v.shapeIndex].points,
+        );
+        updatedPoints[v.vertexIndex] = newPosition;
+        tempAllShapes[v.shapeIndex] = tempAllShapes[v.shapeIndex].copyWith(
+          points: updatedPoints,
+        );
+      }
       allShapes = tempAllShapes;
     } else {
       viewport.applyScaleUpdate(details);
@@ -508,26 +615,12 @@ class CanvasController extends ChangeNotifier {
 
   void handleScaleEnd(ScaleEndDetails details) {
     if (_isDraggingWholeShape && _draggedShapesInitialPoints != null) {
-      final Map<int, List<Offset>> finalPoints = {};
-      for (final int shapeIndex in selectedIndices) {
-        finalPoints[shapeIndex] = List<Offset>.from(
-          allShapes[shapeIndex].points,
-        );
-      }
-
-      final tempShapes = List<ShapeData>.from(allShapes);
-      for (final int shapeIndex in selectedIndices) {
-        if (_draggedShapesInitialPoints!.containsKey(shapeIndex)) {
-          tempShapes[shapeIndex] = tempShapes[shapeIndex].copyWith(
-            points: _draggedShapesInitialPoints![shapeIndex],
-          );
-        }
-      }
-      allShapes = tempShapes;
-
-      executeCommand(
-        MoveShapeCommand(this, _draggedShapesInitialPoints!, finalPoints),
-      );
+      _commitMultiShapeMove();
+    } else if (draggingShapeIndex != null &&
+        draggingPointIndex != null &&
+        _draggedPointInitialPosition != null &&
+        _draggedLinkedVertices.isNotEmpty) {
+      _commitMultiShapeMove();
     } else if (draggingShapeIndex != null &&
         draggingPointIndex != null &&
         _draggedPointInitialPosition != null) {
@@ -560,6 +653,7 @@ class CanvasController extends ChangeNotifier {
     _draggedPointInitialPosition = null;
     _dragStartWorldPoint = null;
     _draggedShapesInitialPoints = null;
+    _draggedLinkedVertices = <VertexRef>{};
 
     if (_tapPointerCount == 2 && _twoFingerGestureStartTime != null) {
       final duration = DateTime.now().difference(_twoFingerGestureStartTime!);
@@ -573,10 +667,48 @@ class CanvasController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Vertices of shapes outside [shapeIndices] linked to any of their vertices.
+  Set<VertexRef> _verticesLinkedToShapes(List<int> shapeIndices) {
+    final Set<VertexRef> result = <VertexRef>{};
+    for (final int shapeIndex in shapeIndices) {
+      for (int i = 0; i < allShapes[shapeIndex].points.length; i++) {
+        final VertexRef v = VertexRef(shapeIndex, i);
+        if (!constraints.isLinked(v)) continue;
+        result.addAll(
+          constraints
+              .linkedGroup(v)
+              .where((m) => !shapeIndices.contains(m.shapeIndex)),
+        );
+      }
+    }
+    return result;
+  }
+
+  /// Commits a drag that touched the shapes in [_draggedShapesInitialPoints]
+  /// as a single undoable [MoveShapeCommand].
+  void _commitMultiShapeMove() {
+    final Map<int, List<Offset>> initialPoints = _draggedShapesInitialPoints!;
+    final Map<int, List<Offset>> finalPoints = {
+      for (final int shapeIndex in initialPoints.keys)
+        shapeIndex: List<Offset>.from(allShapes[shapeIndex].points),
+    };
+
+    final tempShapes = List<ShapeData>.from(allShapes);
+    for (final MapEntry<int, List<Offset>> entry in initialPoints.entries) {
+      tempShapes[entry.key] = tempShapes[entry.key].copyWith(
+        points: entry.value,
+      );
+    }
+    allShapes = tempShapes;
+
+    executeCommand(MoveShapeCommand(this, initialPoints, finalPoints));
+  }
+
   void _handleTwoFingerTap() {
     final now = DateTime.now();
     if (_lastTwoFingerTapTime != null &&
-        now.difference(_lastTwoFingerTapTime!).inMilliseconds < kDoubleTwoFingerTapWindowMs) {
+        now.difference(_lastTwoFingerTapTime!).inMilliseconds <
+            kDoubleTwoFingerTapWindowMs) {
       if (commandHistory.canUndo) {
         undo();
       }
