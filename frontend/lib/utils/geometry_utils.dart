@@ -74,4 +74,35 @@ class GeometryUtils {
   static Offset perpendicularVector(Offset v, {bool leftHand = true}) {
     return leftHand ? Offset(v.dy, -v.dx) : Offset(-v.dy, v.dx);
   }
+
+  /// Whether segments p1-p2 and q1-q2 cross at a point interior to both.
+  static bool segmentsCross(Offset p1, Offset p2, Offset q1, Offset q2) {
+    double cross(Offset o, Offset a, Offset b) =>
+        (a.dx - o.dx) * (b.dy - o.dy) - (a.dy - o.dy) * (b.dx - o.dx);
+    final double d1 = cross(q1, q2, p1);
+    final double d2 = cross(q1, q2, p2);
+    final double d3 = cross(p1, p2, q1);
+    final double d4 = cross(p1, p2, q2);
+    return ((d1 > 0 && d2 < 0) || (d1 < 0 && d2 > 0)) &&
+        ((d3 > 0 && d4 < 0) || (d3 < 0 && d4 > 0));
+  }
+
+  /// Whether the chord between vertices [i] and [j] cuts [polygon] into two
+  /// polygons: the vertices are not neighbours and the chord stays inside.
+  static bool isValidDiagonal(List<Offset> polygon, int i, int j) {
+    final int n = polygon.length;
+    if (i == j || (i - j).abs() == 1 || (i - j).abs() == n - 1) return false;
+
+    final Offset a = polygon[i];
+    final Offset b = polygon[j];
+    if (a == b) return false;
+    if (!isPointInPolygon((a + b) / 2, polygon)) return false;
+
+    for (int k = 0; k < n; k++) {
+      final int next = (k + 1) % n;
+      if (k == i || k == j || next == i || next == j) continue;
+      if (segmentsCross(a, b, polygon[k], polygon[next])) return false;
+    }
+    return true;
+  }
 }

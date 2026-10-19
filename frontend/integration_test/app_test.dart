@@ -308,5 +308,63 @@ void main() {
       expect(controller.constraints.activeVertexLinks, isEmpty);
       await binding.takeScreenshot('18_snap_vertices_separated');
     });
+
+    testWidgets('08 split shape', (tester) async {
+      app.main();
+      await tester.pumpAndSettle(const Duration(seconds: 3));
+
+      // Create project
+      await tester.tap(find.text('New Painting'));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.widgetWithText(TextField, 'My Masterpiece'),
+        'Split Test',
+      );
+      await tester.tap(find.text('Create'));
+      await tester.pumpAndSettle(const Duration(seconds: 2));
+
+      // One square: (100,100)-(200,200).
+      await tester.tap(find.byTooltip('Add New Shape'));
+      await tester.pumpAndSettle();
+
+      final controller = Provider.of<CanvasController>(
+        tester.element(find.byType(OnscreenMenu)),
+        listen: false,
+      );
+      final canvasOrigin = tester.getTopLeft(find.byType(CanvasGrid));
+      Offset toScreen(Offset world) =>
+          canvasOrigin +
+          world * controller.viewport.currentScale +
+          controller.viewport.currentOffset;
+
+      // Cut from the top-left corner to the bottom-right corner.
+      await tester.tap(find.byTooltip('Split Shape'));
+      await tester.pumpAndSettle();
+      await tester.tapAt(toScreen(controller.allShapes[0].points[0]));
+      await tester.pumpAndSettle();
+      await binding.takeScreenshot('19_split_first_vertex');
+      await tester.tapAt(toScreen(controller.allShapes[0].points[2]));
+      await tester.pumpAndSettle();
+
+      expect(controller.allShapes, hasLength(2));
+      expect(controller.allShapes[0].points, hasLength(3));
+      expect(controller.allShapes[1].points, hasLength(3));
+
+      // Pull the new triangle away so the cut is visible.
+      await tester.tap(find.byTooltip('Split Shape'));
+      await tester.pumpAndSettle();
+      controller.selectedIndices = [1];
+      final gesture = await tester.startGesture(
+        toScreen(const Offset(125, 175)),
+        kind: PointerDeviceKind.mouse,
+      );
+      for (int i = 0; i < 10; i++) {
+        await gesture.moveBy(const Offset(-4, 4));
+        await tester.pump(const Duration(milliseconds: 16));
+      }
+      await gesture.up();
+      await tester.pumpAndSettle();
+      await binding.takeScreenshot('20_split_shape');
+    });
   });
 }

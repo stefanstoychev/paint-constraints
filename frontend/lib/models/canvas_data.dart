@@ -6,6 +6,7 @@ enum EditMode {
   linkShapesColor,
   editShapeVertexes,
   linkVertexes,
+  splitShape,
   clampColor,
   selectShape,
 }

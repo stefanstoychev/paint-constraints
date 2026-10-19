@@ -40,6 +40,7 @@ class CanvasController extends ChangeNotifier {
   bool get isClampMode => editMode == EditMode.clampColor;
   bool get isEditVerticesMode => editMode == EditMode.editShapeVertexes;
   bool get isLinkVertexesMode => editMode == EditMode.linkVertexes;
+  bool get isSplitShapeMode => editMode == EditMode.splitShape;
 
   bool isHueVisible = true;
   bool isSatVisible = true;
@@ -61,7 +62,7 @@ class CanvasController extends ChangeNotifier {
   // Vertices moved along with a drag because they are linked to it.
   Set<VertexRef> _draggedLinkedVertices = <VertexRef>{};
 
-  VertexRef? pendingLinkVertex;
+  VertexRef? pendingVertex;
 
   // Gesture tracking
   DateTime? _twoFingerGestureStartTime;
@@ -123,7 +124,7 @@ class CanvasController extends ChangeNotifier {
     viewport.resetZoomScale();
     selectedIndices = <int>[];
     selectedVertexIndex = null;
-    pendingLinkVertex = null;
+    pendingVertex = null;
 
     if (context != null) {
       fitToScreen(context);
@@ -263,6 +264,7 @@ class CanvasController extends ChangeNotifier {
   }
 
   void toggleMode(EditMode mode) {
+    pendingVertex = null;
     if (mode != editMode) {
       editMode = mode;
     } else {
@@ -288,21 +290,27 @@ class CanvasController extends ChangeNotifier {
     toggleMode(EditMode.linkVertexes);
     selectedIndices = <int>[];
     selectedVertexIndex = null;
-    pendingLinkVertex = null;
+    notifyListeners();
+  }
+
+  void toggleSplitShapeMode() {
+    toggleMode(EditMode.splitShape);
+    selectedIndices = <int>[];
+    selectedVertexIndex = null;
     notifyListeners();
   }
 
   bool get canUnlinkPendingVertex =>
-      pendingLinkVertex != null && constraints.isLinked(pendingLinkVertex!);
+      pendingVertex != null && constraints.isLinked(pendingVertex!);
 
   /// Removes every link in the group of the pending vertex.
   void unlinkPendingVertex() {
     if (!canUnlinkPendingVertex) return;
-    final Set<VertexRef> group = constraints.linkedGroup(pendingLinkVertex!);
+    final Set<VertexRef> group = constraints.linkedGroup(pendingVertex!);
     final List<VertexLink> links = constraints.activeVertexLinks
         .where((l) => group.contains(l.a))
         .toList();
-    pendingLinkVertex = null;
+    pendingVertex = null;
     executeCommand(RemoveVertexLinksCommand(this, links));
   }
 
@@ -328,12 +336,12 @@ class CanvasController extends ChangeNotifier {
 
   void _handleLinkVertexesTap(Offset worldPosition) {
     final List<VertexRef> hits = _verticesAt(worldPosition);
-    final VertexRef? pending = pendingLinkVertex;
+    final VertexRef? pending = pendingVertex;
 
     if (hits.isEmpty) {
-      pendingLinkVertex = null;
+      pendingVertex = null;
     } else if (pending == null) {
-      pendingLinkVertex = hits.first;
+      pendingVertex = hits.first;
     } else {
       // Prefer a vertex that can actually be linked to the pending one, since
       // already-linked vertices sit on top of each other.
@@ -344,10 +352,48 @@ class CanvasController extends ChangeNotifier {
       );
       if (target.shapeIndex == pending.shapeIndex ||
           pendingGroup.contains(target)) {
-        pendingLinkVertex = target;
+        pendingVertex = target;
       } else {
         executeCommand(AddVertexLinkCommand(this, pending, target));
-        pendingLinkVertex = null;
+        pendingVertex = null;
+      }
+    }
+    notifyListeners();
+  }
+
+  void _handleSplitShapeTap(Offset worldPosition) {
+    final List<VertexRef> hits = _verticesAt(worldPosition);
+    final VertexRef? pending = pendingVertex;
+
+    if (hits.isEmpty) {
+      pendingVertex = null;
+    } else if (pending == null) {
+      pendingVertex = hits.first;
+    } else {
+      // Prefer another vertex of the pending vertex's shape.
+      final VertexRef target = hits.firstWhere(
+        (v) => v.shapeIndex == pending.shapeIndex && v != pending,
+        orElse: () => hits.first,
+      );
+      if (target.shapeIndex == pending.shapeIndex &&
+          GeometryUtils.isValidDiagonal(
+            allShapes[target.shapeIndex].points,
+            pending.vertexIndex,
+            target.vertexIndex,
+          )) {
+        executeCommand(
+          SplitShapeCommand(
+            this,
+            target.shapeIndex,
+            pending.vertexIndex,
+            target.vertexIndex,
+          ),
+        );
+        pendingVertex = null;
+      } else {
+        // Neighbouring vertices, a cut leaving the shape, or another shape:
+        // start over from the tapped vertex.
+        pendingVertex = target;
       }
     }
     notifyListeners();
@@ -398,6 +444,11 @@ class CanvasController extends ChangeNotifier {
 
     if (isLinkVertexesMode) {
       _handleLinkVertexesTap(worldPosition);
+      return;
+    }
+
+    if (isSplitShapeMode) {
+      _handleSplitShapeTap(worldPosition);
       return;
     }
 

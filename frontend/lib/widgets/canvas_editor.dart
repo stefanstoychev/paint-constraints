@@ -94,11 +94,13 @@ class _CanvasEditorState extends State<CanvasEditor> {
                         isSatVisible: controller.isSatVisible,
                         isValueVisible: controller.isValueVisible,
                         isEditVerticesMode: controller.isEditVerticesMode,
-                        isLinkVertexesMode: controller.isLinkVertexesMode,
+                        showAllVertexHandles:
+                            controller.isLinkVertexesMode ||
+                            controller.isSplitShapeMode,
                         vertexLinks: List.of(
                           controller.constraints.activeVertexLinks,
                         ),
-                        pendingLinkVertex: controller.pendingLinkVertex,
+                        pendingVertex: controller.pendingVertex,
                         showAddPointIndicators: showAddPointIndicators,
                         showRelationships: controller.showRelationships,
                         showColorLabels: controller.showColorLabels,
@@ -255,9 +257,9 @@ class CanvasPainter extends CustomPainter {
     required this.isSatVisible,
     required this.isValueVisible,
     required this.isEditVerticesMode,
-    this.isLinkVertexesMode = false,
+    this.showAllVertexHandles = false,
     this.vertexLinks = const [],
-    this.pendingLinkVertex,
+    this.pendingVertex,
     required this.showAddPointIndicators,
     required this.showRelationships,
     required this.showColorLabels,
@@ -277,9 +279,9 @@ class CanvasPainter extends CustomPainter {
   final bool isSatVisible;
   final bool isValueVisible;
   final bool isEditVerticesMode;
-  final bool isLinkVertexesMode;
+  final bool showAllVertexHandles;
   final List<VertexLink> vertexLinks;
-  final VertexRef? pendingLinkVertex;
+  final VertexRef? pendingVertex;
   final bool showAddPointIndicators;
   final bool showRelationships;
   final bool showColorLabels;
@@ -315,7 +317,7 @@ class CanvasPainter extends CustomPainter {
 
       _paintShape(canvas, shape, isSelected);
 
-      if (isLinkVertexesMode) {
+      if (showAllVertexHandles) {
         _paintVertexHandles(canvas, shape, i);
       } else if (isSelected && isEditVerticesMode) {
         _paintVertexHandles(canvas, shape, i);
@@ -457,9 +459,9 @@ class CanvasPainter extends CustomPainter {
       }
     }
 
-    final Offset? pending = pendingLinkVertex == null
+    final Offset? pending = pendingVertex == null
         ? null
-        : _vertexPosition(pendingLinkVertex!);
+        : _vertexPosition(pendingVertex!);
     if (pending != null) {
       canvas.drawCircle(
         pending,
@@ -757,8 +759,8 @@ class CanvasPainter extends CustomPainter {
     if (draggingPointIndex != oldDelegate.draggingPointIndex) return true;
     if (isLinkMode != oldDelegate.isLinkMode) return true;
     if (isEditVerticesMode != oldDelegate.isEditVerticesMode) return true;
-    if (isLinkVertexesMode != oldDelegate.isLinkVertexesMode) return true;
-    if (pendingLinkVertex != oldDelegate.pendingLinkVertex) return true;
+    if (showAllVertexHandles != oldDelegate.showAllVertexHandles) return true;
+    if (pendingVertex != oldDelegate.pendingVertex) return true;
     if (!listEquals(vertexLinks, oldDelegate.vertexLinks)) return true;
     if (handleRadius != oldDelegate.handleRadius) return true;
     if (showAddPointIndicators != oldDelegate.showAddPointIndicators) {

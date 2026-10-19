@@ -104,6 +104,14 @@ class OnscreenMenu extends StatelessWidget {
                 disabledColor: Colors.white24,
               ),
             ],
+            const SizedBox(height: 8),
+            OnScreenMenuButton(
+              icon: Icons.content_cut,
+              isActive: controller.isSplitShapeMode,
+              activeColor: Colors.orangeAccent,
+              onPressed: controller.toggleSplitShapeMode,
+              tooltip: 'Split Shape',
+            ),
             const Divider(color: Colors.white24, height: 16),
             OnScreenMenuButton(
               icon: Icons.undo,

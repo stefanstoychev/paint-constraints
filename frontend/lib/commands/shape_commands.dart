@@ -1,6 +1,9 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 import '../controllers/canvas_controller.dart';
+import '../models/point_constraint_models.dart';
 import '../models/shape_data.dart';
 import 'canvas_command.dart';
 
@@ -60,6 +63,70 @@ class MoveShapeCommand implements CanvasCommand {
       }
     }
     controller.allShapes = shapes;
+  }
+}
+
+/// Cuts a shape along the chord between two of its vertices. The first part
+/// keeps the shape's index (and so its color constraints); the second part is
+/// appended as a new shape.
+class SplitShapeCommand implements CanvasCommand {
+  final CanvasController controller;
+  final int shapeIndex;
+  final int newShapeIndex;
+  final ShapeData originalShape;
+  late final ShapeData firstPart;
+  late final ShapeData secondPart;
+  final List<VertexLink> previousLinks;
+  late final List<VertexLink> splitLinks;
+
+  SplitShapeCommand(this.controller, this.shapeIndex, int i, int j)
+    : newShapeIndex = controller.allShapes.length,
+      originalShape = controller.allShapes[shapeIndex],
+      previousLinks = List.of(controller.constraints.activeVertexLinks) {
+    final List<Offset> points = originalShape.points;
+    final int n = points.length;
+    final int a = min(i, j);
+    final int b = max(i, j);
+
+    firstPart = originalShape.copyWith(points: points.sublist(a, b + 1));
+    secondPart = originalShape.copyWith(
+      points: [...points.sublist(b), ...points.sublist(0, a + 1)],
+    );
+
+    // Vertices a..b go to the first part; the rest to the second. The cut
+    // vertices exist in both, and their links stay with the first part.
+    VertexRef remap(VertexRef v) {
+      if (v.shapeIndex != shapeIndex) return v;
+      final int k = v.vertexIndex;
+      if (k >= a && k <= b) return VertexRef(shapeIndex, k - a);
+      if (k > b) return VertexRef(newShapeIndex, k - b);
+      return VertexRef(newShapeIndex, k + n - b);
+    }
+
+    splitLinks = previousLinks
+        .map((l) => VertexLink(remap(l.a), remap(l.b)))
+        .toList();
+  }
+
+  @override
+  void execute() {
+    final shapes = List<ShapeData>.from(controller.allShapes);
+    shapes[shapeIndex] = firstPart;
+    shapes.add(secondPart);
+    controller.allShapes = shapes;
+    controller.constraints.activeVertexLinks = List.of(splitLinks);
+  }
+
+  @override
+  void undo() {
+    final shapes = List<ShapeData>.from(controller.allShapes);
+    if (shapes.length > newShapeIndex) shapes.removeAt(newShapeIndex);
+    shapes[shapeIndex] = originalShape;
+    controller.allShapes = shapes;
+    controller.constraints.activeVertexLinks = List.of(previousLinks);
+    controller.selectedIndices = controller.selectedIndices
+        .where((index) => index < shapes.length)
+        .toList();
   }
 }
 
