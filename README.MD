@@ -15,6 +15,122 @@ Beyond the app itself, this project is a living laboratory for "vibecoding"—te
 
 ---
 
+## 📸 Screenshots
+
+Captured by the integration test. Regenerate with `frontend/scripts/update_screenshots.sh`.
+
+<!-- screenshots:start -->
+<details open>
+<summary>20 screenshots</summary>
+
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <a href="frontend/screenshots/01_gallery_empty.png"><img src="frontend/screenshots/01_gallery_empty.png" width="400" alt="Gallery empty"></a><br>
+      <sub>Gallery empty</sub>
+    </td>
+    <td align="center" width="50%">
+      <a href="frontend/screenshots/02_create_dialog.png"><img src="frontend/screenshots/02_create_dialog.png" width="400" alt="Create dialog"></a><br>
+      <sub>Create dialog</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <a href="frontend/screenshots/03_create_dialog_filled.png"><img src="frontend/screenshots/03_create_dialog_filled.png" width="400" alt="Create dialog filled"></a><br>
+      <sub>Create dialog filled</sub>
+    </td>
+    <td align="center" width="50%">
+      <a href="frontend/screenshots/04_canvas_empty.png"><img src="frontend/screenshots/04_canvas_empty.png" width="400" alt="Canvas empty"></a><br>
+      <sub>Canvas empty</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <a href="frontend/screenshots/05_one_shape.png"><img src="frontend/screenshots/05_one_shape.png" width="400" alt="One shape"></a><br>
+      <sub>One shape</sub>
+    </td>
+    <td align="center" width="50%">
+      <a href="frontend/screenshots/06_two_shapes.png"><img src="frontend/screenshots/06_two_shapes.png" width="400" alt="Two shapes"></a><br>
+      <sub>Two shapes</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <a href="frontend/screenshots/07_link_mode_active.png"><img src="frontend/screenshots/07_link_mode_active.png" width="400" alt="Link mode active"></a><br>
+      <sub>Link mode active</sub>
+    </td>
+    <td align="center" width="50%">
+      <a href="frontend/screenshots/08_edit_vertices_mode.png"><img src="frontend/screenshots/08_edit_vertices_mode.png" width="400" alt="Edit vertices mode"></a><br>
+      <sub>Edit vertices mode</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <a href="frontend/screenshots/09_after_undo.png"><img src="frontend/screenshots/09_after_undo.png" width="400" alt="After undo"></a><br>
+      <sub>After undo</sub>
+    </td>
+    <td align="center" width="50%">
+      <a href="frontend/screenshots/10_after_redo.png"><img src="frontend/screenshots/10_after_redo.png" width="400" alt="After redo"></a><br>
+      <sub>After redo</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <a href="frontend/screenshots/11_clamp_mode_no_selection.png"><img src="frontend/screenshots/11_clamp_mode_no_selection.png" width="400" alt="Clamp mode no selection"></a><br>
+      <sub>Clamp mode no selection</sub>
+    </td>
+    <td align="center" width="50%">
+      <a href="frontend/screenshots/12_clamp_panel_open.png"><img src="frontend/screenshots/12_clamp_panel_open.png" width="400" alt="Clamp panel open"></a><br>
+      <sub>Clamp panel open</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <a href="frontend/screenshots/13_link_mode_two_selected.png"><img src="frontend/screenshots/13_link_mode_two_selected.png" width="400" alt="Link mode two selected"></a><br>
+      <sub>Link mode two selected</sub>
+    </td>
+    <td align="center" width="50%">
+      <a href="frontend/screenshots/14_after_save.png"><img src="frontend/screenshots/14_after_save.png" width="400" alt="After save"></a><br>
+      <sub>After save</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <a href="frontend/screenshots/15_gallery_with_project.png"><img src="frontend/screenshots/15_gallery_with_project.png" width="400" alt="Gallery with project"></a><br>
+      <sub>Gallery with project</sub>
+    </td>
+    <td align="center" width="50%">
+      <a href="frontend/screenshots/16_snap_vertices_linked.png"><img src="frontend/screenshots/16_snap_vertices_linked.png" width="400" alt="Snap vertices linked"></a><br>
+      <sub>Snap vertices linked</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <a href="frontend/screenshots/17_snap_vertices_dragged.png"><img src="frontend/screenshots/17_snap_vertices_dragged.png" width="400" alt="Snap vertices dragged"></a><br>
+      <sub>Snap vertices dragged</sub>
+    </td>
+    <td align="center" width="50%">
+      <a href="frontend/screenshots/18_snap_vertices_separated.png"><img src="frontend/screenshots/18_snap_vertices_separated.png" width="400" alt="Snap vertices separated"></a><br>
+      <sub>Snap vertices separated</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <a href="frontend/screenshots/19_split_first_vertex.png"><img src="frontend/screenshots/19_split_first_vertex.png" width="400" alt="Split first vertex"></a><br>
+      <sub>Split first vertex</sub>
+    </td>
+    <td align="center" width="50%">
+      <a href="frontend/screenshots/20_split_shape.png"><img src="frontend/screenshots/20_split_shape.png" width="400" alt="Split shape"></a><br>
+      <sub>Split shape</sub>
+    </td>
+  </tr>
+</table>
+
+</details>
+<!-- screenshots:end -->
+
+---
+
 ## 🤖 The Vibecoding Experiment
 
 Building a cross-language app (Dart/Flutter frontend + Java/Spring Boot backend) with algorithmic requirements is a true stress test for AI agents.

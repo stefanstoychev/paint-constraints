@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
 # Regenerates screenshots/*.png by running integration_test/app_test.dart in
-# Chrome via ChromeDriver.
+# Chrome via ChromeDriver, then refreshes the screenshot gallery in the root
+# README.MD (between the <!-- screenshots:start/end --> markers).
 #
-# Usage: scripts/update_screenshots.sh [--headless]
+# Usage: scripts/update_screenshots.sh [--headless] [--readme-only]
+#   --headless     run Chrome without a window
+#   --readme-only  only regenerate the README gallery, skip the tests
 #
 # Needs chromedriver matching your Chrome version, either on PATH or pointed to
 # by $CHROMEDRIVER. Download: https://googlechromelabs.github.io/chrome-for-testing/
@@ -10,14 +13,70 @@ set -euo pipefail
 
 PORT=4444
 HEADLESS_FLAG=""
+README_ONLY=0
 for arg in "$@"; do
   case "$arg" in
     --headless) HEADLESS_FLAG="--headless" ;;
+    --readme-only) README_ONLY=1 ;;
     *) echo "Unknown argument: $arg" >&2; exit 2 ;;
   esac
 done
 
 cd "$(dirname "$0")/.."
+
+README=../README.MD
+START_MARKER='<!-- screenshots:start -->'
+END_MARKER='<!-- screenshots:end -->'
+
+update_readme_gallery() {
+  if ! grep -qF "$START_MARKER" "$README" || ! grep -qF "$END_MARKER" "$README"; then
+    echo "Warning: screenshot markers not found in $README; gallery not updated" >&2
+    return 0
+  fi
+
+  shopt -s nullglob
+  local files=(screenshots/*.png)
+  shopt -u nullglob
+  local count=${#files[@]}
+  local gallery="" name caption f i
+
+  gallery+="<details open>"$'\n'
+  gallery+="<summary>$count screenshots</summary>"$'\n\n'
+  gallery+="<table>"$'\n'
+  for ((i = 0; i < count; i += 2)); do
+    gallery+="  <tr>"$'\n'
+    for f in "${files[@]:i:2}"; do
+      # 16_snap_vertices_linked.png -> "Snap vertices linked"
+      name=$(basename "$f" .png)
+      caption=${name#*_}
+      caption=${caption//_/ }
+      caption=${caption^}
+      gallery+="    <td align=\"center\" width=\"50%\">"$'\n'
+      gallery+="      <a href=\"frontend/$f\"><img src=\"frontend/$f\" width=\"400\" alt=\"$caption\"></a><br>"$'\n'
+      gallery+="      <sub>$caption</sub>"$'\n'
+      gallery+="    </td>"$'\n'
+    done
+    gallery+="  </tr>"$'\n'
+  done
+  gallery+="</table>"$'\n\n'
+  gallery+="</details>"
+
+  local tmp
+  tmp=$(mktemp)
+  GALLERY="$gallery" awk -v start="$START_MARKER" -v end="$END_MARKER" '
+    { sub(/\r$/, "") }
+    index($0, start) { print; print ENVIRON["GALLERY"]; skip = 1; next }
+    index($0, end) { skip = 0 }
+    !skip { print }
+  ' "$README" > "$tmp"
+  mv "$tmp" "$README"
+  echo "README gallery updated ($count screenshots)"
+}
+
+if [[ "$README_ONLY" == 1 ]]; then
+  update_readme_gallery
+  exit 0
+fi
 
 chromedriver_ready() {
   curl -s "http://localhost:$PORT/status" 2>/dev/null | grep -q '"ready": *true'
@@ -62,5 +121,8 @@ flutter drive \
   $HEADLESS_FLAG
 
 echo
+update_readme_gallery
+
+echo
 echo "Changed screenshots:"
-git status --short screenshots/
+git status --short screenshots/ "$README"
